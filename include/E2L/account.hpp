@@ -250,6 +250,21 @@ void AccountNumber(); /* -----  end of function AccountNumber  ----- */
  */
 e2::Int_e AccountProfit(); /* -----  end of function AccountProfit  ----- */
 
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ThreadPosition
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  thread id, position
+ *  总仓位的分配
+ * ============================================
+ */
+void ThreadPosition(
+    e2::Int_e, e2::Int_e); /* -----  end of function ThreadPosition  ----- */
+
 }  // namespace e2l
 
 #endif /* ----- #ifndef ACCOUNT_INC  ----- */
