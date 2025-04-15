@@ -265,6 +265,32 @@ e2::Int_e AccountProfit(); /* -----  end of function AccountProfit  ----- */
 void ThreadPosition(
     e2::Int_e, e2::Int_e); /* -----  end of function ThreadPosition  ----- */
 
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  PositionSize
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  返回仓位分配了多少份，包括未分配的 1 份
+ * ============================================
+ */
+e2::Int_e PositionSize(); /* -----  end of function PositionSize  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  PositionPart
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  查询 某一个仓位的分配比例
+ * ============================================
+ */
+e2::Int_e PositionPart(
+    e2::Int_e); /* -----  end of function PositionPart  ----- */
 }  // namespace e2l
 
 #endif /* ----- #ifndef ACCOUNT_INC  ----- */

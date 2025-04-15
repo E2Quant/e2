@@ -323,7 +323,7 @@ public:
         _name.push(name);
         _id = this;
     }; /* constructor */
-    ~Identifier(){};
+    ~Identifier() {};
 
     /* =============  ACCESSORS     =================== */
     virtual llvm::Value *codeGen(CodeGenContext &context);
@@ -453,10 +453,22 @@ public:
     /* =============  ACCESSORS     =================== */
     virtual llvm::Value *codeGen(CodeGenContext &context);
     NodeType getType() { return NodeType::_block; }
-    NodeType getType(size_t index) { return _statements.at(index)->getType(); }
+    NodeType getType(size_t index)
+    {
+        if (_statements.size() < index) {
+            log::bug("statement index:", index);
+        }
+        return _statements.at(index)->getType();
+    }
 
     bool importnull(std::string l) { return _imports.count(l) == 0; }
-    std::deque<std::string> get_import(std::string l) { return _imports.at(l); }
+    std::deque<std::string> get_import(std::string l)
+    {
+        if (importnull(l)) {
+            log::bug("import :", l);
+        }
+        return _imports.at(l);
+    }
     /* =============  MUTATORS      =================== */
     void push_back(Expression *exp);
     void push_back(Statement *stat);

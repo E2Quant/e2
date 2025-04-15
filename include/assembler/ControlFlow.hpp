@@ -49,6 +49,7 @@
 
 #include <algorithm>
 #include <cstddef>
+#include <exception>
 #include <tuple>
 #include <vector>
 
@@ -185,8 +186,7 @@ public:
     /* =============  LIFECYCLE     =================== */
 
     SwitchStatement(Expression *condition, LabledBlock *lableBlock)
-        : _condition(condition),
-          _labledBlock(lableBlock){
+        : _condition(condition), _labledBlock(lableBlock) {
 
           };
 

@@ -314,7 +314,8 @@ void OfferTime(e2::Int_e); /* -----  end of function OfferTime  ----- */
  * ============================================
  */
 void QuantVersion(
-    const char *); /* -----  end of function QuantVersion  ----- */
+    e2::Int_e major, e2::Int_e minor,
+    e2::Int_e patch); /* -----  end of function QuantVersion  ----- */
 
 /*
  * ===  FUNCTION  =============================
