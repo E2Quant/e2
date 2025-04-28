@@ -98,7 +98,7 @@ void SymbolName(e2::Int_e index); /* -----  end of function SymbolName  ----- */
  *   https://www.iso20022.org/market-identifier-codes
  * ============================================
  */
-void SymbolCFICode(e2::Int_e); /* -----  end of function SymbolCFICode  ----- */
+e2::Int_e SymbolCFICode(e2::Int_e idx ); /* -----  end of function SymbolCFICode  ----- */
 
 /*
  * ===  FUNCTION  =============================
