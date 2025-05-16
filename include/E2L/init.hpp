@@ -156,6 +156,18 @@ void tframe(e2::Int_e); /* -----  end of function tframe  ----- */
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  deftframe
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  默认 timeframe
+ * ============================================
+ */
+e2::Int_e deftframe(); /* -----  end of function deftframe  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  index
  *  ->  void *
  *  Parameters:

@@ -98,7 +98,8 @@ void SymbolName(e2::Int_e index); /* -----  end of function SymbolName  ----- */
  *   https://www.iso20022.org/market-identifier-codes
  * ============================================
  */
-e2::Int_e SymbolCFICode(e2::Int_e idx ); /* -----  end of function SymbolCFICode  ----- */
+e2::Int_e SymbolCFICode(
+    e2::Int_e idx); /* -----  end of function SymbolCFICode  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -385,5 +386,34 @@ e2::Int_e ExdiCash(e2::Int_e id); /* -----  end of function ExdiCash  ----- */
  * ============================================
  */
 e2::Int_e ExdiShare(e2::Int_e id); /* -----  end of function ExdiShare  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CustomDataSize
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e CustomDataSize(
+    e2::Int_e, e2::Int_e); /* -----  end of function CustomDataSize  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CustomDataGet
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e CustomDataGet(
+    e2::Int_e, e2::Int_e,
+    e2::Int_e); /* -----  end of function CustomDataGet  ----- */
 }  // namespace e2l
 #endif /* ----- #ifndef MARKETINFO_INC  ----- */

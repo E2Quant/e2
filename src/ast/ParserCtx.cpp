@@ -153,6 +153,8 @@ int ParserCtx::toparse(const char* f)
 {
     int ret = 0;
     code_line = 1;
+    variable_str_num = 1;
+
     if (_dir == nullptr) {
         size_t dlen = snprintf(NULL, 0, "%s", f) + 1;
         _file_path = (char*)malloc(dlen);

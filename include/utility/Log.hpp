@@ -44,12 +44,11 @@
 
 #ifndef LOG_INC
 #define LOG_INC
+#include <iomanip>
 #include <unistd.h>
 
 #include <cstdarg>
-#include <cstdio>
 #include <iostream>
-#include <sstream>
 #include <string>
 
 #include "utility/Colors.hpp"
@@ -85,7 +84,9 @@ template <typename... Args>
 void log_cout(const char *file, const char *functionName, long lineNumber,
               std::string color, Args &&...args)
 {
-    std::cout << KCYN << getpid() << "->[" << base_name(std::string(file))
+    std::time_t t = std::time(nullptr);
+    std::cout << KCYN <<  std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S %Z")
+              << ":" <<  getpid() << "->[" << base_name(std::string(file))
               << "::" << functionName << " line." << lineNumber << "] " << RST
               << color;
     (std::cout << ... << args) << RST << std::endl;

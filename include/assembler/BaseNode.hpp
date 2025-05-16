@@ -106,7 +106,7 @@ namespace e2 {
 
 using retType = llvm::Type;
 using ArgType = std::vector<llvm::Type *>;
-
+inline std::size_t variable_str_num = 1;
 /**
  * code in codeGen , conver to the next
  */

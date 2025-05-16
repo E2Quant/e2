@@ -43,16 +43,17 @@
 
 #include "assembler/CodeGenStatement.hpp"
 
-#include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/Type.h>
-#include <llvm/Support/Casting.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Instructions.h>
+#include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
+#include <llvm/Support/Casting.h>
 
 #include <cstddef>
 #include <vector>
 
+#include "assembler/BaseType.hpp"
 #include "generated/e2_bison.hpp"
 
 namespace e2 {
@@ -446,8 +447,17 @@ llvm::Value* FunctionDeclaration::codeGen(CodeGenContext& context)
     }
     context.ScriptList(NodeType::_function, _id->name(), func->arg_size());
 
-    llvm::ReturnInst::Create(context.getGlobalContext(),
-                             context.getCurrentReturnValue(),
+    llvm::Value* _Return = context.getCurrentReturnValue();
+    if (_Return == nullptr) {
+#ifdef E2L_DEBUG
+        log::info("return is null");
+#endif
+        ReturnStatement* _ret =
+            MALLOC(ReturnStatement, _codeLine, _path.c_str());
+
+        _Return = _ret->codeGen(context);
+    }
+    llvm::ReturnInst::Create(context.getGlobalContext(), _Return,
                              context.currentBlock());
 
     context.popBlock();

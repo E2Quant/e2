@@ -59,6 +59,7 @@
 #include "BaseType.hpp"
 #include "assembler/BaseNode.hpp"
 #include "assembler/CodeGenContext.hpp"
+#include "utility/Log.hpp"
 
 namespace e2 {
 
@@ -161,7 +162,7 @@ public:
         }
         _codeLine = line;
     };
-    StrObj(std::string str, bool full) : _str(str){};
+    StrObj(std::string str, bool full) : _str(str) {};
 
     ~StrObj() {}
     /* constructor */
@@ -172,7 +173,11 @@ public:
 
     /* =============  MUTATORS      =================== */
     std::string value() { return _str; };
-    void name(std::string n) { _name = "_str_" + n; }
+    void name(std::string n)
+    {
+        _name = log::format("_str_%s_%ld_%ld", n.c_str(), _codeLine,
+                            variable_str_num++);
+    }
 
     /* =============  OPERATORS     =================== */
 
@@ -188,6 +193,7 @@ private:
     std::string _str;
 
     std::string _name = "";
+    std::size_t _idx = 0;
 }; /* -----  end of class StrObj  ----- */
 
 /*
