@@ -330,6 +330,13 @@ public:
     NodeType getType() { return NodeType::_identifier; }
     /* =============  MUTATORS      =================== */
 
+    void codeLine(size_t line) { _codeLine = line; };
+    void codePath(const char *path)
+    {
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+    };
     size_t size() { return _name.size(); }
     const iterable_queue<std::string> &qname() { return _name; }
     void push_back(std::string name) { _name.push(name); };

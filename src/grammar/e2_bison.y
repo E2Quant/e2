@@ -433,8 +433,19 @@ primary_rvalue
     ;
 
 identifier_list
-    : IDENTIFIER  {$$ = MALLOC(e2::Identifier, $1, e2::IDType::_normal);} 
-    | identifier_list '.' IDENTIFIER {$$=$1;  $1->push_back($3);$1->idType(e2::IDType::_global);}
+    : IDENTIFIER  {
+                $$ = MALLOC(e2::Identifier, $1, e2::IDType::_normal);
+                $$->codeLine(code_line);
+                $$->codePath(ctx.path());
+                } 
+    | identifier_list '.' IDENTIFIER {
+                $$=$1;  
+                $1->push_back($3);
+                $1->idType(e2::IDType::_global);
+                $1->codeLine(code_line);
+                $1->codePath(ctx.path());
+
+                }
     ;
 
 %%

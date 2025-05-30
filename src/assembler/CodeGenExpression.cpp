@@ -192,7 +192,9 @@ llvm::Value* Identifier::codeGen(CodeGenContext& context)
         llvm::GlobalVariable* gVar = context.getModule()->getNamedGlobal(cname);
         if (gVar == nullptr) {
             if (_gl) {
-                e2::log::bug("identifier gvar is nullptr! ", cname);
+                log::bug(
+                    "can't found the globale variable:" + cname + " .line : ",
+                    _codeLine, " file:", _path, " type:", _idtype);
             }
 
             return nullptr;
@@ -419,6 +421,9 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
     /* } */
     llvm::Value* value = _rhs->codeGen(context);
     if (value == nullptr) {
+        log::bug(
+            "can't found the right value for variable:" + cname + " .line : ",
+            _codeLine, " file:", _path);
         context.DontRun();
         return nullptr;
     }
@@ -428,13 +433,16 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
     bool _gl = FIND_GV(cname);
 
     if (_id->idType() == IDType::_global || _gl) {
+        log::bug("can't found the globale variable:" + cname + " .line : ",
+                 _codeLine, " file:", _path);
         return nullptr;
     }
     else {
         idVal = context.findBlockId(cname);
     }
     if (idVal == nullptr) {
-        log::bug("error id");
+        log::bug("can't found the  variable:" + cname + " .line : ", _codeLine,
+                 " file:", _path);
         context.DontRun();
 
         return nullptr;

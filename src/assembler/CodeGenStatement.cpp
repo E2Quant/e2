@@ -332,7 +332,8 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
         if (id->idType() == IDType::_normal) {
             llvm::Value* check = context.findBlockId(id->name());
             if (check == nullptr) {
-                log::bug("---- not in current! ", id->name());
+                log::bug("can't found variable:", id->name(),
+                         " . line:", _codeLine, " file:", _path);
                 return nullptr;
             }
         }
