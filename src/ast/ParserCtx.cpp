@@ -44,17 +44,14 @@
 #include "ast/ParserCtx.hpp"
 
 #include <libgen.h>
+#include <sys/unistd.h>
+#include <unistd.h>
 
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <iostream>
-#include <ostream>
-#include <stack>
 #include <string>
-#include <vector>
 
 #include "generated/e2_bison.hpp"
 #include "generated/e2_lex.hpp"
@@ -154,15 +151,16 @@ int ParserCtx::toparse(const char* f)
     int ret = 0;
     code_line = 1;
     variable_str_num = 1;
-
+    char* _dirc = nullptr;
+    char* dir = nullptr;
     if (_dir == nullptr) {
         size_t dlen = snprintf(NULL, 0, "%s", f) + 1;
         _file_path = (char*)malloc(dlen);
         snprintf(_file_path, dlen, "%s", f);
 
-        char* _dirc = strdup(f);
+        _dirc = strdup(f);
         if (_dirc != nullptr) {
-            char* dir = dirname(_dirc);
+            dir = dirname(_dirc);
             dlen = snprintf(NULL, 0, "%s", dir) + 1;
             _dir = (char*)malloc(dlen);
             snprintf(_dir, dlen, "%s", dir);
@@ -173,9 +171,30 @@ int ParserCtx::toparse(const char* f)
     }
     else {
         char fmt[] = "%s/%s";
-        size_t len = snprintf(NULL, 0, fmt, _dir, f) + 1;
-        _file_path = (char*)malloc(len);
-        snprintf(_file_path, len, fmt, _dir, f);
+        size_t len = 0;
+        bool ef = true;
+        dir = _dir;
+        size_t dir_is_len = 0;
+        do {
+            if (_file_path != nullptr) {
+                free(_file_path);
+                _file_path = nullptr;
+            }
+            len = snprintf(NULL, 0, fmt, dir, f) + 1;
+
+            _file_path = (char*)malloc(len);
+            snprintf(_file_path, len, fmt, _dir, f);
+            ef = access(_file_path, R_OK) == 0;
+            if (ef) {
+                break;
+            }
+            dir = dirname(dir);
+            dir_is_len = strnlen(dir, len);
+            if (dir_is_len < 2) {
+                break;
+            }
+
+        } while (1);
     }
 
     yylex_init(&lexer);

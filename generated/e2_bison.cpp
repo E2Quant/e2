@@ -1863,18 +1863,29 @@ namespace yy {
 
   case 108: // identifier_list: IDENTIFIER
 #line 436 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                  {yylhs.value.as < e2::Identifier * > () = MALLOC(e2::Identifier, yystack_[0].value.as < std::string > (), e2::IDType::_normal);}
-#line 1868 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+                  {
+                yylhs.value.as < e2::Identifier * > () = MALLOC(e2::Identifier, yystack_[0].value.as < std::string > (), e2::IDType::_normal);
+                yylhs.value.as < e2::Identifier * > ()->codeLine(code_line);
+                yylhs.value.as < e2::Identifier * > ()->codePath(ctx.path());
+                }
+#line 1872 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 109: // identifier_list: identifier_list '.' IDENTIFIER
-#line 437 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                     {yylhs.value.as < e2::Identifier * > ()=yystack_[2].value.as < e2::Identifier * > ();  yystack_[2].value.as < e2::Identifier * > ()->push_back(yystack_[0].value.as < std::string > ());yystack_[2].value.as < e2::Identifier * > ()->idType(e2::IDType::_global);}
-#line 1874 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 441 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+                                     {
+                yylhs.value.as < e2::Identifier * > ()=yystack_[2].value.as < e2::Identifier * > ();  
+                yystack_[2].value.as < e2::Identifier * > ()->push_back(yystack_[0].value.as < std::string > ());
+                yystack_[2].value.as < e2::Identifier * > ()->idType(e2::IDType::_global);
+                yystack_[2].value.as < e2::Identifier * > ()->codeLine(code_line);
+                yystack_[2].value.as < e2::Identifier * > ()->codePath(ctx.path());
+
+                }
+#line 1885 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
 
-#line 1878 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 1889 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
 
             default:
               break;
@@ -2462,7 +2473,7 @@ namespace yy {
      297,   301,   307,   318,   323,   329,   337,   342,   349,   350,
      354,   358,   362,   366,   374,   375,   376,   377,   382,   383,
      387,   388,   392,   397,   403,   410,   411,   415,   416,   417,
-     418,   422,   427,   428,   429,   430,   431,   432,   436,   437
+     418,   422,   427,   428,   429,   430,   431,   432,   436,   441
   };
 
   void
@@ -2494,9 +2505,9 @@ namespace yy {
 
 
 } // yy
-#line 2498 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 2509 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
 
-#line 440 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 451 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
 
 
 /**
