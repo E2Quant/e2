@@ -8,8 +8,8 @@ add_definitions('-std=c++20')
 add_definitions('-Wno-div-by-zero')
 
 # Set project version
-set(E2Lan_VERSION_MAJOR "0")
-set(E2Lan_VERSION_MINOR "1")
+set(E2Lan_VERSION_MAJOR "1")
+set(E2Lan_VERSION_MINOR "0")
 set(E2Lan_VERSION_PATCH "0")
 set(E2Lan_VERSION_EXTRA "")
 set(E2Lan_VERSION "${E2Lan_VERSION_MAJOR}.${E2Lan_VERSION_MINOR}")
