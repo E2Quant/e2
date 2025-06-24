@@ -162,5 +162,123 @@ void TimeGMTOffset(); /* -----  end of function TimeGMTOffset  ----- */
  * ============================================
  */
 e2::Int_e Clock(); /* -----  end of function Clock  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  year
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e year(e2::Int_e); /* -----  end of function year  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  month
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e month(e2::Int_e); /* -----  end of function month  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  day
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e day(e2::Int_e); /* -----  end of function day  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  week
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  0 - sunday
+ * ============================================
+ */
+e2::Int_e week(e2::Int_e); /* -----  end of function week  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  year_week
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e year_week(e2::Int_e); /* -----  end of function year_week  ----- */
+
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  hours
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+e2::Int_e hours ( e2::Int_e );		/* -----  end of function hours  ----- */
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  minutes
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+e2::Int_e minutes ( e2::Int_e );	/* -----  end of function minutes  ----- */
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  second
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+e2::Int_e second (e2::Int_e  );		/* -----  end of function second  ----- */
+
+
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  millisecond
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+e2::Int_e millisecond ( e2::Int_e );	/* -----  end of function millisecond  ----- */
+
 }  // namespace e2l
 #endif /* ----- #ifndef DATE_TIME_INC  ----- */

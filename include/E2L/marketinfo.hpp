@@ -401,6 +401,20 @@ e2::Int_e ExdiShare(e2::Int_e id); /* -----  end of function ExdiShare  ----- */
 e2::Int_e CustomDataSize(
     e2::Int_e, e2::Int_e); /* -----  end of function CustomDataSize  ----- */
 
+
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CustomDataNumber
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+e2::Int_e CustomDataNumber ( e2::Int_e, e2::Int_e );		/* -----  end of function CustomDataNumber  ----- */
 /*
  * ===  FUNCTION  =============================
  *
