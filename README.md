@@ -12,6 +12,11 @@
 - 完善数组指令
 - 类(Class Object)功能
 
+
+> 目前可提供的 IDE 是采用 VIM 开发
+
+- [vim_for_e2l_ide](https://github.com/E2Quant/vim_for_e2l_ide)
+
 ## 例子
 
 > $ cat import.e2
