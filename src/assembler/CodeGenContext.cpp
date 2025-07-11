@@ -895,7 +895,8 @@ void CodeGenContext::AddGlobal()
     ADD_GV("UInitOk.I_OK", InitOk::I_OK);
 
     ADD_GV("UOMSRisk.I_OMS", OMSRisk::I_OMS);
-    ADD_GV("UOMSRisk.I_RISK", OMSRisk::I_RISK);
+    ADD_GV("UOMSRisk.I_BROKER", OMSRisk::I_BROKER);
+    ADD_GV("UOMSRisk.I_EA", OMSRisk::I_EA);
 
     ADD_GV("ULineState.L_Dotted", LineState::L_Dotted);
     ADD_GV("ULineState.L_Solid", LineState::L_Solid);

@@ -289,8 +289,9 @@ enum __InitOk {
 typedef enum __InitOk InitOk;
 
 enum __OMSRisk {
-    I_OMS = 0,  //  oms server run
-    I_RISK = 1  // fixapplication risk
+    I_OMS = 0,     //  oms server run
+    I_BROKER = 1,  // fixapplication broker
+    I_EA = 2       //  ea
 }; /* ----------  end of enum __OMSRisk  ---------- */
 
 typedef enum __OMSRisk OMSRisk;

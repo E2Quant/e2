@@ -18,8 +18,9 @@ set(E2Lan_VERSION_FULL "${E2Lan_VERSION_MAJOR}.${E2Lan_VERSION_MINOR}.${E2Lan_VE
 # number deci for expression
 add_definitions(-DNUMBER_DECI=10000)
 
-option(LIB "build application to library !" OFF) # OFF is the default
 
+
+option(LIB "build application to library !" OFF) # OFF is the default
 
 option(E2L_DEBUG "build application with debug" OFF) # OFF is the default
 
@@ -43,16 +44,15 @@ configure_file(
 
     )
 
-option(USE_CCACHE "" OFF)                                                                                           
-set(CCACHE_OPTIONS "" CACHE STRING "options for ccache")                                                            
-# or cmake -DE2L_DEBUG=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  ../                                                      
-if (USE_CCACHE)                                                                                                     
+option(USE_CCACHE "" OFF)                                                                                    
+set(CCACHE_OPTIONS "" CACHE STRING "options for ccache")                                            
+# or cmake -DE2L_DEBUG=ON -DCMAKE_CXX_COMPILER_LAUNCHER=ccache  ../                                      
 
-    find_program(CCACHE_PROGRAM ccache)                                                                             
-
-    if(CCACHE_PROGRAM)                                                                                              
-        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")                                                          
-        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")                                                         
+if (USE_CCACHE)                                         
+    find_program(CCACHE_PROGRAM ccache)     
+    if(CCACHE_PROGRAM)                                                                          
+        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")                              
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")                             
         message("Looking ccache library")                                                                  
     endif()                                                                                                 
 endif()
@@ -67,6 +67,9 @@ else()
 endif()
 
 #set(CMAKE_INSTALL_LIBDIR "/usr/local/lib")
+
+
+add_compile_definitions(SEARCH_PATH="${CMAKE_INSTALL_PREFIX}/include/e2")
 
 #if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 #    set(CMAKE_INSTALL_LIBDIR "/opt/etomc2/lib")
@@ -235,7 +238,7 @@ add_custom_target( clean-all
     COMMAND rm -f /usr/local/lib/libe2* 
     COMMAND ccache -C
     COMMAND make clean
-    
+
     )
 
 

@@ -78,6 +78,7 @@ public:
     void scan_end();
 
     int toparse(const char *f);
+    void search_path(const char *f);
 
     Block *RootBlock();
     void RootBlock(Block *block);
@@ -95,6 +96,10 @@ private:
     /* =============  METHODS       =================== */
     int HasImport();
 
+    void rootPath(const char *f);
+    int findPath(const char *f);
+
+    int defPath(const char *f);
     /* =============  DATA MEMBERS  =================== */
     void *lexer;
     yy::location *loc;
@@ -109,6 +114,8 @@ private:
     bool trace_scanning;
 
     std::string _imp_path = "main";
+
+    std::string _search_path = "";
 
 }; /* -----  end of class ParserCtx  ----- */
 

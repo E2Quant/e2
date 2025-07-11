@@ -14,7 +14,7 @@ IS			(u|U|l|L)*
     #include<stdio.h>
     #include "e2_bison.hpp"
    
-    std::size_t code_line=1;
+    int code_line=1;
 
 #define YY_DECL yy::Parser::symbol_type yylex(yyscan_t yyscanner, yy::location& loc, class e2::ParserCtx& ctx)
 

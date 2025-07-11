@@ -201,8 +201,9 @@ llvm::Value* ReturnStatement::codeGen(CodeGenContext& context)
 
     llvm::Value* ret = _expression->codeGen(context);
     if (ret == nullptr) {
-        context.DontRun();
         log::bug("var is nullptr: ", _expression->id()->name());
+        context.DontRun();
+
         return nullptr;
     }
     context.setCurrentReturnValue(ret);
@@ -285,7 +286,6 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
             }
             llvm::Type* type = E2LType(context.getGlobalContext());
             BuildGlobal(context, type, cname, init_val);
-
             return nullptr;
         }
         else {
@@ -294,7 +294,6 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
              */
             if (_rhs->getType() == NodeType::_number) {
                 alloc = _rhs->codeGen(context);
-
                 gVar->setOperand(0, alloc);
                 return nullptr;
             }

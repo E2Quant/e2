@@ -193,7 +193,7 @@ private:
     std::string _str;
 
     std::string _name = "";
-    std::size_t _idx = 0;
+    // std::size_t _idx = 0;
 }; /* -----  end of class StrObj  ----- */
 
 /*

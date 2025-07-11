@@ -104,11 +104,15 @@ std::int64_t last(std::int64_t index)
  *
  * ============================================
  */
-void toDo(std::string f, std::pair<std::string, Int_e> &b)
+void toDo(const char *f, const char *s, std::pair<std::string, Int_e> &b)
 {
     e2::ParserCtx ctx;
 
-    int ret = ctx.toparse(f.c_str());
+    if (s != nullptr) {
+        ctx.search_path(s);
+    }
+
+    int ret = ctx.toparse(f);
 
     if (ret == -1) {
         return;
@@ -160,7 +164,13 @@ void toDo(std::string f, std::pair<std::string, Int_e> &b)
 int main(int argc, char *argv[])
 {
     char *f = nullptr;
-    if (argc == 2) {
+    char *s = nullptr;
+
+    if (argc > 2) {
+        s = argv[2];
+    }
+
+    if (argc >= 2) {
         f = argv[1];
     }
     else {
@@ -169,7 +179,7 @@ int main(int argc, char *argv[])
     std::pair<std::string, Int_e> b;
     b = std::make_pair("sfd.ssfd.sfd", 1198);
 
-    toDo(f, b);
+    toDo(f, s, b);
 
     // toDo(f, b);
 

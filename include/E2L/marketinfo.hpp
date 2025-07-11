@@ -156,6 +156,20 @@ e2::Int_e BarSize(
     e2::Int_e id,
     e2::Int_e timeframe); /* -----  end of function BarSize  ----- */
 
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  BarNumber
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+e2::Int_e BarNumber ( e2::Int_e id,
+    e2::Int_e timeframe );	/* -----  end of function BarNumber  ----- */
 /*
  * ===  FUNCTION  =============================
  *

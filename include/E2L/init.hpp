@@ -357,5 +357,18 @@ void LotAndShare(e2::Int_e); /* -----  end of function LotAndShare  ----- */
  * ============================================
  */
 e2::Int_e CurrentLS(); /* -----  end of function CurrentLS  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  whois
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e whois(); /* -----  end of function whois  ----- */
 }  // namespace e2l
 #endif /* ----- #ifndef INIT_INC  ----- */

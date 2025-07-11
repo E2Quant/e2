@@ -514,7 +514,8 @@ e2::Int_e Sqrt(e2::Int_e); /* -----  end of function Sqrt  ----- */
  *
  * ============================================
  */
-e2::Int_e Stdev(e2::Int_e); /* -----  end of function Stdev  ----- */
+e2::Int_e Stdev(e2::Int_e, const char *_vname, e2::Int_e loc,
+    const char *_path); /* -----  end of function Stdev  ----- */
 /*
  * ===  FUNCTION  =============================
  *
@@ -552,7 +553,8 @@ void Tan(); /* -----  end of function Tan  ----- */
  *
  * ============================================
  */
-e2::Int_e Sum(e2::Int_e, e2::Int_e); /* -----  end of function Sum  ----- */
+e2::Int_e Sum(e2::Int_e, e2::Int_e, const char *_vname, e2::Int_e loc,
+    const char *_path); /* -----  end of function Sum  ----- */
 /*
  * ===  FUNCTION  =============================
  *

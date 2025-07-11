@@ -422,7 +422,7 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
     llvm::Value* value = _rhs->codeGen(context);
     if (value == nullptr) {
         log::bug(
-            "can't found the right value for variable:" + cname + " .line : ",
+            "can't found the right value for variable:" + cname + " . line : ",
             _codeLine, " file:", _path);
         context.DontRun();
         return nullptr;
@@ -433,7 +433,7 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
     bool _gl = FIND_GV(cname);
 
     if (_id->idType() == IDType::_global || _gl) {
-        log::bug("can't found the globale variable:" + cname + " .line : ",
+        log::bug("can't found the globale variable:" + cname + " . line : ",
                  _codeLine, " file:", _path);
         return nullptr;
     }
@@ -441,7 +441,7 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
         idVal = context.findBlockId(cname);
     }
     if (idVal == nullptr) {
-        log::bug("can't found the  variable:" + cname + " .line : ", _codeLine,
+        log::bug("can't found the  variable:" + cname + " . line : ", _codeLine,
                  " file:", _path);
         context.DontRun();
 

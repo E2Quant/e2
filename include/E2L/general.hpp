@@ -44,7 +44,6 @@
 
 #ifndef GENERAL_INC
 #define GENERAL_INC
-#include <iostream>
 
 #include "E2LType.hpp"
 #include "assembler/BaseType.hpp"

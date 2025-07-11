@@ -59,7 +59,7 @@ namespace e2l {
  *
  * ============================================
  */
-void ethread_id(); /* -----  end of function ethread_id  ----- */
+    e2::Int_e ethread_id(); /* -----  end of function ethread_id  ----- */
 
 /*
  * ===  FUNCTION  =============================

@@ -40,7 +40,7 @@
     #include "ast/ParserCtx.hpp"
     #include "utility/Log.hpp"
     #include "assembler/BaseNode.hpp"
-    extern  std::size_t code_line;
+    extern  int code_line;
 
 	/* define the sturctures using as types for non-terminals */
 

@@ -59,6 +59,9 @@ namespace e2 {
 
 ParserCtx::ParserCtx()
 {
+#ifdef SEARCH_PATH
+    search_path(SEARCH_PATH);
+#endif
     _RootBlock = MALLOC(Block, "inter", code_line, _file_path);
 }
 
@@ -151,50 +154,15 @@ int ParserCtx::toparse(const char* f)
     int ret = 0;
     code_line = 1;
     variable_str_num = 1;
-    char* _dirc = nullptr;
-    char* dir = nullptr;
+
     if (_dir == nullptr) {
-        size_t dlen = snprintf(NULL, 0, "%s", f) + 1;
-        _file_path = (char*)malloc(dlen);
-        snprintf(_file_path, dlen, "%s", f);
-
-        _dirc = strdup(f);
-        if (_dirc != nullptr) {
-            dir = dirname(_dirc);
-            dlen = snprintf(NULL, 0, "%s", dir) + 1;
-            _dir = (char*)malloc(dlen);
-            snprintf(_dir, dlen, "%s", dir);
-
-            free(_dirc);
-            _dirc = nullptr;
-        }
+        rootPath(f);
     }
     else {
-        char fmt[] = "%s/%s";
-        size_t len = 0;
-        bool ef = true;
-        dir = _dir;
-        size_t dir_is_len = 0;
-        do {
-            if (_file_path != nullptr) {
-                free(_file_path);
-                _file_path = nullptr;
-            }
-            len = snprintf(NULL, 0, fmt, dir, f) + 1;
-
-            _file_path = (char*)malloc(len);
-            snprintf(_file_path, len, fmt, _dir, f);
-            ef = access(_file_path, R_OK) == 0;
-            if (ef) {
-                break;
-            }
-            dir = dirname(dir);
-            dir_is_len = strnlen(dir, len);
-            if (dir_is_len < 2) {
-                break;
-            }
-
-        } while (1);
+        ret = defPath(f);
+        if (ret != 0) {
+            ret = findPath(f);
+        }
     }
 
     yylex_init(&lexer);
@@ -215,6 +183,133 @@ int ParserCtx::toparse(const char* f)
 
 } /* -----  end of function ParserCtx::toparse  ----- */
 
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ParserCtx::rootPath
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void ParserCtx::rootPath(const char* f)
+{
+    char* _dirc = nullptr;
+    char* dir = nullptr;
+    size_t dlen = snprintf(NULL, 0, "%s", f) + 1;
+    _file_path = (char*)malloc(dlen);
+    snprintf(_file_path, dlen, "%s", f);
+
+    _dirc = strdup(f);
+    if (_dirc != nullptr) {
+        dir = dirname(_dirc);
+        dlen = snprintf(NULL, 0, "%s", dir) + 1;
+        _dir = (char*)malloc(dlen);
+        snprintf(_dir, dlen, "%s", dir);
+
+        free(_dirc);
+        _dirc = nullptr;
+    }
+} /* -----  end of function ParserCtx::rootPath  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ParserCtx::resetPath
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+int ParserCtx::defPath(const char* f)
+{
+    int ret = 0;
+    char fmt[] = "%s/%s";
+    size_t len = 0;
+    if (_search_path.length() == 0) {
+        return -1;
+    }
+    len = snprintf(NULL, 0, fmt, _search_path.c_str(), f) + 1;
+
+    _file_path = (char*)malloc(len);
+    snprintf(_file_path, len, fmt, _search_path.c_str(), f);
+
+#ifdef DEBUG
+    log::info(_file_path);
+#endif
+
+    ret = access(_file_path, R_OK);
+
+    return ret;
+} /* -----  end of function ParserCtx::resetPath  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ParserCtx::findPath
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+int ParserCtx::findPath(const char* f)
+{
+    char fmt[] = "%s/%s";
+    size_t len = 0;
+    int ef = -1;
+    char* dir = strdup(_dir);
+    size_t dir_is_len = 0;
+    do {
+        if (_file_path != nullptr) {
+            free(_file_path);
+            _file_path = nullptr;
+        }
+        len = snprintf(NULL, 0, fmt, dir, f) + 1;
+
+        _file_path = (char*)malloc(len);
+        snprintf(_file_path, len, fmt, dir, f);
+
+#ifdef DEBUG
+        log::info(_file_path);
+#endif
+
+        ef = access(_file_path, R_OK);
+        if (ef == 0) {
+            break;
+        }
+        dir = dirname(dir);
+        dir_is_len = strnlen(dir, len);
+        if (dir_is_len < 2) {
+            break;
+        }
+
+    } while (1);
+    if (dir != nullptr) {
+        free(dir);
+        dir = nullptr;
+    }
+    return ef;
+} /* -----  end of function ParserCtx::findPath  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ParserCtx::search_path
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void ParserCtx::search_path(const char* f)
+{
+    _search_path = std::string(f);
+} /* -----  end of function ParserCtx::search_path  ----- */
 /*
  * ===  FUNCTION  =============================
  *

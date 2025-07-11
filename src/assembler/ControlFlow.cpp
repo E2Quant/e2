@@ -104,8 +104,9 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
         }
     }
     if (_Comp == nullptr) {
-        context.DontRun();
         e2::log::bug("condition is nullptr");
+        context.DontRun();
+
         return nullptr;
     }
     comp = _Comp->codeGen(context);
