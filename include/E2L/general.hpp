@@ -83,6 +83,18 @@ void SymbolUnion(); /* -----  end of function SymbolUnion  ----- */
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  isDebug
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void isDebug(e2::Bool); /* -----  end of function isDebug  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  log
  *  ->  void *
  *  Parameters:

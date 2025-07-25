@@ -336,9 +336,9 @@ enum __Bool {
 typedef enum __Bool Bool;
 
 enum __OrderEvent {
-    Oe_Compleate = 0,
-    Oe_StopLoss,
-    Oe_TakeProfit
+    Oe_Compleate = 100,
+    Oe_StopLoss = 101,
+    Oe_TakeProfit = 102
 }; /* ----------  end of enum __OrderEvent  ---------- */
 
 typedef enum __OrderEvent OrderEvent;
