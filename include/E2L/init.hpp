@@ -329,6 +329,20 @@ void QuantVersion(
     e2::Int_e major, e2::Int_e minor,
     e2::Int_e patch); /* -----  end of function QuantVersion  ----- */
 
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  VersionId
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+e2::Int_e VersionId (  );		/* -----  end of function VersionId  ----- */
+
 /*
  * ===  FUNCTION  =============================
  *

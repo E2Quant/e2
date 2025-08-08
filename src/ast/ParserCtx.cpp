@@ -231,6 +231,7 @@ int ParserCtx::defPath(const char* f)
     char fmt[] = "%s/%s";
     size_t len = 0;
     if (_search_path.length() == 0) {
+        log::info("search path is empty");
         return -1;
     }
     len = snprintf(NULL, 0, fmt, _search_path.c_str(), f) + 1;
