@@ -119,6 +119,34 @@ void SymbolSelect(
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  SymbolLockForEA
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  symbol 不重传，每个cficode 只给一次 ea
+ * ============================================
+ */
+void SymbolLockForEA();
+/* -----  end of function SymbolLockForEA  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  Delisting
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  返回退市时间，否则返回0
+ * ============================================
+ */
+e2::Int_e Delisting(
+    e2::Int_e cficode); /* -----  end of function Delisting  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  BarOnOpen
  *  ->  void *
  *  Parameters:
@@ -156,20 +184,20 @@ e2::Int_e BarSize(
     e2::Int_e id,
     e2::Int_e timeframe); /* -----  end of function BarSize  ----- */
 
-
-/* 
+/*
  * ===  FUNCTION  =============================
  *
  *         Name:  BarNumber
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
- *  Description:  
+ *  Description:
  *
  * ============================================
  */
-e2::Int_e BarNumber ( e2::Int_e id,
-    e2::Int_e timeframe );	/* -----  end of function BarNumber  ----- */
+e2::Int_e BarNumber(
+    e2::Int_e id,
+    e2::Int_e timeframe); /* -----  end of function BarNumber  ----- */
 /*
  * ===  FUNCTION  =============================
  *
@@ -415,20 +443,19 @@ e2::Int_e ExdiShare(e2::Int_e id); /* -----  end of function ExdiShare  ----- */
 e2::Int_e CustomDataSize(
     e2::Int_e, e2::Int_e); /* -----  end of function CustomDataSize  ----- */
 
-
-
-/* 
+/*
  * ===  FUNCTION  =============================
  *
  *         Name:  CustomDataNumber
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
- *  Description:  
+ *  Description:
  *
  * ============================================
  */
-e2::Int_e CustomDataNumber ( e2::Int_e, e2::Int_e );		/* -----  end of function CustomDataNumber  ----- */
+e2::Int_e CustomDataNumber(
+    e2::Int_e, e2::Int_e); /* -----  end of function CustomDataNumber  ----- */
 /*
  * ===  FUNCTION  =============================
  *

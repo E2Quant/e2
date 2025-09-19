@@ -146,12 +146,12 @@ void toDo(const char *f, const char *s, std::pair<std::string, Int_e> &b)
     if (isgc) {
         context.runCode();
         int ret = context.runFunction(a, a);
-        log::echo("ret:", ret);
+        llog::echo("ret:", ret);
     }
     else {
-        log::bug("generateCode is error");
+        llog::bug("generateCode is error");
     }
-    log::echo("-----------");
+    llog::echo("-----------");
 
 } /* -----  end of function toDo  ----- */
 

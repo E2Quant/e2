@@ -463,7 +463,7 @@ public:
     NodeType getType(size_t index)
     {
         if (_statements.size() < index) {
-            log::bug("statement index:", index);
+            llog::bug("statement index:", index);
         }
         return _statements.at(index)->getType();
     }
@@ -472,7 +472,7 @@ public:
     std::deque<std::string> get_import(std::string l)
     {
         if (importnull(l)) {
-            log::bug("import :", l);
+            llog::bug("import :", l);
         }
         return _imports.at(l);
     }

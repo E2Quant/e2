@@ -59,9 +59,6 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
-#include <exception>
-#include <map>
 
 #include "generated/e2_bison.hpp"
 namespace e2 {
@@ -96,7 +93,7 @@ llvm::Value* ImportModule::codeGen(CodeGenContext& context)
 llvm::Value* Number::codeGen(CodeGenContext& context)
 {
 #ifdef E2L_DEBUG
-    e2::log::bug("Number: ", _value);
+    e2::llog::bug("Number: ", _value);
 #endif
 
     return llvm::ConstantInt::get(context.defType(), _value, true);
@@ -192,7 +189,7 @@ llvm::Value* Identifier::codeGen(CodeGenContext& context)
         llvm::GlobalVariable* gVar = context.getModule()->getNamedGlobal(cname);
         if (gVar == nullptr) {
             if (_gl) {
-                log::bug(
+                llog::bug(
                     "can't found the globale variable:" + cname + " .line : ",
                     _codeLine, " file:", _path, " type:", _idtype);
             }
@@ -282,8 +279,8 @@ const std::string Identifier::real_name()
 llvm::Value* BinaryOperator::codeGen(CodeGenContext& context)
 {
 #ifdef E2L_DEBUG
-    e2::log::bug("lhs: ", _lhs->getType(), " rhs:", _rhs->getType());
-    e2::log::bug("_op:", _op);
+    e2::llog::bug("lhs: ", _lhs->getType(), " rhs:", _rhs->getType());
+    e2::llog::bug("_op:", _op);
 #endif
     llvm::Instruction::BinaryOps instr;
     switch (_op) {
@@ -421,7 +418,7 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
     /* } */
     llvm::Value* value = _rhs->codeGen(context);
     if (value == nullptr) {
-        log::bug(
+        llog::bug(
             "can't found the right value for variable:" + cname + " . line : ",
             _codeLine, " file:", _path);
         context.DontRun();
@@ -433,22 +430,22 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
     bool _gl = FIND_GV(cname);
 
     if (_id->idType() == IDType::_global || _gl) {
-        log::bug("can't found the globale variable:" + cname + " . line : ",
-                 _codeLine, " file:", _path);
+        llog::bug("can't found the globale variable:" + cname + " . line : ",
+                  _codeLine, " file:", _path);
         return nullptr;
     }
     else {
         idVal = context.findBlockId(cname);
     }
     if (idVal == nullptr) {
-        log::bug("can't found the  variable:" + cname + " . line : ", _codeLine,
-                 " file:", _path);
+        llog::bug("can't found the  variable:" + cname + " . line : ",
+                  _codeLine, " file:", _path);
         context.DontRun();
 
         return nullptr;
     }
 
-    /* log::info("value type:", value->getType()->getTypeID(), */
+    /* llog::info("value type:", value->getType()->getTypeID(), */
     /*           " idval type:", idVal->getType()->isIntegerTy(), " name:",
      * cname, */
     /*           " code line:", _codeLine, " : ", value->getType()->getTypeID(),
@@ -472,8 +469,8 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
 llvm::Value* CompOperator::codeGen(CodeGenContext& context)
 {
     if (_lhs == nullptr) {
-        log::bug("comp operator lhs or rhs is nullptr. line:", _codeLine,
-                 " file:", _path);
+        llog::bug("comp operator lhs or rhs is nullptr. line:", _codeLine,
+                  " file:", _path);
         return nullptr;
     }
     llvm::Value* rval = nullptr;
@@ -484,25 +481,25 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
 
     if (lval == nullptr) {
         if (_lhs->id() == nullptr) {
-            log::bug("rval or lval is nullptr, lhs is null:", " rhs:",
-                     _rhs->id()->name(), " . line:", _codeLine,
-                     " file:", _path);
+            llog::bug("rval or lval is nullptr, lhs is null:", " rhs:",
+                      _rhs->id()->name(), " . line:", _codeLine,
+                      " file:", _path);
         }
         else if (_rhs != nullptr) {
             if (_rhs->id() != nullptr) {
-                log::bug("rval or lval is nullptr, lhs:", _lhs->id()->name(),
-                         " rhs:", _rhs->id()->name(), " . line:", _codeLine,
-                         " file:", _path);
+                llog::bug("rval or lval is nullptr, lhs:", _lhs->id()->name(),
+                          " rhs:", _rhs->id()->name(), " . line:", _codeLine,
+                          " file:", _path);
             }
             else if (_rhs->id() == nullptr) {
-                log::bug("rval or lval is nullptr, lhs id null:",
-                         " rhs id null :", " . line:", _codeLine,
-                         " file:", _path);
+                llog::bug("rval or lval is nullptr, lhs id null:",
+                          " rhs id null :", " . line:", _codeLine,
+                          " file:", _path);
             }
         }
         else {
-            log::bug("rval or lval is nullptr, lhs:", _lhs->id()->name(),
-                     " rhs id null:", " . line:", _codeLine, " file:", _path);
+            llog::bug("rval or lval is nullptr, lhs:", _lhs->id()->name(),
+                      " rhs id null:", " . line:", _codeLine, " file:", _path);
         }
         return nullptr;
     }
@@ -532,15 +529,15 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
     else {
         rval = CodeGen(_rhs);
         if (rval == nullptr) {
-            log::bug("comp operator  rhs is nullptr. line:", _codeLine,
-                     " file:", _path);
+            llog::bug("comp operator  rhs is nullptr. line:", _codeLine,
+                      " file:", _path);
             return nullptr;
         }
     }
 
 #ifdef E2L_DEBUG
-    e2::log::bug("---------lhs: ", _lhs->getType(), " rhs:", _rhs->getType());
-    e2::log::bug("_op:", _op);
+    e2::llog::bug("---------lhs: ", _lhs->getType(), " rhs:", _rhs->getType());
+    e2::llog::bug("_op:", _op);
 
 #endif
 
@@ -577,7 +574,7 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
             break;
 
         default:
-            log::bug("op is null ..");
+            llog::bug("op is null ..");
             return nullptr;
     }
 

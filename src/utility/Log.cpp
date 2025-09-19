@@ -42,7 +42,7 @@
  */
 #include "utility/Log.hpp"
 namespace e2 {
-namespace log {
+namespace llog {
 
 std::string format(const char* fmt, ...)
 {
@@ -69,6 +69,6 @@ std::string format(const char* fmt, ...)
 
     return result;
 }
-}  // namespace log
+}  // namespace llog
 }  // namespace e2
 

@@ -235,7 +235,7 @@ void AccountName(); /* -----  end of function AccountName  ----- */
  *  Returns the current account number
  * ============================================
  */
-void AccountNumber(); /* -----  end of function AccountNumber  ----- */
+e2::Int_e AccountNumber(); /* -----  end of function AccountNumber  ----- */
 
 /*
  * ===  FUNCTION  =============================

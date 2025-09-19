@@ -145,3 +145,4 @@ void AnalseLog(e2::Int_e key, e2::Int_e val, e2::Int_e type,
                e2::Int_e time); /* -----  end of function AnalseLog  ----- */
 }  // namespace e2l
 #endif /* ----- #ifndef ANALYZER_INC  ----- */
+

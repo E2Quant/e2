@@ -94,17 +94,17 @@ void Block::push_back(Expression* exp)
             std::string mod = im->value();
 
             if (_imports.count(mod) > 0) {
-                log::info("exit curent:", _current_mod, " mod:", mod);
+                llog::info("exit curent:", _current_mod, " mod:", mod);
                 for (auto it = _imports.begin(); it != _imports.end(); ++it) {
                     for (std::string key : it->second) {
                         if (key == mod) {
-                            log::info("duplicate import mod in here:",
+                            llog::info("duplicate import mod in here:",
                                       it->first);
                             return;
                         }
                     }
                 }
-                log::bug("import error:", _current_mod, " mod:", mod);
+                llog::bug("import error:", _current_mod, " mod:", mod);
             }
 
             std::deque<std::string> emp;
@@ -129,7 +129,7 @@ void Block::push_back(Expression* exp)
         }
     }
     else {
-        e2::log::bug("Expression push_back is nullptr code_line:", _codeLine,
+        e2::llog::bug("Expression push_back is nullptr code_line:", _codeLine,
                      " path:", _path);
     }
 }
@@ -146,7 +146,7 @@ void Block::push_back(Statement* stat)
         }
     }
     else {
-        e2::log::bug("statement push_back is nullptr code_line:", _codeLine,
+        e2::llog::bug("statement push_back is nullptr code_line:", _codeLine,
                      " path:", _path);
     }
 }
@@ -163,7 +163,7 @@ void Block::push_back(Block* blk)
         }
     }
     else {
-        e2::log::bug("block push_back is nullptr code_line:", _codeLine,
+        e2::llog::bug("block push_back is nullptr code_line:", _codeLine,
                      " path:", _path);
     }
 } /* -----  end of function Block::push_back  ----- */

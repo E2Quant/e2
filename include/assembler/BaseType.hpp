@@ -213,7 +213,7 @@ inline std::atomic<int> ptr_number = 0;
             ptr = nullptr;                                            \
             int num = ptr_number.load(std::memory_order_acquire) - 1; \
             ptr_number.store(num, std::memory_order_release);         \
-            e2::log::bug("release, num:", num);                       \
+            e2::llog::bug("release, num:", num);                       \
         }                                                             \
     } while (0)
 #else
@@ -232,7 +232,7 @@ inline std::atomic<int> ptr_number = 0;
         obj *__ptr = nullptr;                                              \
         do {                                                               \
             int _num = ptr_number.fetch_add(1, std::memory_order_release); \
-            e2::log::info("new obj, num:", _num);                          \
+            e2::llog::info("new obj, num:", _num);                          \
             __ptr = new obj(args);                                         \
         } while (0);                                                       \
         __ptr;                                                             \

@@ -44,16 +44,19 @@
 
 #ifndef LOG_INC
 #define LOG_INC
-#include <iomanip>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <cstdarg>
+#include <cstdio>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <string>
 
-#include "utility/Colors.hpp"
+#include "Colors.hpp"
 namespace e2 {
-namespace log {
+namespace llog {
 template <class T>
 T base_name(T const &path, T const &delims = "/\\")
 {
@@ -85,11 +88,37 @@ void log_cout(const char *file, const char *functionName, long lineNumber,
               std::string color, Args &&...args)
 {
     std::time_t t = std::time(nullptr);
-    std::cout << KCYN <<  std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S %Z")
-              << ":" <<  getpid() << "->[" << base_name(std::string(file))
+
+#ifdef DEBUG
+    std::cout << KCYN
+              << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S %Z")
+              << ":" << getpid() << "=>[" << base_name(std::string(file))
               << "::" << functionName << " line." << lineNumber << "] " << RST
               << color;
     (std::cout << ... << args) << RST << std::endl;
+
+#else
+
+    struct stat info;
+    char _dir[] = "./log";
+    if (stat(_dir, &info) != 0) {
+        mkdir(_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
+    else if (info.st_mode & S_IFDIR) {
+    }
+    else {
+        mkdir(_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+    }
+    char log_file[256] = {0};
+    snprintf(log_file, 256, "%s/%d.log", _dir, getpid());
+    std::ofstream cout(log_file);
+
+    cout << KCYN << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S %Z")
+         << ":" << getpid() << "=>[" << base_name(std::string(file))
+         << "::" << functionName << " line." << lineNumber << "] " << RST
+         << color;
+    (cout << ... << args) << RST << std::endl;
+#endif
 }
 
 #define echo(...) log_cout(__FILE__, __FUNCTION__, __LINE__, KBLU, __VA_ARGS__);
@@ -100,6 +129,6 @@ void log_cout(const char *file, const char *functionName, long lineNumber,
 
 std::string format(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
 
-}  // namespace log
+}  // namespace llog
 }  // namespace e2
 #endif /* ----- #ifndef LOG_INC  ----- */

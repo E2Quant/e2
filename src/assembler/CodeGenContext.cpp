@@ -52,7 +52,6 @@
 
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -187,7 +186,7 @@ retType* CodeGenContext::defType()
 bool CodeGenContext::generateCode(Block* root)
 {
     if (root == nullptr) {
-        e2::log::bug("root is nullptr");
+        e2::llog::bug("root is nullptr");
 
         return false;
     }
@@ -216,7 +215,7 @@ bool CodeGenContext::generateCode(Block* root)
                                "main" + std::to_string(random_val), _module);
 
     if (_mainFunction == nullptr) {
-        e2::log::bug("_mainFunction is nullptr");
+        e2::llog::bug("_mainFunction is nullptr");
         return false;
     }
 
@@ -232,7 +231,7 @@ bool CodeGenContext::generateCode(Block* root)
 #ifdef E2L_DEBUG
     if (bblock->hasName()) {
         llvm::StringRef bbname(bblock->getName());
-        e2::log::echo("main function name:", bbname.str());
+        e2::llog::echo("main function name:", bbname.str());
     }
 #endif
 
@@ -251,11 +250,11 @@ bool CodeGenContext::generateCode(Block* root)
 #endif
     if (_debug) {
         if (llvm::verifyModule(*_module)) {
-            e2::log::bug("module is error");
+            e2::llog::bug("module is error");
             _module->print(llvm::errs(), nullptr);
         }
         else {
-            e2::log::info("module is verify ok");
+            e2::llog::info("module is verify ok");
         }
     }
     return _CanRun;
@@ -289,7 +288,7 @@ void CodeGenContext::runCode()
         _ee->addGlobalMapping(efun.fun, efun.addr);
     }
     if (!err.empty()) {
-        e2::log::echo("error:", err);
+        e2::llog::echo("error:", err);
     }
     _ee->finalizeObject();
 
@@ -548,12 +547,12 @@ llvm::Value* CodeGenContext::MainArgx(size_t index)
     llvm::Argument* argx = _mainFunction->getArg(index);
 
     if (argx == nullptr) {
-        log::bug("argx is nullptr");
+        llog::bug("argx is nullptr");
         return nullptr;
     }
 
     /* llvm::StringRef name(argx->getName()); */
-    /* log::echo("args:", name.str()); */
+    /* llog::echo("args:", name.str()); */
 
     return argx;
 } /* -----  end of function CodeGenContext::MainArgx  ----- */
@@ -588,7 +587,7 @@ void CodeGenContext::setCurrentReturnValue(llvm::Value* value)
 llvm::Value* CodeGenContext::getCurrentReturnValue()
 {
     // if (_breakStack.size() == 0) {
-    //     log::info("_break_stat size is 0");
+    //     llog::info("_break_stat size is 0");
     // }
     return _blockStack.front()->getValue();
 } /* -----  end of function CodeGenContext::getCurrentReturnValue  ----- */

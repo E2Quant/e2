@@ -103,7 +103,7 @@ void ParserCtx::scan_begin()
     else {
         _file = fopen(_file_path, "r");
         if (_file == nullptr) {
-            e2::log::bug("cannot open ", std::string(_file_path), ": ",
+            e2::llog::bug("cannot open ", std::string(_file_path), ": ",
                          strerror(errno));
             exit(EXIT_FAILURE);
         }
@@ -231,7 +231,7 @@ int ParserCtx::defPath(const char* f)
     char fmt[] = "%s/%s";
     size_t len = 0;
     if (_search_path.length() == 0) {
-        log::info("search path is empty");
+        llog::info("search path is empty");
         return -1;
     }
     len = snprintf(NULL, 0, fmt, _search_path.c_str(), f) + 1;
@@ -240,7 +240,7 @@ int ParserCtx::defPath(const char* f)
     snprintf(_file_path, len, fmt, _search_path.c_str(), f);
 
 #ifdef DEBUG
-    log::info(_file_path);
+    llog::info(_file_path);
 #endif
 
     ret = access(_file_path, R_OK);
@@ -276,7 +276,7 @@ int ParserCtx::findPath(const char* f)
         snprintf(_file_path, len, fmt, dir, f);
 
 #ifdef DEBUG
-        log::info(_file_path);
+        llog::info(_file_path);
 #endif
 
         ef = access(_file_path, R_OK);

@@ -104,7 +104,7 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
         }
     }
     if (_Comp == nullptr) {
-        e2::log::bug("condition is nullptr");
+        e2::llog::bug("condition is nullptr");
         context.DontRun();
 
         return nullptr;
@@ -115,11 +115,11 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
 
     if (comp == nullptr) {
         if (_Comp->id() != nullptr) {
-            e2::log::bug("comp value is nullptr, comp id:", _Comp->id()->name(),
+            e2::llog::bug("comp value is nullptr, comp id:", _Comp->id()->name(),
                          " codeline:", _codeLine, " path:", _path);
         }
         else {
-            e2::log::bug("comp values error, codeline:", _codeLine,
+            e2::llog::bug("comp values error, codeline:", _codeLine,
                          " path:", _path);
         }
 
@@ -130,7 +130,7 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
     ToBool(comp, context);
 
     if (_labledBlock == nullptr) {
-        e2::log::bug("labed block value is nullptr");
+        e2::llog::bug("labed block value is nullptr");
 
         return nullptr;
     }
@@ -153,7 +153,7 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
     bool needMergeBlock = false;
     Selection se = _labledBlock->selection(0);
     if (se != Selection::_then) {
-        e2::log::bug("then error");
+        e2::llog::bug("then error");
 
         return nullptr;
     }
@@ -294,7 +294,7 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     context.pushBlock(firstCondBlock, ScopeKind::_sk_flow);
     llvm::Value* firstCondValue = _condition->codeGen(context);
     if (firstCondValue == nullptr) {
-        e2::log::bug("Missing condition in while loop.");
+        e2::llog::bug("Missing condition in while loop.");
         return nullptr;
     }
 
@@ -311,7 +311,7 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     context.pushBlock(condBB, ScopeKind::_sk_flow);
     llvm::Value* condValue = _condition->codeGen(context);
     if (condValue == nullptr) {
-        e2::log::bug("Code gen for condition expression in while loop failed.");
+        e2::llog::bug("Code gen for condition expression in while loop failed.");
         return nullptr;
     }
     ToBool(condValue, context);
@@ -327,7 +327,7 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     context.pushBlock(loopBB, ScopeKind::_sk_flow);
     llvm::Value* loopValue = _block->codeGen(context);
     if (loopValue == nullptr) {
-        e2::log::bug("Code gen for loop value in while loop failed.");
+        e2::llog::bug("Code gen for loop value in while loop failed.");
         return nullptr;
     }
     llvm::BranchInst::Create(condBB, context.currentBlock());
@@ -362,7 +362,7 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
 llvm::Value* IterStatement::IterFor(CodeGenContext& context)
 {
     if (_initial == nullptr) {
-        e2::log::bug("initial is null");
+        e2::llog::bug("initial is null");
         return nullptr;
     }
 
@@ -370,7 +370,7 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
 
     _initial->codeGen(context);
 #ifdef E2L_DEBUG
-    e2::log::info("initial is ok -------------");
+    e2::llog::info("initial is ok -------------");
 #endif
     llvm::BasicBlock* firstCondBlock = BBLock("firstcond", function);
     llvm::BasicBlock* condBB = BBLock("cond", nullptr);
@@ -384,13 +384,13 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
     context.pushBlock(firstCondBlock, ScopeKind::_sk_flow);
     llvm::Value* firstCondValue = _condition->codeGen(context);
     if (firstCondValue == nullptr) {
-        e2::log::bug("Missing condition in while loop.");
+        e2::llog::bug("Missing condition in while loop.");
         return nullptr;
     }
     ToBool(firstCondValue, context);
 
 #ifdef E2L_DEBUG
-    e2::log::info("firstCondValue is ok -------------");
+    e2::llog::info("firstCondValue is ok -------------");
 #endif
     llvm::BranchInst::Create(loopBB, breakBB, firstCondValue,
                              context.currentBlock());
@@ -403,13 +403,13 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
     context.pushBlock(condBB, ScopeKind::_sk_flow);
     llvm::Value* condValue = _condition->codeGen(context);
     if (condValue == nullptr) {
-        e2::log::bug("Code gen for condition expression in while loop failed.");
+        e2::llog::bug("Code gen for condition expression in while loop failed.");
         return nullptr;
     }
     ToBool(condValue, context);
 
 #ifdef E2L_DEBUG
-    e2::log::info("agent CondValue is ok -------------");
+    e2::llog::info("agent CondValue is ok -------------");
 #endif
     llvm::BranchInst::Create(loopBB, mergeBB, condValue,
                              context.currentBlock());
@@ -422,7 +422,7 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
     context.pushBlock(loopBB, ScopeKind::_sk_flow);
     llvm::Value* loopValue = _block->codeGen(context);
     if (loopValue == nullptr) {
-        e2::log::bug("Code gen for loop value in while loop failed.");
+        e2::llog::bug("Code gen for loop value in while loop failed.");
         return nullptr;
     }
 

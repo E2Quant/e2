@@ -72,13 +72,13 @@ llvm::Value* ExpressionStatement::codeGen(CodeGenContext& context)
 {
     if (_expression) {
 #ifdef E2L_DEBUG
-        e2::log::bug("ExpressionStatement : expression");
+        e2::llog::bug("ExpressionStatement : expression");
 #endif
         return _expression->codeGen(context);
     }
     if (_statement) {
 #ifdef E2L_DEBUG
-        e2::log::bug("ExpressionStatement : statement");
+        e2::llog::bug("ExpressionStatement : statement");
 #endif
         return _statement->codeGen(context);
     }
@@ -99,7 +99,7 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
 {
     std::string cname = _id->name();
 #ifdef E2L_DEBUG
-    e2::log::bug("method call name: ", cname, " code line:", _codeLine);
+    e2::llog::bug("method call name: ", cname, " code line:", _codeLine);
 #endif
 
     llvm::Function* func = context.getModule()->getFunction(cname.c_str());
@@ -124,9 +124,9 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
     for (auto arg = func->arg_begin(); arg != func->arg_end(); ++arg) {
         llvm::Type* atype = arg->getType();
         if (atype == charType) {
-            log::echo("str type");
+            llog::echo("str type");
         }
-        log::echo("atype:", atype->getTypeID());
+        llog::echo("atype:", atype->getTypeID());
     }
 */
     std::vector<llvm::Value*> args;
@@ -143,14 +143,14 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
         }
         for (auto expr : *_arguments) {
             if (expr == nullptr) {
-                e2::log::bug("expr is null");
+                e2::llog::bug("expr is null");
                 context.DontRun();
                 break;
             }
 
             auto arg = expr->codeGen(context);
             if (arg == nullptr) {
-                e2::log::bug("args is null");
+                e2::llog::bug("args is null");
                 context.DontRun();
                 break;
             }
@@ -162,7 +162,7 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
      * check func arg size and type is the same
      */
     if (func->arg_size() != args.size()) {
-        e2::log::bug("call name ,", cname,
+        e2::llog::bug("call name ,", cname,
                      " arg size not eq ! args size:", args.size(),
                      " line:", _codeLine, " path:", _path);
         context.DontRun();
@@ -194,14 +194,14 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
 llvm::Value* ReturnStatement::codeGen(CodeGenContext& context)
 {
     if (_expression == nullptr) {
-        log::bug("expression is nullptr");
+        llog::bug("expression is nullptr");
         context.DontRun();
         return nullptr;
     }
 
     llvm::Value* ret = _expression->codeGen(context);
     if (ret == nullptr) {
-        log::bug("var is nullptr: ", _expression->id()->name());
+        llog::bug("var is nullptr: ", _expression->id()->name());
         context.DontRun();
 
         return nullptr;
@@ -228,7 +228,7 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
     std::string cname = _id->name();
     llvm::Value* alloc = nullptr;
 #ifdef E2L_DEBUG
-    e2::log::bug("VariableStatement, id name:", cname, " _op:", _op);
+    e2::llog::bug("VariableStatement, id name:", cname, " _op:", _op);
 #endif
 
     if (_op != yy::Parser::token::token_kind_type::ASSIGN_EQ) {
@@ -247,7 +247,7 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
                 nop = '/';
                 break;
             default:
-                e2::log::bug("VariableStatement, bad: _op:", _op);
+                e2::llog::bug("VariableStatement, bad: _op:", _op);
 
                 return alloc;
         }
@@ -264,7 +264,7 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
     }
 
     if (_rhs == nullptr) {
-        e2::log::bug("VariableStatement, rhs is nullptr, line:", _codeLine,
+        e2::llog::bug("VariableStatement, rhs is nullptr, line:", _codeLine,
                      " path:", _path);
 
         return nullptr;
@@ -298,7 +298,7 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
                 return nullptr;
             }
             else {
-                e2::log::bug("error type:", _rhs->getType());
+                e2::llog::bug("error type:", _rhs->getType());
             }
         }
     }
@@ -331,7 +331,7 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
         if (id->idType() == IDType::_normal) {
             llvm::Value* check = context.findBlockId(id->name());
             if (check == nullptr) {
-                log::bug("can't found variable:", id->name(),
+                llog::bug("can't found variable:", id->name(),
                          " . line:", _codeLine, " file:", _path);
                 return nullptr;
             }
@@ -359,8 +359,8 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
 llvm::Value* UnaryOperator::codeGen(CodeGenContext& context)
 {
 #ifdef E2L_DEBUG
-    e2::log::bug("lhs: ", _id->getType());
-    e2::log::bug("_op:", _op);
+    e2::llog::bug("lhs: ", _id->getType());
+    e2::llog::bug("_op:", _op);
 #endif
 
     Int_e num = 1;
@@ -399,14 +399,14 @@ llvm::Value* FunctionDeclaration::codeGen(CodeGenContext& context)
 {
 #ifdef E2L_DEBUG
 
-    e2::log::bug("FunctionStatement, id name:", _id->name());
+    e2::llog::bug("FunctionStatement, id name:", _id->name());
 #endif
 
     std::vector<llvm::Type*> argTypes;
     if (_arguments != nullptr) {
         for (auto it : *_arguments) {
             if (it == nullptr) {
-                e2::log::bug(" FunctionDeclaration arguments id error ");
+                e2::llog::bug(" FunctionDeclaration arguments id error ");
 
                 continue;
             }
@@ -430,7 +430,7 @@ llvm::Value* FunctionDeclaration::codeGen(CodeGenContext& context)
     if (_arguments != nullptr) {
         for (auto it : *_arguments) {
 #ifdef E2L_DEBUG
-            e2::log::bug(" FunctionDeclaration arguments: ", it->id()->name());
+            e2::llog::bug(" FunctionDeclaration arguments: ", it->id()->name());
 #endif
             context.locals()[it->id()->name()] = new llvm::AllocaInst(
                 context.typeOf(it), 4, it->id()->name().c_str(),
@@ -450,7 +450,7 @@ llvm::Value* FunctionDeclaration::codeGen(CodeGenContext& context)
     llvm::Value* _Return = context.getCurrentReturnValue();
     if (_Return == nullptr) {
 #ifdef E2L_DEBUG
-        log::info("return is null");
+        llog::info("return is null");
 #endif
         ReturnStatement* _ret =
             MALLOC(ReturnStatement, _codeLine, _path.c_str());
@@ -488,7 +488,7 @@ llvm::Value* ExternDeclaration::codeGen(CodeGenContext& context)
         llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage,
                                _id->name().c_str(), context.getModule());
     if (function == nullptr) {
-        e2::log::bug("func:", _id->name(), " not found!");
+        e2::llog::bug("func:", _id->name(), " not found!");
     }
     return function;
 
@@ -517,7 +517,7 @@ llvm::Value* UnionDeclaration::codeGen(CodeGenContext& context)
         _block->codeGen(context);
     }
     else {
-        e2::log::info("block is null");
+        e2::llog::info("block is null");
     }
     return value;
 

@@ -47,13 +47,9 @@
 
 #include <llvm/IR/Constants.h>
 
-#include <algorithm>
 #include <cstddef>
-#include <cstdint>
 #include <cstring>
-#include <fstream>
 #include <string>
-#include <vector>
 
 #include "BaseNode.hpp"
 #include "BaseType.hpp"
@@ -175,8 +171,8 @@ public:
     std::string value() { return _str; };
     void name(std::string n)
     {
-        _name = log::format("_str_%s_%ld_%ld", n.c_str(), _codeLine,
-                            variable_str_num++);
+        _name = llog::format("_str_%s_%ld_%ld", n.c_str(), _codeLine,
+                             variable_str_num++);
     }
 
     /* =============  OPERATORS     =================== */
