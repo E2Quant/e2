@@ -147,6 +147,19 @@ e2::Int_e Delisting(
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  IsSuspended
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Bool IsSuspended(); /* -----  end of function IsSuspended  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  BarOnOpen
  *  ->  void *
  *  Parameters:
