@@ -442,6 +442,20 @@ e2::Int_e ExdiCash(e2::Int_e id); /* -----  end of function ExdiCash  ----- */
  */
 e2::Int_e ExdiShare(e2::Int_e id); /* -----  end of function ExdiShare  ----- */
 
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ExdiSplit
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+e2::Int_e ExdiSplit ( e2::Int_e);
+		/* -----  end of function ExdiSplit  ----- */
 /*
  * ===  FUNCTION  =============================
  *

@@ -184,6 +184,9 @@ e2::Int_e ExDivPrice(e2::Int_e); /* -----  end of function ExDivPrice  ----- */
 e2::Int_e ExDividendSize(
     e2::Int_e); /* -----  end of function ExDividendSize  ----- */
 
+
+
+
 /*
  * ===  FUNCTION  =============================
  *
@@ -225,6 +228,20 @@ e2::Int_e ExDividendCash(
  */
 e2::Int_e ExDividendShare(
     e2::Int_e, e2::Int_e); /* -----  end of function ExDividendShare  ----- */
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ExDividendSplit
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+e2::Int_e ExDividendSplit ( e2::Int_e , e2::Int_e);
+/* -----  end of function ExDividendSplit  ----- */
 
 /*
  * ===  FUNCTION  =============================

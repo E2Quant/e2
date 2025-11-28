@@ -99,7 +99,7 @@ void Block::push_back(Expression* exp)
                     for (std::string key : it->second) {
                         if (key == mod) {
                             llog::info("duplicate import mod in here:",
-                                      it->first);
+                                      it->first," mod:",mod," current mod:",_current_mod);
                             return;
                         }
                     }
