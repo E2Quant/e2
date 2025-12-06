@@ -58,12 +58,12 @@
 namespace e2 {
 namespace llog {
 template <class T>
-T base_name(T const &path, T const &delims = "/\\")
+T base_name(T const& path, T const& delims = "/\\")
 {
     return path.substr(path.find_last_of(delims) + 1);
 }
 template <class T>
-T remove_extension(T const &filename)
+T remove_extension(T const& filename)
 {
     typename T::size_type const p(filename.find_last_of('.'));
     return p > 0 && p != T::npos ? filename.substr(0, p) : filename;
@@ -84,8 +84,9 @@ T remove_extension(T const &filename)
  */
 
 template <typename... Args>
-void log_cout(const char *file, const char *functionName, long lineNumber,
-              std::string color, Args &&...args)
+
+void log_cout(const char* file, const char* functionName, long lineNumber,
+              std::string color, Args&&... args)
 {
     std::time_t t = std::time(nullptr);
 
@@ -110,9 +111,8 @@ void log_cout(const char *file, const char *functionName, long lineNumber,
         mkdir(_dir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
     char log_file[256] = {0};
-    snprintf(log_file, 256, "%s/%d.log", _dir, getpid());
-    std::ofstream cout(log_file);
-
+    snprintf(log_file, 256, "%s/e2l_bug_%d.log", _dir, getpid());
+    std::ofstream cout(log_file, std::ios::app);
     cout << KCYN << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S %Z")
          << ":" << getpid() << "=>[" << base_name(std::string(file))
          << "::" << functionName << " line." << lineNumber << "] " << RST
@@ -127,8 +127,7 @@ void log_cout(const char *file, const char *functionName, long lineNumber,
 #define debug(...) \
     log_cout(__FILE__, __PRETTY_FUNCTION__, __LINE__, KORG, __VA_ARGS__);
 
-std::string format(const char *fmt, ...) __attribute__((format(printf, 1, 2)));
-
+std::string format(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 }  // namespace llog
 }  // namespace e2
 #endif /* ----- #ifndef LOG_INC  ----- */

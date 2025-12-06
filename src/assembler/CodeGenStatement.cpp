@@ -105,9 +105,8 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
     llvm::Function* func = context.getModule()->getFunction(cname.c_str());
     if (func == nullptr) {
         std::string err = "call name not found: " + cname;
-        std::cout << err << ", line:" << _codeLine << " path:" << _path
-                  << std::endl;
 
+        llog::bug(err, ", line:", _codeLine, " path:", _path);
         context.ScriptError(NodeType::_methodcall, cname, ErrorNo::_NotExist,
                             err, 0);
         context.DontRun();
@@ -163,8 +162,8 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
      */
     if (func->arg_size() != args.size()) {
         e2::llog::bug("call name ,", cname,
-                     " arg size not eq ! args size:", args.size(),
-                     " line:", _codeLine, " path:", _path);
+                      " arg size not eq ! args size:", args.size(),
+                      " line:", _codeLine, " path:", _path);
         context.DontRun();
         return nullptr;
     }
@@ -265,7 +264,7 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
 
     if (_rhs == nullptr) {
         e2::llog::bug("VariableStatement, rhs is nullptr, line:", _codeLine,
-                     " path:", _path);
+                      " path:", _path);
 
         return nullptr;
     }
@@ -332,7 +331,7 @@ llvm::Value* VariableStatement::codeGen(CodeGenContext& context)
             llvm::Value* check = context.findBlockId(id->name());
             if (check == nullptr) {
                 llog::bug("can't found variable:", id->name(),
-                         " . line:", _codeLine, " file:", _path);
+                          " . line:", _codeLine, " file:", _path);
                 return nullptr;
             }
         }

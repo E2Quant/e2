@@ -73,7 +73,7 @@ e2::Int_e isInit(); /* -----  end of function isInit  ----- */
  *   fix 的配置文件
  * ============================================
  */
-void fix(const char *cfg); /* -----  end of function fix  ----- */
+void fix(const char* cfg); /* -----  end of function fix  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -98,8 +98,8 @@ void mktype(e2::Int_e); /* -----  end of function mktype  ----- */
  *
  * ============================================
  */
-void mkcsv(const char *source,
-           const char *symbol); /* -----  end of function csvdata  ----- */
+void mkcsv(const char* source,
+           const char* symbol); /* -----  end of function csvdata  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -112,7 +112,7 @@ void mkcsv(const char *source,
  *   kafka 结构体传送 symbol 过来
  * ============================================
  */
-void mkkf(const char *source); /* -----  end of function mkkafka  ----- */
+void mkkf(const char* source); /* -----  end of function mkkafka  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -126,7 +126,7 @@ void mkkf(const char *source); /* -----  end of function mkkafka  ----- */
  * ============================================
  */
 void topic_tick(
-    const char *topic); /* -----  end of function topic_tick  ----- */
+    const char* topic); /* -----  end of function topic_tick  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -139,7 +139,7 @@ void topic_tick(
  *
  * ============================================
  */
-void topic_log(const char *topic); /* -----  end of function topic_log  ----- */
+void topic_log(const char* topic); /* -----  end of function topic_log  ----- */
 /*
  * ===  FUNCTION  =============================
  *
@@ -165,6 +165,32 @@ void tframe(e2::Int_e); /* -----  end of function tframe  ----- */
  * ============================================
  */
 e2::Int_e deftframe(); /* -----  end of function deftframe  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  tframelength
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  返回周期数量
+ * ============================================
+ */
+e2::Int_e tframelength(); /* -----  end of function tframelength  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  gettframe
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  返回第几个周期
+ * ============================================
+ */
+e2::Int_e gettframe(e2::Int_e); /* -----  end of function gettframe  ----- */
 /*
  * ===  FUNCTION  =============================
  *
@@ -231,7 +257,7 @@ void gmtime(); /* -----  end of function gmtime  ----- */
  * ============================================
  */
 void commission(e2::Int_e,
-                const char *ccy); /* -----  end of function commission  ----- */
+                const char* ccy); /* -----  end of function commission  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -329,19 +355,18 @@ void QuantVersion(
     e2::Int_e major, e2::Int_e minor,
     e2::Int_e patch); /* -----  end of function QuantVersion  ----- */
 
-
-/* 
+/*
  * ===  FUNCTION  =============================
  *
  *         Name:  VersionId
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
- *  Description:  
+ *  Description:
  *
  * ============================================
  */
-e2::Int_e VersionId (  );		/* -----  end of function VersionId  ----- */
+e2::Int_e VersionId(); /* -----  end of function VersionId  ----- */
 
 /*
  * ===  FUNCTION  =============================

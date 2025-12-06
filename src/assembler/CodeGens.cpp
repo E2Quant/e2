@@ -98,8 +98,9 @@ void Block::push_back(Expression* exp)
                 for (auto it = _imports.begin(); it != _imports.end(); ++it) {
                     for (std::string key : it->second) {
                         if (key == mod) {
-                            llog::info("duplicate import mod in here:",
-                                      it->first," mod:",mod," current mod:",_current_mod);
+                            llog::info(
+                                "duplicate import mod in here:", it->first,
+                                " mod:", mod, " current mod:", _current_mod);
                             return;
                         }
                     }
@@ -130,7 +131,7 @@ void Block::push_back(Expression* exp)
     }
     else {
         e2::llog::bug("Expression push_back is nullptr code_line:", _codeLine,
-                     " path:", _path);
+                      " path:", _path);
     }
 }
 void Block::push_back(Statement* stat)
@@ -147,7 +148,7 @@ void Block::push_back(Statement* stat)
     }
     else {
         e2::llog::bug("statement push_back is nullptr code_line:", _codeLine,
-                     " path:", _path);
+                      " path:", _path);
     }
 }
 void Block::push_back(Block* blk)
@@ -164,7 +165,7 @@ void Block::push_back(Block* blk)
     }
     else {
         e2::llog::bug("block push_back is nullptr code_line:", _codeLine,
-                     " path:", _path);
+                      " path:", _path);
     }
 } /* -----  end of function Block::push_back  ----- */
 

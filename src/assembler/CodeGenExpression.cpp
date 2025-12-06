@@ -311,17 +311,15 @@ llvm::Value* BinaryOperator::codeGen(CodeGenContext& context)
     llvm::Value* rhs = CodeGen(_rhs);
     llvm::Value* lhs = CodeGen(_lhs);
     if (rhs == nullptr) {
-        std::cout << "rhs is nullptr:" << _rhs->getType()
-                  << " name:" << _rhs->uname() << " line:" << _codeLine
-                  << " file:" << _path << std::endl;
+        llog::bug("rhs is nullptr:", _rhs->getType(), " name:", _rhs->uname(),
+                  " line:", _codeLine, " file:", _path);
         context.DontRun();
 
         return nullptr;
     }
     if (lhs == nullptr) {
-        std::cout << "lhs is nullptr:" << _lhs->getType()
-                  << " name:" << _lhs->uname() << " line:" << _codeLine
-                  << " file:" << _path << std::endl;
+        llog::bug("lhs is nullptr:", _lhs->getType(), " name:", _lhs->uname(),
+                  " line:", _codeLine, " file:", _path);
 
         context.DontRun();
 
