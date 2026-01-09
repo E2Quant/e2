@@ -35,6 +35,14 @@ E2L 详细底层系统 API 请参考 [e2l_api](https://e2q-doc.readthedocs.io/e2
 ## E2L [IR](https://llvm.org/docs/LangRef.html) 状态 
 > LLVM 的设计核心是与语言无关的中间表示 (IR)，它是一种可移植的高级汇编语言 ，可以通过多次迭代进行各种转换优化 。
 
+```
+Frontend (Language Specific) → LLVM IR → Backend (Target Specific)
+     ↓                           ↓              ↓
+Your Custom Language       Optimization      x86/ARM/RISC-V
+   Parser & AST               Passes           Machine Code
+   
+```
+
 ---
 
 ### E2L 基本语法展示
