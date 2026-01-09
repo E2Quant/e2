@@ -41,10 +41,12 @@
  * =====================================================================================
  */
 
+#include <cstddef>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "assembler/BaseNode.hpp"
 #include "assembler/CodeGenContext.hpp"
 
 namespace e2 {
@@ -61,17 +63,21 @@ namespace e2 {
  */
 llvm::Value* Block::codeGen(CodeGenContext& context)
 {
+#ifdef E2L_DEBUG
+    EnterCode("Block");
+#endif
     llvm::Value* last = nullptr;
 
     for (auto v : _statements) {
         if (v == nullptr) {
             continue;
         }
-        UNION_NAME(v);
 
         last = v->codeGen(context);
     }
-
+#ifdef E2L_DEBUG
+    ExitCode("Block");
+#endif
     return last;
 } /* -----  end of function Block::codeGen  ----- */
 
@@ -151,6 +157,7 @@ void Block::push_back(Statement* stat)
                       " path:", _path);
     }
 }
+
 void Block::push_back(Block* blk)
 {
     if (blk != nullptr) {
@@ -169,8 +176,21 @@ void Block::push_back(Block* blk)
     }
 } /* -----  end of function Block::push_back  ----- */
 
-/* -----  end of function Block::insert  ----- */
-
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  Block::getStatement
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+Statement* Block::getStatement(std::size_t idx)
+{
+    return _statements.at(idx);
+} /* -----  end of function Block::getStatement  ----- */
 /*
  * ===  FUNCTION  =============================
  *

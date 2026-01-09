@@ -46,13 +46,12 @@
 #define CODEGENCONTEXT_INC
 
 #include <llvm/IR/BasicBlock.h>
-#include <llvm/IR/Type.h>
 #include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Type.h>
 
 #include <cstddef>
 #include <cstdlib>
 #include <map>
-#include <memory>
 #include <stack>
 #include <string>
 #include <vector>
@@ -60,14 +59,16 @@
 #include "BaseType.hpp"
 #include "E2L/E2LType.hpp"
 #include "assembler/BaseNode.hpp"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Value.h"
 
 namespace e2 {
 
-using MapLocals = std::map<std::string, llvm::Value *>;
+using MapLocals = std::map<std::string, llvm::AllocaInst*>;
 
 struct __ExternFunc_t {
-    llvm::Function *fun{nullptr};
-    void *addr{nullptr};
+    llvm::Function* fun{nullptr};
+    void* addr{nullptr};
 }; /* ----------  end of struct __ExternFunc  ---------- */
 
 typedef struct __ExternFunc_t ExternFunc_t;
@@ -83,7 +84,7 @@ typedef struct __ScriptList_t ScriptList_t;
 enum ErrorNo {
     _NotExist = 0,  // not exist
     _ArgSize,       // call func arg number is error
-};                  /* ----------  end of enum ErrorNo  ---------- */
+}; /* ----------  end of enum ErrorNo  ---------- */
 
 typedef enum ErrorNo ErrorNo;
 struct __ScriptError {
@@ -92,7 +93,7 @@ struct __ScriptError {
     ErrorNo en;        // error number
     std::string msg;   // error msg
     size_t line;       // error line number
-};                     /* ----------  end of struct __ScriptError  ---------- */
+}; /* ----------  end of struct __ScriptError  ---------- */
 
 typedef struct __ScriptError ScriptError_t;
 
@@ -105,13 +106,13 @@ typedef struct __ScriptError ScriptError_t;
 class CodeGenBlock {
 public:
     /* =============  LIFECYCLE     =================== */
-    CodeGenBlock(llvm::BasicBlock *block, ScopeKind sc)
-        : _block(block), _scope(sc){}; /* constructor */
+    CodeGenBlock(llvm::BasicBlock* block, ScopeKind sc)
+        : _block(block), _scope(sc) {}; /* constructor */
     ~CodeGenBlock() {}
 
     /* =============  ACCESSORS     =================== */
-    void setCodeBlock(llvm::BasicBlock *bb) { _block = bb; }
-    llvm::BasicBlock *block() const { return _block; }
+    void setCodeBlock(llvm::BasicBlock* bb) { _block = bb; }
+    llvm::BasicBlock* block() const { return _block; }
 
     /**
      * block 有多个 return 就只要第一个就可以了
@@ -121,12 +122,12 @@ public:
      *  return 0;
      *
      */
-    void setValue(llvm::Value *value)
+    void setValue(llvm::Value* value)
     {
         if (_returnValue == nullptr) _returnValue = value;
     }
-    llvm::Value *getValue() const { return _returnValue; }
-    MapLocals &local() { return _locals; }
+    llvm::Value* getValue() const { return _returnValue; }
+    MapLocals& local() { return _locals; }
     void scope(ScopeKind sc) { _scope = sc; }
     ScopeKind scope() { return _scope; }
     /* =============  MUTATORS      =================== */
@@ -142,8 +143,8 @@ private:
     /* =============  METHODS       =================== */
 
     /* =============  DATA MEMBERS  =================== */
-    llvm::BasicBlock *_block{nullptr};
-    llvm::Value *_returnValue{nullptr};
+    llvm::BasicBlock* _block{nullptr};
+    llvm::Value* _returnValue{nullptr};
     MapLocals _locals;
     ScopeKind _scope{_sk_main};
 
@@ -183,11 +184,11 @@ public:
         llvm::llvm_shutdown();
     }
     /* =============  ACCESSORS     =================== */
-    llvm::Module *getModule() const { return _module; }
+    llvm::Module* getModule() const { return _module; }
 
-    llvm::LLVMContext &getGlobalContext() { return _llvmContext; }
+    llvm::LLVMContext& getGlobalContext() { return _llvmContext; }
 
-    retType *typeOf(Expression *type)
+    retType* typeOf(Expression* type)
     {
         switch (type->getType()) {
             case NodeType::_identifier:
@@ -210,45 +211,108 @@ public:
 
     /* =============  MUTATORS      =================== */
 
-    retType *defType();
+    retType* defType();
     /*! Compile the AST into a module */
-    bool generateCode(Block *root);
+    bool generateCode(Block* root);
     llvm::GenericValue Result();
-    int runFunction(double, double);
+    Int_e runFunction(double, double);
 
     void runCode();
 
-    void currentBreak(llvm::BasicBlock *);
-    llvm::BasicBlock *currentBreak();
+    void currentBreak(llvm::BasicBlock*);
+    llvm::BasicBlock* currentBreak();
     void popBreak();
     void setBreakPoint(bool);
     bool isBreakPoint();
 
-    llvm::BasicBlock *currentBlock();
+    llvm::BasicBlock* currentBlock();
     ScopeKind currentScope();
-    void pushBlock(llvm::BasicBlock *block, ScopeKind sc);
-    void setInsertPoint(llvm::BasicBlock *block);
+    void pushBlock(llvm::BasicBlock* block, ScopeKind sc);
+    void setInsertPoint(llvm::BasicBlock* block);
 
+    void currentFuncName(std::string);
+    std::string currentFuncName();
     void popBlock();
 
-    MapLocals &locals();
+    /**
+     * union id -> name stack
+     */
+    void pushUnion(std::string);
+    std::string topUnion();
+    void popUnion();
 
-    llvm::Value *MainArgx(size_t index);
-    void setCurrentReturnValue(llvm::Value *value);
-    llvm::Value *getCurrentReturnValue();
+    MapLocals& locals();
 
-    llvm::Value *findBlockId(const std::string name);
+    llvm::Value* MainArgx(size_t index);
+    void setCurrentReturnValue(llvm::Value* value);
+    llvm::Value* getCurrentReturnValue();
 
-    void ExternBuild(retType *ret, ArgType arg, void *fun, std::string &fname);
+    llvm::AllocaInst* findBlockId(const std::string name);
 
-    void ExternBuildInt(void *fun, size_t args, std::string &fname,
+    void ExternBuild(retType* ret, ArgType arg, void* fun, std::string& fname);
+
+    void ExternBuildInt(void* fun, size_t args, std::string& fname,
                         bool isVoid = false);
 
     void ScriptList(NodeType nt, std::string name, size_t argc);
 
-    void OutGlobalVar(const std::string &, Int_e);
+    void OutGlobalVar(const std::string&, Int_e);
 
-    const std::vector<ScriptList_t> &ScriptList();
+    // ------ namespace
+    /*! Associate a LLVM type with a name space name. */
+    void addNSType(const std::string& name, llvm::Type* ty)
+    {
+        _NameSpaceTypeMap.emplace(name, ty);
+    }
+
+    llvm::Type* getNSType(const std::string& name)
+    {
+        if (_NameSpaceTypeMap.count(name) == 0) {
+            return nullptr;
+        }
+        return _NameSpaceTypeMap.at(name);
+    }
+
+    /*! Creates a new namespace block scope. */
+    void newNameSpace(std::string name);
+
+    /*! Closes a namespace block scope */
+    void endNameSpace();
+
+    std::size_t NameSpaceVariableSize(std::string ns);
+    void NameSpaceAddVariableAccess(std::string name, int index,
+                                    llvm::Type* type);
+    NameSpaceValueNames NameSpaceVariable(std::string ns);
+    llvm::Type* getNameSpaceVariableType(std::string name, std::string var);
+    llvm::Instruction* getNameSpaceVarAccessInst(std::string ns,
+                                                 std::string var,
+                                                 llvm::AllocaInst* this_ptr);
+    void addNameSpaceVariableGep(std::string ns, std::string var,
+                                 llvm::Instruction*);
+
+    /*! Returns the currently processed class definition. */
+    std::string getNameSpace() { return _NameSpace; }
+
+    // 保存转换后的表达式
+    void addNameSpaceinitCode(std::string name, Assignment*);
+    NameSpaceInitCodeAssign& getNameSpaceAssign(std::string name);
+
+    llvm::AllocaInst* function_self(std::string arg_name);
+
+    void function_self_push(llvm::AllocaInst*);
+    llvm::Value* function_self_current();
+    void function_self_pop();
+
+    void block_ns_var_push(std::string, llvm::Instruction*);
+    llvm::Instruction* block_ns_var_current(std::string);
+    void block_ns_var_pop();
+
+    llvm::AllocaInst* MethodCallInst(Identifier*);
+    bool isTagInitVariable(std::string);
+
+    //----- namespace end
+
+    const std::vector<ScriptList_t>& ScriptList();
 
     void ScriptError(NodeType nt,       // Identifier type
                      std::string name,  // Identifier name
@@ -257,7 +321,7 @@ public:
                      size_t line        // error line number
 
     );
-    const std::vector<ScriptError_t> &ScriptError();
+    const std::vector<ScriptError_t>& ScriptError();
 
     void DontRun();
 
@@ -273,24 +337,48 @@ private:
     /* =============  METHODS       =================== */
 
     void InitGlobalVar();
-    void ExternGlobalVar(const std::string &, Int_e);
+    void ExternGlobalVar(const std::string&, Int_e);
     void AddGlobal();
     /* =============  DATA MEMBERS  =================== */
 
-    llvm::Module *_module{nullptr};
-    std::list<CodeGenBlock *> _blockStack;
-    std::list<llvm::BasicBlock *> _breakStack;
+    llvm::Module* _module{nullptr};
+    std::list<CodeGenBlock*> _blockStack;
+    std::list<llvm::Value*> _function_ns_arg;
+    std::list<llvm::BasicBlock*> _breakStack;
     bool _breakStat = false;
 
-    llvm::Function *_mainFunction{nullptr};
+    std::string _current_func_name = "";
+    llvm::Function* _mainFunction{nullptr};
     llvm::LLVMContext _llvmContext;
 
-    llvm::ExecutionEngine *_ee{nullptr};
+    llvm::ExecutionEngine* _ee{nullptr};
     funPtr _function;
 
     std::vector<ExternFunc_t> _ExternFunc;
 
+    // e2l 的返回值
     llvm::GenericValue _GenericRet;
+
+    // 保存当前的union id name 的
+    std::stack<std::string> _union_name;
+
+    //< The current class definition block
+    std::string _NameSpace;
+    CodeGenBlock* _self_ns = nullptr;
+    //< Maps a Name Space name to its LLVM struct type
+    //  name_space -> sturct_type
+    std::map<std::string, llvm::Type*> _NameSpaceTypeMap;
+    //< List of attributes a class
+    NameSpaceAttributes _NameSpaceAttributes;
+    // 保存转换后的表达式
+    // name_space -> variable: Assignment
+    NameSpaceinitCode _ns_assign;
+
+    // block in block out
+    NameSpaceVarInstList _NameSpaceVarBlockInst;
+
+    // 全局保存 tag 的 allocainst 变量
+    NameSpaceTagCallMap _NameSpaceTag;
 
     /**
      * Identifier list

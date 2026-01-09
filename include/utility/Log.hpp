@@ -125,7 +125,9 @@ void log_cout(const char* file, const char* functionName, long lineNumber,
 #define bug(...) log_cout(__FILE__, __FUNCTION__, __LINE__, KRED, __VA_ARGS__);
 #define info(...) log_cout(__FILE__, __FUNCTION__, __LINE__, KGRN, __VA_ARGS__);
 #define debug(...) \
-    log_cout(__FILE__, __PRETTY_FUNCTION__, __LINE__, KORG, __VA_ARGS__);
+    log_cout(__FILE__, __FUNCTION__, __LINE__, KMAG, __VA_ARGS__);
+
+#define warn(...) log_cout(__FILE__, __FUNCTION__, __LINE__, KYEL, __VA_ARGS__);
 
 std::string format(const char* fmt, ...) __attribute__((format(printf, 1, 2)));
 }  // namespace llog

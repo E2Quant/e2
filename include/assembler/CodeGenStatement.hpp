@@ -48,13 +48,10 @@
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/DerivedTypes.h>
 
-#include <algorithm>
-#include <array>
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <iterator>
 #include <string>
 #include <vector>
 
@@ -72,8 +69,8 @@ namespace e2 {
 class ExpressionStatement : public Statement {
 public:
     /* =============  LIFECYCLE     =================== */
-    ExpressionStatement(Expression *exp) : _expression(exp){};
-    ExpressionStatement(Statement *stat) : _statement(stat){};
+    ExpressionStatement(Expression* exp) : _expression(exp) {};
+    ExpressionStatement(Statement* stat) : _statement(stat) {};
     /* constructor */
     ~ExpressionStatement()
     {
@@ -81,7 +78,7 @@ public:
         RELEASE(_statement);
     }
     /* =============  ACCESSORS     =================== */
-    llvm::Value *codeGen(CodeGenContext &context);
+    llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType()
     {
         if (_expression) {
@@ -91,8 +88,8 @@ public:
     }
 
     /* =============  MUTATORS      =================== */
-    Expression *exp() { return _expression; }
-    Statement *sta() { return _statement; }
+    Expression* exp() { return _expression; }
+    Statement* sta() { return _statement; }
     /* =============  OPERATORS     =================== */
 
 protected:
@@ -104,8 +101,8 @@ private:
     /* =============  METHODS       =================== */
 
     /* =============  DATA MEMBERS  =================== */
-    Expression *_expression{nullptr};
-    Statement *_statement{nullptr};
+    Expression* _expression{nullptr};
+    Statement* _statement{nullptr};
 }; /* -----  end of class ExpressionStatement  ----- */
 
 /*
@@ -117,28 +114,18 @@ private:
 class MethodCall : public Statement {
 public:
     /* =============  LIFECYCLE     =================== */
-    explicit MethodCall(Identifier *id, ExpressionList *arguments, size_t line,
-                        const char *path)
+    explicit MethodCall(Identifier* id, ExpressionList* arguments, size_t line,
+                        const char* path)
         : _arguments(arguments)
+
     {
         _id = std::move(id);
-
         if (path != nullptr) {
             _path = std::string(path);
         }
         _codeLine = line;
     };
 
-    MethodCall(std::string id, ExpressionList *arguments, size_t line,
-               const char *path)
-        : _arguments(arguments)
-    {
-        _id = MALLOC(Identifier, id, IDType::_normal);
-        if (path != nullptr) {
-            _path = std::string(path);
-        }
-        _codeLine = line;
-    };
     /* constructor */
     ~MethodCall()
     {
@@ -152,7 +139,7 @@ public:
         RELEASE(_id);
     }
     /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context);
+    virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_methodcall; }
     const std::string name() { return _id->name(); };
 
@@ -172,59 +159,12 @@ private:
      * call fun echo or PrintXXX
      *  差不多了，以后再优化
      */
-    void DebugLoc()
-    {
-        std::array<std::string, 5> diff_str{"FPrint", "echo", "log", "StoreId",
-                                            "Array"};
+    void DebugLoc();
 
-        if (_arguments == nullptr) {
-            _arguments = MALLOC(ExpressionList);
-        }
-        /**
-         * 在多次运行的情况，初始化的时候，就知道了
-         */
-        if (_id->name() == "FPrintCurrentPath") {
-            StrObj *str = MALLOC(StrObj, _path, true);
-
-            _arguments->push_back(str);
-            return;
-        }
-
-        bool diff = false;
-        std::string::size_type isfound;
-        std::string find_str = _id->name();
-        for (std::string key : diff_str) {
-            isfound = find_str.find(key);
-            if (isfound != std::string::npos) {
-                diff = true;
-                break;
-            }
-        }
-
-        if (diff) {
-            std::string vname = "";
-
-            if (_arguments->size() > 0) {
-                if (_arguments->at(0)->getType() == NodeType::_identifier) {
-                    Identifier *id = (Identifier *)_arguments->at(0);
-                    vname = id->name();
-                }
-                StrObj *vn = MALLOC(StrObj, vname, true);
-                _arguments->push_back(vn);
-            }
-
-            e2::Number *line = MALLOC(Number, (Int_e)_codeLine);
-            line->genuine();
-            _arguments->push_back(line);
-
-            StrObj *str = MALLOC(StrObj, _path, true);
-            _arguments->push_back(str);
-        }
-    }
-
+    void callNameSpaceInit(CodeGenContext& context, llvm::AllocaInst*);
     /* =============  DATA MEMBERS  =================== */
 
-    ExpressionList *_arguments{nullptr};
+    ExpressionList* _arguments{nullptr};
 
 }; /* -----  end of class MethodCall  ----- */
 
@@ -237,17 +177,21 @@ private:
 class BreakStatement : public Statement {
 public:
     /* =============  LIFECYCLE     =================== */
-    BreakStatement()
+    BreakStatement(size_t line, const char* path)
     {
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
         Int_e val = 1;
-        _expression = MALLOC(Number, val);
+        _expression = MALLOC(Number, val, line, path);
 
     }; /* constructor */
     ~BreakStatement() { RELEASE(_expression); }
     /* =============  ACCESSORS     =================== */
 
     /* =============  MUTATORS      =================== */
-    llvm::Value *codeGen(CodeGenContext &context)
+    llvm::Value* codeGen(CodeGenContext& context)
     {
         context.setBreakPoint(true);
         return nullptr;
@@ -265,7 +209,7 @@ private:
     /* =============  METHODS       =================== */
 
     /* =============  DATA MEMBERS  =================== */
-    Expression *_expression{nullptr};
+    Expression* _expression{nullptr};
 
 }; /* -----  end of class BreakStatement  ----- */
 
@@ -279,16 +223,16 @@ private:
 class ReturnStatement : public Statement {
 public:
     /*i =============  LIFECYCLE     =================== */
-    ReturnStatement(size_t line, const char *path)
+    ReturnStatement(size_t line, const char* path)
     {
         Int_e val = 0;
-        _expression = MALLOC(Number, val);
+        _expression = MALLOC(Number, val, line, path);
         if (path != nullptr) {
             _path = std::string(path);
         }
         _codeLine = line;
     };
-    ReturnStatement(Expression *exp, size_t line, const char *path)
+    ReturnStatement(Expression* exp, size_t line, const char* path)
         : _expression(exp)
     {
         if (path != nullptr) {
@@ -298,7 +242,7 @@ public:
     }; /* constructor */
     ~ReturnStatement() { RELEASE(_expression); }
     /* =============  ACCESSORS     =================== */
-    llvm::Value *codeGen(CodeGenContext &context);
+    llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_return; }
 
     /* =============  MUTATORS      =================== */
@@ -314,7 +258,7 @@ private:
     /* =============  METHODS       =================== */
 
     /* =============  DATA MEMBERS  =================== */
-    Expression *_expression{nullptr};
+    Expression* _expression{nullptr};
 }; /* -----  end of class ReturnStatement  ----- */
 
 /*
@@ -328,8 +272,8 @@ class VariableStatement : public Statement {
 public:
     /* =============  LIFECYCLE     =================== */
 
-    VariableStatement(Identifier *id, int op, Expression *rhs, size_t line,
-                      const char *path)
+    VariableStatement(Identifier* id, int op, Expression* rhs, size_t line,
+                      const char* path)
         : _op(op), _rhs(rhs)
     {
         _id = std::move(id);
@@ -338,12 +282,6 @@ public:
         }
         _codeLine = line;
     };
-    /* VariableStatement(Identifier *id) */
-    /* { */
-    /*     _id = std::move(id); */
-    /*     _rhs = nullptr; */
-    /* }; */
-    /* constructor */
 
     ~VariableStatement()
     {
@@ -358,8 +296,10 @@ public:
         // RELEASE(_rhs);
     }
     /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context);
+    virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_variable; }
+    bool hasRhs() { return _rhs != nullptr; }
+    Expression* getRhs() { return _rhs; }
 
     /* =============  MUTATORS      =================== */
 
@@ -376,11 +316,11 @@ private:
     /* =============  DATA MEMBERS  =================== */
 
     int _op{0};
-    Expression *_rhs{nullptr};
+    Expression* _rhs{nullptr};
 
-    Assignment *_ass{nullptr};
+    Assignment* _ass{nullptr};
 }; /* -----  end of class VariableStatement  ----- */
-typedef std::vector<VariableStatement *> VariableList;
+typedef std::vector<VariableStatement*> VariableList;
 
 /*
  * ================================
@@ -391,7 +331,7 @@ typedef std::vector<VariableStatement *> VariableList;
 class UnaryOperator : public Statement {
 public:
     /* =============  LIFECYCLE     =================== */
-    UnaryOperator(Identifier *id, int op, size_t line, const char *path)
+    UnaryOperator(Identifier* id, int op, size_t line, const char* path)
         : _op(op)
     {
         _id = std::move(id);
@@ -402,7 +342,7 @@ public:
     }; /* constructor */
     ~UnaryOperator() { RELEASE(_id); }
     /* =============  ACCESSORS     =================== */
-    llvm::Value *codeGen(CodeGenContext &context);
+    llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_binaryop; }
 
     const std::string name()
@@ -437,15 +377,15 @@ private:
 class FunctionDeclaration : public Statement {
 public:
     /* =============  LIFECYCLE     =================== */
-    FunctionDeclaration(Identifier *id, ExpressionList *arguments, Block *block)
+    FunctionDeclaration(Identifier* id, ExpressionList* arguments, Block* block,
+                        size_t line, const char* path)
         : _arguments(arguments), _block(block)
     {
         _id = std::move(id);
-    };
-    FunctionDeclaration(std::string id, ExpressionList *arguments, Block *block)
-        : _arguments(arguments), _block(block)
-    {
-        _id = MALLOC(Identifier, id, IDType::_normal);
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
     };
 
     /* constructor */
@@ -464,7 +404,7 @@ public:
         }
     }
     /* =============  ACCESSORS     =================== */
-    llvm::Value *codeGen(CodeGenContext &context);
+    llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_function; }
 
     /* =============  MUTATORS      =================== */
@@ -479,8 +419,8 @@ private:
     /* =============  METHODS       =================== */
 
     /* =============  DATA MEMBERS  =================== */
-    ExpressionList *_arguments{nullptr};
-    Block *_block{nullptr};
+    ExpressionList* _arguments{nullptr};
+    Block* _block{nullptr};
 }; /* -----  end of class FunctionDeclaration  ----- */
 
 /*
@@ -492,11 +432,11 @@ private:
 class ExternDeclaration : public Statement {
 public:
     /* =============  LIFECYCLE     =================== */
-    ExternDeclaration(Identifier *id, ExpressionList *args) : _arguments(args)
+    ExternDeclaration(Identifier* id, ExpressionList* args) : _arguments(args)
     {
         _id = std::move(id);
     };
-    ExternDeclaration(std::string id, ExpressionList *arguments)
+    ExternDeclaration(std::string id, ExpressionList* arguments)
         : _arguments(arguments)
     {
         _id = MALLOC(Identifier, id, IDType::_normal);
@@ -516,7 +456,7 @@ public:
         }
     }
     /* =============  ACCESSORS     =================== */
-    llvm::Value *codeGen(CodeGenContext &context);
+    llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_function; }
 
     /* =============  MUTATORS      =================== */
@@ -532,7 +472,7 @@ private:
     /* =============  METHODS       =================== */
 
     /* =============  DATA MEMBERS  =================== */
-    ExpressionList *_arguments{nullptr};
+    ExpressionList* _arguments{nullptr};
 
 }; /* -----  end of class ExternDeclaration  ----- */
 
@@ -546,15 +486,17 @@ class UnionDeclaration : public Statement {
 public:
     /* =============  LIFECYCLE     =================== */
     UnionDeclaration() {}
-    UnionDeclaration(Identifier *id, Block *block) : _block(block)
+    UnionDeclaration(Identifier* id, Block* block, size_t line,
+                     const char* path)
+        : _block(block)
     {
         _id = std::move(id);
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
     };
 
-    UnionDeclaration(std::string id, Block *block) : _block(block)
-    {
-        _id = MALLOC(Identifier, id, IDType::_global);
-    };
     /* constructor */
     ~UnionDeclaration()
     {
@@ -562,10 +504,10 @@ public:
         RELEASE(_block);
     }
     /* =============  ACCESSORS     =================== */
-    llvm::Value *codeGen(CodeGenContext &context);
+    llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_union; }
 
-    llvm::StructType *UnionType() { return _unionType; };
+    //  llvm::StructType* UnionType() { return _unionType; };
     /* =============  MUTATORS      =================== */
 
     /* =============  OPERATORS     =================== */
@@ -579,10 +521,64 @@ private:
     /* =============  METHODS       =================== */
 
     /* =============  DATA MEMBERS  =================== */
-    Block *_block{nullptr};
+    Block* _block{nullptr};
 
-    llvm::StructType *_unionType{nullptr};
+    //    llvm::StructType* _unionType{nullptr};
 }; /* -----  end of class UnionDeclaration  ----- */
+
+/*
+ * ================================
+ *        Class:  NameSpace
+ *  Description:
+ * ================================
+ */
+class NameSpace : public Statement {
+public:
+    /* =============  LIFECYCLE     =================== */
+
+    NameSpace(Identifier* id, Block* block, size_t line, const char* path)
+        : _block(block)
+    {
+        _id = std::move(id);
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
+        _member = MALLOC(Block, "init ns", line, path);
+
+    }; /* constructor */
+
+    ~NameSpace()
+    {
+        RELEASE(_id);
+        RELEASE(_block);
+    }
+    /* =============  ACCESSORS     =================== */
+    llvm::Value* codeGen(CodeGenContext& context);
+    NodeType getType() { return NodeType::_namespace; }
+
+    /* =============  MUTATORS      =================== */
+
+    /* =============  OPERATORS     =================== */
+
+protected:
+    /* =============  METHODS       =================== */
+
+    /* =============  DATA MEMBERS  =================== */
+
+private:
+    /* =============  METHODS       =================== */
+
+    void removeVarDeclStatements();
+    void constructStructFields(std::vector<llvm::Type*>& StructTy_fields,
+                               CodeGenContext& context);
+    void addVarsToClassAttributes(CodeGenContext& context,
+                                  std::vector<llvm::Type*>& StructTy_fields);
+    void InitFunc();
+    /* =============  DATA MEMBERS  =================== */
+    Block* _block{nullptr};
+    Block* _member{nullptr};
+}; /* -----  end of class NameSpace  ----- */
 
 }  // namespace e2
 #endif /* ----- #ifndef CODEGENSTATEMENT_INC  ----- */

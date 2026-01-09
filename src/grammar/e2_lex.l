@@ -1,5 +1,6 @@
 D			[0-9]
-L			[a-zA-Z_]
+Z           [a-zA-Z]
+L			({Z})|[_]
 H			[a-fA-F0-9]
 E			[Ee][-]?{D}+
 FS			(f|F|l|L)
@@ -39,11 +40,13 @@ typedef yy::Parser::token_type token_type;
 	loc.step();
 %}
 
-"extern"      {return Parser::make_EXTERN(loc);}
-"union"				{return Parser::make_UNION(loc);}
-"func"				{return Parser::make_FUNCTION(loc);}
-"import"				{return Parser::make_IMPORT(loc);}
-
+"extern"        {return Parser::make_EXTERN(loc);}
+"namespace"		{return Parser::make_NAMESPACE(loc);}
+"union"			{return Parser::make_UNION(loc);}
+"func"			{return Parser::make_FUNCTION(loc);}
+"import"		{return Parser::make_IMPORT(loc);}
+"this"          {return Parser::make_THIS(loc);}  
+"self"          {return Parser::make_SELF(loc);}
 
 "switch"		{return  Parser::make_SWITCH(loc);}
 "case"			{return Parser::make_CASE(loc);}	
@@ -60,20 +63,21 @@ typedef yy::Parser::token_type token_type;
 "break"			{return Parser::make_BREAK(loc);}
 "return"		{return Parser::make_RETURN(loc);}
 
+0[xX]{H}+{IS}?		    { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
+0{D}+{IS}?		        { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
+{D}+{IS}?		        { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
+L?'(\\.|[^\\'])+'	    { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 
-0[xX]{H}+{IS}?		{ return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
-0{D}+{IS}?		{ return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
-{D}+{IS}?		{ return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
-L?'(\\.|[^\\'])+'	{ return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
-
-{D}+{E}{FS}?		{ return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
+{D}+{E}{FS}?		    { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 {D}*"."{D}+({E})?{FS}?	{ return Parser::make_FCONSTANT(std::stod(yytext,0), loc);}
 {D}+"."{D}*({E})?{FS}?	{ return Parser::make_FCONSTANT(std::stod(yytext,0), loc);}
 
-{L}({L}|{D})*		{ 
-            return Parser::make_IDENTIFIER(yytext, loc);
-}
-L?\"(\\.|[^\\"])*\"	{ return Parser::make_STRING_LITERAL(yytext, loc);}
+{Z}({L}|{D})*		    { 
+                            return Parser::make_IDENTIFIER(yytext, loc);
+                        }
+L?\"(\\.|[^\\"])*\"	    { return Parser::make_STRING_LITERAL(yytext, loc);}
+
+"::"		{ return Parser::symbol_type( token::NAMESPACE_ATTR, loc);}
 
 "++"		{ return Parser::symbol_type( token::UNARY_INC, loc);}
 "--"		{ return Parser::symbol_type( token::UNARY_DEC, loc);}
@@ -130,6 +134,8 @@ L?\"(\\.|[^\\"])*\"	{ return Parser::make_STRING_LITERAL(yytext, loc);}
 #.*         { /* comments */ }
 
 (<.*\.e2>)      { return Parser::make_IMPORT_LITERAL(yytext, loc);}
+
+(<.*>::)      { return Parser::make_NSFUNC_CALL(yytext, loc);}
 
 [ \v\f\t]	    {  }
 [\n]      { code_line++; }

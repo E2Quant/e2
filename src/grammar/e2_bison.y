@@ -27,9 +27,9 @@
 
 %code requires
 {
-	/* you may need these header files 
-	 * add more header file if you need more
-	 */
+    /* you may need these header files 
+     * add more header file if you need more
+     */
     #include <stdio.h>
     #include <iostream>
     #include <list>
@@ -37,31 +37,31 @@
     #include <functional>
 
 
-    #include "ast/ParserCtx.hpp"
+#include "ast/ParserCtx.hpp"
     #include "utility/Log.hpp"
     #include "assembler/BaseNode.hpp"
     extern  int code_line;
 
-	/* define the sturctures using as types for non-terminals */
+/* define the sturctures using as types for non-terminals */
 
-	/* end the structures for non-terminal types */
+/* end the structures for non-terminal types */
 }
 
 %code
 {
 
 yy::Parser::symbol_type yylex(void* yyscanner,
-                         yy::location& loc,
+  yy::location& loc,
                          class e2::ParserCtx& ctx);
 }
 
 // token
 %token END 0;
-%token <std::string> IDENTIFIER STRING_LITERAL IMPORT_LITERAL 
+%token <std::string> IDENTIFIER STRING_LITERAL IMPORT_LITERAL NSFUNC_CALL
 %token <std::int64_t>  CONSTANT
 %token <float>  FCONSTANT
 
-
+%token <int> NAMESPACE_ATTR
 %token <int> OP_LE OP_GE OP_EQ OP_NE
 %token <int> LOGICAL_AND LOGICAL_OR LOGICAL_NOT
 
@@ -73,11 +73,19 @@ yy::Parser::symbol_type yylex(void* yyscanner,
 %token <int> ASSIGN_EQ
 %token <int> '*' '/' '%' '+' '-' '<' '>' '&' '^' '|'
 
-%token  UNION FUNCTION EXTERN IMPORT
+%token NAMESPACE UNION FUNCTION EXTERN IMPORT THIS SELF
 
 %token IF ELSE SWITCH CASE DEFAULT WHILE DO FOR CONTINUE BREAK RETURN
 
 //type
+
+%type <e2::Identifier *> global_union_variable identifier_str namespace_variable
+
+// id list
+%type <e2::Identifier *> id_ns_name id_func_call_name
+// 包括 union 的全局变量
+%type <e2::Identifier *> id_ns_gl_name
+
 %type <e2::Block *> translation_unit
 
 %type <e2::Statement *> block
@@ -98,12 +106,20 @@ yy::Parser::symbol_type yylex(void* yyscanner,
 %type <e2::UnaryOperator *> unary_val
 
 %type <e2::FunctionDeclaration *> function_definition
+
+
+
+// call name 
+
 %type <e2::MethodCall *> method_call 
 
 %type <e2::ExternDeclaration *>  extern_call
 
-%type <e2::Identifier *> identifier_list
-%type <e2::Expression *>  primary_rvalue  
+//赋值中的 左边变量, 包括一无运算 
+%type <e2::Identifier *> primary_lvalue
+//赋值中的 右边变量
+%type <e2::Expression *> primary_rvalue  
+//赋值中的 右边 表达式
 %type <e2::Expression *> expression_rvalue
 %type <e2::ExpressionList *> parameter_list function_parameter
 
@@ -111,6 +127,11 @@ yy::Parser::symbol_type yylex(void* yyscanner,
 %type <e2::VariableStatement *> union_statement 
 %type <e2::Block *> union_list 
 %type <e2::UnionDeclaration *> union_definition
+
+
+%type <e2::VariableStatement *> namespace_member
+%type <e2::Block *> namespace_body
+%type <e2::NameSpace *> namespace_definition
 
 %type <e2::ImportModule *> import_module
 
@@ -124,7 +145,7 @@ yy::Parser::symbol_type yylex(void* yyscanner,
 /* The driver is passed by reference to the parser and to the scanner. This
  * provides a simple but effective pure interface, not relying on global
  * variables. */
-%lex-param {void *scanner} {yy::location& loc} { class e2::ParserCtx& ctx }
+%lex-param {void *scanner} {yy::location& {$$ = MALLOC(e2::Block, "union_list", code_line, ctx.path() ); $$->push_back($1);} loc} { class e2::ParserCtx& ctx }
 %parse-param {void *scanner} {yy::location& loc} { class e2::ParserCtx& ctx }
 
 
@@ -133,40 +154,51 @@ yy::Parser::symbol_type yylex(void* yyscanner,
 %%
 
 translation_unit 
-    : /* 入口  block 1, 变量，函数调用,2,   function_definition: 函数定义， 3. union 声明   */
+    : /* 入口  blreturn Parser::make_NSFUNC_CALL(yytext, loc);ock 1, 变量，函数调用,2,   function_definition: 函数定义， 3. union 声明   */
       block     { ctx.RootBlock()->push_back($1);}
     | import_module { if($1!=nullptr) ctx.RootBlock()->push_back($1); } 
+    | namespace_definition { ctx.RootBlock()->push_back($1);}
     | function_definition  { ctx.RootBlock()->push_back($1);} 
     | union_definition     { ctx.RootBlock()->push_back($1);} 
     | translation_unit block  { ctx.RootBlock()->push_back($2);} 
+    | translation_unit namespace_definition { ctx.RootBlock()->push_back($2);}
     | translation_unit function_definition  { ctx.RootBlock()->push_back($2);} 
     | translation_unit union_definition     { ctx.RootBlock()->push_back($2);} 
     | translation_unit import_module { if($2!=nullptr)ctx.RootBlock()->push_back($2); } 
     ;
 
 import_module:        /* empty */ 
-         IMPORT IMPORT_LITERAL {$$ = MALLOC( e2::ImportModule,$2);}        
+             IMPORT IMPORT_LITERAL {$$ = MALLOC( e2::ImportModule,$2);}        
         ;
 
 block
     : /* block */
       variable_val ';'  {$$ = $1; } 
-    | method_call  ';'  {$$ = $1; } 	
-    | extern_call ';'  {$$ = $1;}
     | unary_val ';'  {$$ = $1;}
+    | method_call  ';'  {$$ = $1; } 	
+    | extern_call ';'  {$$ = $1;} 
+    ;
+
+
+
+unary_val
+    : /*一无运算*/
+      primary_lvalue unary {
+        $$ = MALLOC(e2::UnaryOperator,$1,$2,code_line, ctx.path()); 
+         }
+    ;
+
+unary
+    : /* ++a ; a-- */
+      UNARY_INC {$$= token::UNARY_INC;}
+    | UNARY_DEC {$$= token::UNARY_DEC;}
     ;
 
 variable_val
-    : /* Statement 变量 赋值*/
-      identifier_list assignment expression {
+    : /* Statement 变量 = 赋值 或 运算  */
+      primary_lvalue assignment expression {
             $$ = MALLOC( e2::VariableStatement,$1,$2, $3,code_line, ctx.path());
             } 
-    ;
-
-unary_val
-    : identifier_list unary {
-        $$ = MALLOC(e2::UnaryOperator,$1,$2,code_line, ctx.path()); 
-         }
     ;
 
 expression
@@ -175,11 +207,11 @@ expression
     ;
 
 additive_expression
-	: multiplicative_expression {$$=$1;}
-	| additive_expression add_arithmetic multiplicative_expression {
+    : multiplicative_expression {$$=$1;}
+    | additive_expression add_arithmetic multiplicative_expression {
             $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.path());
             }
-	;
+    ;
 
 
 add_arithmetic
@@ -190,12 +222,12 @@ add_arithmetic
 
 
 multiplicative_expression
-	: shift_expression {$$=$1;} 
-	| multiplicative_expression mul_arithmetic shift_expression {
+    : shift_expression {$$=$1;} 
+    | multiplicative_expression mul_arithmetic shift_expression {
             $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.path());
          }
 
-	;
+;
 
 mul_arithmetic
     :
@@ -219,7 +251,7 @@ shift_arithmetic
     | '^' {$$='^';}
     | '|' {$$='|';} 
     ;
-    
+
 
 conditional
     : /* expression 判断的条件 */
@@ -256,12 +288,8 @@ logical
     | LOGICAL_OR {$$ = token::LOGICAL_OR;}
     ;
 
-unary
-    : /* ++a ; a-- */
-      UNARY_INC {$$= token::UNARY_INC;}
-    | UNARY_DEC {$$= token::UNARY_DEC;}
-    ;
-    
+
+
 assignment
     : /* a = b;  a += b; a *= b */
       ASSIGN_EQ    {$$= token::ASSIGN_EQ;}
@@ -278,9 +306,9 @@ assignment
     ;
 
 compound_statement
-	: '{' '}'  {$$ = nullptr;}
-	| '{' compound_block '}' {$$ = $2;}
-	;
+    : '{' '}'  {$$ = nullptr;}
+    | '{' compound_block '}' {$$ = $2;}
+    ;
 
 compound_block
      :/* blocks */ 
@@ -291,11 +319,11 @@ compound_block
     ;	
 
 statement
-	: /* statement compound_statement */ 	  
-	  selection_statement {$$ = $1;}
-	| iteration_statement {$$ = $1;}
-	| jump_statement {$$ = $1;}
-	;
+    : /* statement compound_statement */ 	  
+      selection_statement {$$ = $1;}
+    | iteration_statement {$$ = $1;}
+    | jump_statement {$$ = $1;}
+    ;
 
 labled_if
     : compound_statement 
@@ -303,19 +331,19 @@ labled_if
             $$ = MALLOC(e2::LabledBlock, "labled_if", code_line, ctx.path()); 
             $$->push($1, e2::Selection::_then);
 
-        }
+}
     | compound_statement ELSE compound_statement 
         {  
 
-            $$ = MALLOC(e2::LabledBlock,"labled_if", code_line, ctx.path()); 
+$$ = MALLOC(e2::LabledBlock,"labled_if", code_line, ctx.path()); 
             $$->push($1, e2::Selection::_then);
 
-            $$->push($3, e2::Selection::_else);
+$$->push($3, e2::Selection::_else);
         }
     ;
 
 labeled_switch
-	: CASE primary_rvalue ':' compound_block
+    : CASE primary_rvalue ':' compound_block
         {
             $$ = MALLOC(e2::LabledBlock, "labeled_switch", code_line, ctx.path());
             $$->push($2,$4, e2::Selection::_case) ;
@@ -324,26 +352,26 @@ labeled_switch
         { 
             $$ = $1;  
             $1->push($3,$5, e2::Selection::_case) ;
-            
+
         } 
-	| labeled_switch  DEFAULT ':' compound_block
+    | labeled_switch  DEFAULT ':' compound_block
         { 
             $$ = $1;
             $1->push($4,e2::Selection::_default);
         }
-	;
+    ;
 
 selection_statement
-	: IF '(' conditional ')'  labled_if 
+    : IF '(' conditional ')'  labled_if 
         {
             $$ = MALLOC(e2::IFStatement, $3,$5, code_line, ctx.path());
         }
-    
-	| SWITCH '(' conditional ')' '{' labeled_switch '}'
+
+    | SWITCH '(' conditional ')' '{' labeled_switch '}'
         {
             $$ = MALLOC(e2::SwitchStatement, $3,$6);
         }
-	;
+    ;
 
 for_range
     : unary_val {$$ = $1;}
@@ -351,31 +379,33 @@ for_range
     ;
 
 iteration_statement
-	: WHILE '(' conditional ')' compound_statement 
+    : WHILE '(' conditional ')' compound_statement 
         {   
             $$ = MALLOC(e2::IterStatement, $3,$5,e2::IterType::_while);
         }
-	| DO compound_statement WHILE '(' conditional ')' ';' 
+    | DO compound_statement WHILE '(' conditional ')' ';' 
         {
             $$ = MALLOC(e2::IterStatement,$5,$2,e2::IterType::_do);
         }
-	| FOR '(' variable_val ';' conditional ';' ')' compound_statement 
+    | FOR '(' variable_val ';' conditional ';' ')' compound_statement 
         {
             $$ = MALLOC(e2::IterStatement,$3,$5,$8,e2::IterType::_for);
         }
-	| FOR '(' variable_val ';' conditional ';' for_range ')' compound_statement 
+    | FOR '(' variable_val ';' conditional ';' for_range ')' compound_statement 
         {
             $$ = MALLOC(e2::IterStatement,$3,$5,$7,$9,e2::IterType::_forfull);
         }
-	;
+    ;
 
 jump_statement
-	:  
-	  CONTINUE ';'           {$$ = nullptr;}
-	| BREAK ';'             {$$ = MALLOC(e2::BreakStatement) ;}
+    :  
+      CONTINUE ';'           {$$ = nullptr;}
+    | BREAK ';'             {$$ = MALLOC(e2::BreakStatement, code_line, ctx.path()) ;}
     | RETURN ';' {$$ = MALLOC(e2::ReturnStatement, code_line, ctx.path());} 
-	| RETURN primary_rvalue ';' {$$ = MALLOC(e2::ReturnStatement,$2, code_line, ctx.path());}
-	;
+    | RETURN primary_rvalue ';' {$$ = MALLOC(e2::ReturnStatement,$2, code_line, ctx.path());}
+    ;
+
+
 
 parameter_list	
     :   /* 参数可以为空 */
@@ -389,18 +419,21 @@ function_parameter
     ;
 
 function_definition
-    : FUNCTION IDENTIFIER function_parameter compound_statement {$$ = MALLOC(e2::FunctionDeclaration,$2, $3, $4);} 
+    : FUNCTION  identifier_str function_parameter compound_statement 
+        {
+            $$ = MALLOC(e2::FunctionDeclaration, $2, $3, $4, code_line, ctx.path());
+        } 
     ;
 
 method_call
     : /* method call */
-     IDENTIFIER function_parameter {
+     id_func_call_name function_parameter {
             $$ = MALLOC(e2::MethodCall, $1, $2, code_line, ctx.path());
-        } 
+        }  
     ;
 
 extern_call
-    : EXTERN IDENTIFIER  IDENTIFIER '(' IDENTIFIER primary_rvalue ')' { 
+    : EXTERN IDENTIFIER  identifier_str '(' identifier_str primary_rvalue ')' { 
         e2::ExpressionList *el = MALLOC(e2::ExpressionList); 
          el->push_back($6); 
          $$ = MALLOC(e2::ExternDeclaration,$3,el);}
@@ -408,46 +441,188 @@ extern_call
 
 union_statement
     : ';' {$$ = nullptr; }	
-    | variable_val ';' {$$ = $1;}
+    | variable_val ';' 
+        {
+            $$ = $1;  
+            $1->idType(e2::IDType::_global); 
+        } 
     ;
 
 union_list
-    : union_statement               {$$ = MALLOC(e2::Block, "union_list", code_line, ctx.path() ); $$->push_back($1);}
-    | union_list union_statement    {$$ = $1; $1->push_back($2);}
-    | union_definition              {$$ = MALLOC(e2::Block, "union_def", code_line, ctx.path() ); $$->push_back($1);}
-    | union_list union_definition   {$$ = $1; $1->push_back($2);} 
+    : union_statement               
+        {
+            $$ = MALLOC(e2::Block, "union_list", code_line, ctx.path() ); 
+            $$->push_back($1);
+        }
+    | union_list union_statement    
+        {
+            $$ = $1; 
+            $2->idType(e2::IDType::_global);
+            $1->push_back($2); 
+        }
+    | union_definition              
+        {
+            $1->idType(e2::IDType::_global);
+            $$ = MALLOC(e2::Block, "union_def", code_line, ctx.path() ); 
+            $$->push_back($1); 
+        }
+    | union_list union_definition   
+        {
+            $$ = $1; 
+            $2->idType(e2::IDType::_global); 
+            $1->push_back($2);
+        } 
     ;
 
 union_definition
-    : UNION IDENTIFIER '{' union_list '}' {  $$ = MALLOC(e2::UnionDeclaration,$2,$4);} 
+    : UNION identifier_str '{' union_list '}' 
+        {  
+            $$ = MALLOC(e2::UnionDeclaration,$2,$4, code_line, ctx.path());
+        } 
+    ;
+
+namespace_member
+    : /*命名空间体,包括私有变量，函数. 公共函数*/
+      ';' {$$ = nullptr; }	
+    | variable_val ';'     
+        {
+            $$ = $1; 
+            if($1->id()->idType() ==e2::IDType::_ns_private){
+                $1->id()->nss(NameSpaceStatus::_n_attr_definition);
+            }
+        }  
+    ;
+
+namespace_body
+    :  /*body*/ 
+        namespace_member   
+        {
+            $$ = MALLOC(e2::Block, "namespace_member", code_line, ctx.path() ); 
+            $$->push_back($1);
+        }
+    | function_definition
+        {
+            $1->idType(e2::IDType::_ns_public); 
+
+            $$ = MALLOC(e2::Block, "namespace_func", code_line, ctx.path());
+            $$->push_back($1);
+        } 
+    | SELF function_definition
+        {
+            $2->idType(e2::IDType::_ns_private); 
+
+            $$ = MALLOC(e2::Block, "namespace_func", code_line, ctx.path());
+            $$->push_back($2);
+        }
+    | namespace_body namespace_member {$$=$1; $1->push_back($2);}
+    | namespace_body function_definition {$$=$1; $1->push_back($2);}
+    | namespace_body SELF function_definition {$$=$1; $1->push_back($3);}
+    ;
+
+namespace_definition
+    : /* namespace 定义 */
+        NAMESPACE identifier_str '{' namespace_body '}' 
+        {  
+            $$ = MALLOC(e2::NameSpace, $2, $4, code_line, ctx.path());
+           
+        } 
+    ;
+
+
+primary_lvalue
+    : /*左边的变量*/
+      id_ns_name { $$ = $1; }
     ;
 
 primary_rvalue 
     : /* 变量名, 数字 */
-      identifier_list {$$ = $1;} 
-    | CONSTANT  {$$ = MALLOC(e2::Number,$1);}
-    | '-' CONSTANT  {$$ = MALLOC(e2::Number,$2, true); }
-    | FCONSTANT  {$$ = MALLOC(e2::Number,$1);}    
-    | '-' FCONSTANT  {$$ = MALLOC(e2::Number,$2, true);}    
-    | STRING_LITERAL {$$ = MALLOC(e2::StrObj, $1, code_line, ctx.path()); }
+      id_ns_gl_name { $$ = $1; } 
+    | CONSTANT  
+        {
+            $$ = MALLOC(e2::Number,$1, code_line, ctx.path());
+        }
+    | '-' CONSTANT  
+        {
+            $$ = MALLOC(e2::Number,$2, true, code_line, ctx.path()); 
+        }
+    | FCONSTANT  
+        {
+            $$ = MALLOC(e2::Number,$1, code_line, ctx.path());
+        }
+    | '-' FCONSTANT  
+        {
+            $$ = MALLOC(e2::Number,$2, true, code_line, ctx.path());
+        }    
+    | STRING_LITERAL 
+        {
+            $$ = MALLOC(e2::StrObj, $1, code_line, ctx.path()); 
+        }
     ;
 
-identifier_list
-    : IDENTIFIER  {
-                $$ = MALLOC(e2::Identifier, $1, e2::IDType::_normal);
-                $$->codeLine(code_line);
-                $$->codePath(ctx.path());
-                } 
-    | identifier_list '.' IDENTIFIER {
-                $$=$1;  
-                $1->push_back($3);
-                $1->idType(e2::IDType::_global);
-                $1->codeLine(code_line);
-                $1->codePath(ctx.path());
-
-                }
+id_func_call_name
+    : /**/
+      id_ns_name {$$=$1;}
+    | identifier_str NSFUNC_CALL identifier_str 
+        {
+            $$=$3;
+            $3->push_back($1);
+            $3->NameSpaceTag($2);
+            $3->idType(IDType::_ns_methodcall); 
+        }
     ;
 
+id_ns_gl_name
+    : 
+      id_ns_name { $$ = $1; }
+    | global_union_variable { $$ = $1; } 
+    ;
+
+id_ns_name
+    : /*左边的变量*/
+      identifier_str { $$ = $1; }
+    | namespace_variable {$$ = $1;}
+    ;
+
+global_union_variable
+    : /* union 的全局变量 */
+      identifier_str '.' identifier_str
+        {
+            $$=$1;  
+            $$->push_back($3);
+            $$->idType(e2::IDType::_global);
+            $$->codeLine(code_line);
+            $$->codePath(ctx.path());
+        }
+    |  global_union_variable '.' identifier_str
+        {
+            $$=$1;  
+            $1->push_back($3);
+            $1->idType(e2::IDType::_global);
+            $1->codeLine(code_line);
+            $1->codePath(ctx.path());
+        }
+    ;
+
+
+namespace_variable
+    : /* namespace 私有变量*/
+    THIS NAMESPACE_ATTR identifier_str 
+        { 
+            $$ = $3;
+            $3->idType(e2::IDType::_ns_private); 
+            $3->nss(NameSpaceStatus::_n_attr_expression);
+        }
+    ;
+
+identifier_str
+    : /* 最基本的字符串 */
+      IDENTIFIER  
+        {
+            $$ = MALLOC(e2::Identifier, $1, e2::IDType::_normal);
+            $$->codeLine(code_line);
+            $$->codePath(ctx.path());
+        }
+    ;
 %%
 
 /**

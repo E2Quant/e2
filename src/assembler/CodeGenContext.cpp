@@ -52,17 +52,28 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <functional>
+#include <iostream>
 #include <string>
 #include <vector>
 
 #include "E2L/E2LType.hpp"
+#include "assembler/BaseNode.hpp"
 #include "assembler/BaseType.hpp"
 #include "assembler/ExternFunction.hpp"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/IR/DerivedTypes.h"
+#include "llvm/IR/Instruction.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Value.h"
+#include "llvm/IR/Verifier.h"
+#include "llvm/Support/raw_ostream.h"
 #include "utility/pack.hpp"
 
 extern "C" {
@@ -249,13 +260,15 @@ bool CodeGenContext::generateCode(Block* root)
     _debug = true;
 #endif
     if (_debug) {
-        if (llvm::verifyModule(*_module)) {
-            e2::llog::bug("module is error");
-            _module->print(llvm::errs(), nullptr);
+        llvm::verifyFunction(*_mainFunction, &llvm::errs());
+
+        if (llvm::verifyModule(*_module, &llvm::errs())) {
+            e2::llog::bug("module is error:");
         }
         else {
             e2::llog::info("module is verify ok");
         }
+        _module->print(llvm::outs(), nullptr);
     }
     return _CanRun;
 } /* -----  end of function CodeGenCotext::generateCode  ----- */
@@ -292,8 +305,8 @@ void CodeGenContext::runCode()
     }
     _ee->finalizeObject();
 
-    /* std::vector<llvm::GenericValue> noargs(1); */
-    /* llvm::GenericValue v = ee->runFunction(_mainFunction, noargs); */
+    // std::vector<llvm::GenericValue> noargs(1);
+    //  llvm::GenericValue v = _ee->runFunction(_mainFunction, noargs);
 
     _function = (funPtr)_ee->getPointerToFunction(_mainFunction);
 
@@ -326,12 +339,12 @@ llvm::GenericValue CodeGenContext::Result()
  * ============================================
  */
 
-int CodeGenContext::runFunction(double arg1 = 0, double arg2 = 0)
+Int_e CodeGenContext::runFunction(double arg1 = 0, double arg2 = 0)
 {
     Int_e _arg1 = (Int_e)VALNUMBER(arg1);
     Int_e _arg2 = (Int_e)VALNUMBER(arg2);
 
-    int ret = _function(_arg1, _arg2);
+    Int_e ret = _function(_arg1, _arg2);
 
     _GenericRet.IntVal = ret;
     return ret;
@@ -438,6 +451,9 @@ bool CodeGenContext::isBreakPoint()
  */
 llvm::BasicBlock* CodeGenContext::currentBlock()
 {
+    if (_blockStack.size() == 0) {
+        return nullptr;
+    }
     return _blockStack.front()->block();
 } /* -----  end of function CodeGenContext::currentBlock  ----- */
 
@@ -492,7 +508,9 @@ void CodeGenContext::popBlock()
 {
     CodeGenBlock* top = _blockStack.front();
     _blockStack.pop_front();
+
     RELEASE(top);
+
 } /* -----  end of function CodeGenContext::popBlock  ----- */
 
 /*
@@ -515,6 +533,38 @@ void CodeGenContext::setInsertPoint(llvm::BasicBlock* block)
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  CodeGenContext::currentFuncName
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::currentFuncName(std::string func)
+{
+    _current_func_name = func;
+} /* -----  end of function CodeGenContext::currentFuncName  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::currentFuncName
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+std::string CodeGenContext::currentFuncName()
+{
+    return _current_func_name;
+} /* -----  end of function CodeGenContext::currentFuncName  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  CodeGenContext::locales
  *  ->  void *
  *  Parameters:
@@ -531,7 +581,59 @@ MapLocals& CodeGenContext::locals()
 /*
  * ===  FUNCTION  =============================
  *
- *         Name:  CodeGenContext::MainArgx
+ *         Name:  CodeGenContext::pushUnion
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::pushUnion(std::string name)
+{
+    _union_name.push(name);
+} /* -----  end of function CodeGenContext::pushUnion  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::topUnion
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+std::string CodeGenContext::topUnion()
+{
+    std::string top = "";
+    if (_union_name.size() > 0) {
+        top = _union_name.top();
+    }
+    return top;
+} /* -----  end of function CodeGenContext::topUnion  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::popUnion
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::popUnion()
+{
+    if (_union_name.size() > 0) {
+        _union_name.pop();
+    }
+} /* -----  end of function CodeGenContext::popUnion  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::MainArgxfunction_self_pop
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
@@ -586,9 +688,10 @@ void CodeGenContext::setCurrentReturnValue(llvm::Value* value)
  */
 llvm::Value* CodeGenContext::getCurrentReturnValue()
 {
-    // if (_breakStack.size() == 0) {
-    //     llog::info("_break_stat size is 0");
-    // }
+    if (_blockStack.size() == 0) {
+        //        llog::info("_break_stat size is 0");
+        return nullptr;
+    }
     return _blockStack.front()->getValue();
 } /* -----  end of function CodeGenContext::getCurrentReturnValue  ----- */
 
@@ -603,7 +706,7 @@ llvm::Value* CodeGenContext::getCurrentReturnValue()
  *
  * ============================================
  */
-llvm::Value* CodeGenContext::findBlockId(const std::string name)
+llvm::AllocaInst* CodeGenContext::findBlockId(const std::string name)
 {
     ScopeKind current = ScopeKind::_sk_null;
     for (auto cb : _blockStack) {
@@ -930,6 +1033,473 @@ void CodeGenContext::AddGlobal()
     ADD_GV("UBookType.BBook", BookType::BBook);
     ADD_GV("UBookType.ABook", BookType::ABook);
 } /* -----  end of function CodeGenContext::AddGlobal  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::newNameSpace
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::newNameSpace(std::string name)
+{
+    _NameSpace = name;
+
+    if (_NameSpaceAttributes.count(name) == 0 && _blockStack.size() > 0) {
+        _self_ns = _blockStack.front();
+        // 保存私有变量的 map
+        _NameSpaceAttributes[name] = NameSpaceValueNames();
+    }
+    else {
+        llog::echo("block size ==0");
+    }
+
+} /* -----  end of function CodeGenContext::newNameSpace  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::NameSpaceVariableSize
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+std::size_t CodeGenContext::NameSpaceVariableSize(std::string ns)
+{
+    std::size_t nsize = 0;
+    if (_NameSpaceAttributes.count(ns) == 1) {
+        nsize = _NameSpaceAttributes[ns].size();
+    }
+
+    return nsize;
+} /* -----  end of function CodeGenContext::NameSpaceVariableSize  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::NameSpaceVariable
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+NameSpaceValueNames CodeGenContext::NameSpaceVariable(std::string ns)
+{
+    NameSpaceValueNames nsv;
+
+    if (_NameSpaceAttributes.count(ns) > 0) {
+        nsv = _NameSpaceAttributes[ns];
+    }
+    return nsv;
+
+} /* -----  end of function CodeGenContext::NameSpaceVariable  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::NameSpaceAddVariableAccess
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  记录 namespace 的私有变量在 gep 中的 索引及类型
+ * ============================================
+ */
+void CodeGenContext::NameSpaceAddVariableAccess(std::string name, int index,
+                                                llvm::Type* type)
+{
+    _NameSpaceAttributes[_NameSpace][name] = {index, type};
+} /* -----  end of function CodeGenContext::NameSpaceAddVariableAccess  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::getNameSpaceVariableType
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+llvm::Type* CodeGenContext::getNameSpaceVariableType(std::string name,
+                                                     std::string var)
+{
+    if (_NameSpaceAttributes.count(name) == 0) {
+        return nullptr;
+    }
+    if (_NameSpaceAttributes[name].count(var) == 0) {
+        return nullptr;
+    }
+    return std::get<1>(_NameSpaceAttributes[name][var]);
+} /* -----  end of function CodeGenContext::getNameSpaceVariableType  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::getNameSpaceVarAccessInst
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+llvm::Instruction* CodeGenContext::getNameSpaceVarAccessInst(
+    std::string ns, std::string var_name, llvm::AllocaInst* this_ptr)
+{
+    if (_NameSpaceAttributes.count(ns) == 0) {
+        llog::bug("error namespace:", ns);
+        DontRun();
+        return nullptr;
+    }
+    int index = std::get<0>(_NameSpaceAttributes[ns][var_name]);
+    llvm::Instruction* instr = block_ns_var_current(var_name);
+
+    if (instr != nullptr) {
+        llog::echo("instr is null");
+        return instr;
+    }
+
+    if (this_ptr == nullptr) {
+        llog::echo("instr is this_ptr");
+
+        return nullptr;
+    }
+
+    llog::echo("index:", index, " ns:", ns, " var:", var_name);
+
+    std::vector<llvm::Value*> ptr_indices;
+    llvm::ConstantInt* const_int32_0 =
+        llvm::ConstantInt::get(_module->getContext(), llvm::APInt(32, 0));
+
+    llvm::ConstantInt* const_int32 =
+        llvm::ConstantInt::get(_module->getContext(), llvm::APInt(32, index));
+
+    ptr_indices.push_back(const_int32_0);
+    ptr_indices.push_back(const_int32);
+
+    llvm::Type* structTy = getNSType(ns);
+
+    if (this_ptr->getAllocatedType() != nullptr &&
+        this_ptr->getAllocatedType()->isPointerTy()) {
+        if (this_ptr->getType() == nullptr) {
+            llog::bug("gettype is nullptr");
+        }
+
+        llvm::Value* nsPtr = function_self_current();
+
+        if (nsPtr == nullptr) {
+            llog::bug("nsptr is nullptr");
+            return nullptr;
+        }
+
+        instr = llvm::GetElementPtrInst::CreateInBounds(
+            structTy, nsPtr, ptr_indices, var_name, currentBlock());
+    }
+
+    if (instr == nullptr) {
+        instr = llvm::GetElementPtrInst::CreateInBounds(
+            structTy, this_ptr, ptr_indices, var_name, currentBlock());
+    }
+
+    block_ns_var_push(var_name, instr);
+
+    return instr;
+
+} /* -----  end of function CodeGenContext::getNameSpaceVarAccessInst  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::addNameSpaceinitCode
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *   保存转换后的表达式
+ * ============================================
+ */
+void CodeGenContext::addNameSpaceinitCode(std::string name, Assignment* assign)
+{
+    _ns_assign[name].insert(assign);
+} /* -----  end of function CodeGenContext::addNameSpaceinitCode  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::getNameSpaceAssign
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  返回某个 namespace 的表达式
+ * ============================================
+ */
+NameSpaceInitCodeAssign& CodeGenContext::getNameSpaceAssign(std::string name)
+{
+    assert(_ns_assign.count(name) != 0);
+
+    return _ns_assign[name];
+} /* -----  end of function CodeGenContext::getNameSpaceAssign  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::function_self
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  创建一个 namespace 变量 allocainst的值
+ * ============================================
+ */
+llvm::AllocaInst* CodeGenContext::function_self(std::string arg_name)
+{
+    llvm::AllocaInst* alloca = nullptr;
+    std::string name_space = getNameSpace();
+    llvm::Type* self_ty = getNSType(name_space);
+    if (self_ty == nullptr) {
+        llog::bug("self type is nullptr");
+        DontRun();
+
+        return alloca;
+    }
+
+    llvm::PointerType* self_ptr_ty = llvm::PointerType::getUnqual(self_ty);
+
+    alloca = new llvm::AllocaInst(self_ptr_ty, ALLOCAINST_SIZE,
+                                  arg_name.c_str(), currentBlock());
+
+    locals()[arg_name] = alloca;
+
+    return alloca;
+} /* -----  end of function CodeGenContext::function_self  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::function_self_push
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ * loadinst 的值
+ * ============================================
+ */
+void CodeGenContext::function_self_push(llvm::AllocaInst* self)
+{
+    if (self->getAllocatedType() != nullptr &&
+        self->getAllocatedType()->isPointerTy()) {
+        if (self->getType() == nullptr) {
+            llog::bug("gettype is nullptr");
+        }
+        llvm::Value* nsPtr = new llvm::LoadInst(
+            self->getType()->getPointerElementType(), self, self->getName(),
+            false, storeinst_align, currentBlock());
+        _function_ns_arg.push_back(nsPtr);
+    }
+
+} /* -----  end of function CodeGenContext::function_self_push  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::function_self_current
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+llvm::Value* CodeGenContext::function_self_current()
+{
+    if (_function_ns_arg.size() == 0) {
+        return nullptr;
+    }
+    return _function_ns_arg.front();
+} /* -----  end of function CodeGenContext::function_self_current  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::function_self_pop
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::function_self_pop()
+{
+    if (_function_ns_arg.size() == 0) {
+        return;
+    }
+    _function_ns_arg.pop_front();
+
+} /* -----  end of function CodeGenContext::function_self_pop  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::block_ns_var_push
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  function block start init
+ * ============================================
+ */
+void CodeGenContext::block_ns_var_push(std::string var, llvm::Instruction* inst)
+{
+    if (inst == nullptr) {
+        // init
+        std::string name_space = getNameSpace();
+        NameSpaceVarMap svm;
+        for (auto it : _NameSpaceAttributes[name_space]) {
+            svm.insert({it.first, inst});
+        }
+
+        _NameSpaceVarBlockInst.push_back(svm);
+    }
+    else {
+        // 某一个变量初始化的时候加入来
+        if (_NameSpaceVarBlockInst.front().count(var) == 0) {
+            llog::bug("not found var:", var);
+            return;
+        }
+
+        _NameSpaceVarBlockInst.front()[var] = inst;
+    }
+
+} /* -----  end of function CodeGenContext::block_ns_var_push  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::block_ns_var_current
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+llvm::Instruction* CodeGenContext::block_ns_var_current(std::string var)
+{
+    llvm::Instruction* inst = nullptr;
+    if (_NameSpaceVarBlockInst.size() == 0) {
+        return inst;
+    }
+    if (_NameSpaceVarBlockInst.front().count(var) == 0) {
+        return inst;
+    }
+    inst = _NameSpaceVarBlockInst.front()[var];
+    return inst;
+} /* -----  end of function CodeGenContext::block_ns_var_current  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::block_ns_var_pop
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::block_ns_var_pop()
+{
+    if (_NameSpaceVarBlockInst.size() == 0) {
+        return;
+    }
+    _NameSpaceVarBlockInst.pop_front();
+} /* -----  end of function CodeGenContext::block_ns_var_pop  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::MethodCallInst
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+llvm::AllocaInst* CodeGenContext::MethodCallInst(Identifier* id)
+{
+    IDType idt = id->idType();
+    std::vector<llvm::Value*> args;
+    llvm::AllocaInst* alloca = nullptr;
+    if (idt == IDType::_ns_methodcall) {
+        std::string ns_name = id->qname().back();
+        std::string tag = id->NameSpaceTag();
+
+        if (_NameSpaceTag.count(tag) == 0) {
+            llvm::Type* ns_ty = getNSType(ns_name);
+            if (ns_ty == nullptr) {
+                llog::bug("namespace not found:", ns_name);
+                return nullptr;
+            }
+
+            alloca = new llvm::AllocaInst(ns_ty, ALLOCAINST_SIZE, tag.c_str(),
+                                          currentBlock());
+            NameSpaceTagProperty ntp;
+            ntp._alloca = alloca;
+
+            _NameSpaceTag.insert({tag, ntp});
+        }
+        else {
+            alloca = _NameSpaceTag[tag]._alloca;
+        }
+    }
+
+    return alloca;
+} /* -----  end of function CodeGenContext::MethodCallInst  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::isTagInitVariable
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+bool CodeGenContext::isTagInitVariable(std::string tag)
+{
+    return _NameSpaceTag.count(tag) == 0;
+} /* -----  end of function CodeGenContext::isTagInitVariable  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::endNameSpace
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *   当前 namespace 处理完成了,生成了 ir 了
+ * ============================================
+ */
+void CodeGenContext::endNameSpace()
+{
+    _self_ns = nullptr;
+    _NameSpace = "";
+} /* -----  end of function CodeGenContext::endNameSpace  ----- */
 /*
  * ===  FUNCTION  =============================
  *
@@ -958,7 +1528,7 @@ void CodeGenContext::ScriptList(NodeType nt, std::string name, size_t argc)
  *  Parameters:
  *  - size_t  arg
  *  Description:
- *
+ *  把变量，函数记录下来，方便 E2L API 对比或者什么的
  * ============================================
  */
 const std::vector<ScriptList_t>& CodeGenContext::ScriptList()
@@ -1047,5 +1617,6 @@ void CodeGenContext::DontRun()
 {
     _CanRun = false;
 } /* -----  end of function CodeGenContext::DontRun  ----- */
+
 }  // namespace e2
 

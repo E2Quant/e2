@@ -409,5 +409,18 @@ e2::Int_e CurrentLS(); /* -----  end of function CurrentLS  ----- */
  * ============================================
  */
 e2::Int_e whois(); /* -----  end of function whois  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ConfigShow
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ * 显示当前的配置，包括ea 和 oms 端
+ * ============================================
+ */
+void ConfigShow(); /* -----  end of function ConfigShow  ----- */
 }  // namespace e2l
 #endif /* ----- #ifndef INIT_INC  ----- */

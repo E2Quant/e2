@@ -53,6 +53,7 @@
 #include <string>
 #include <utility>
 
+#include "assembler/BaseType.hpp"
 #include "ast/ParserCtx.hpp"
 
 /* #ifdef NUMBER_DECI */
@@ -62,7 +63,7 @@
 
 extern "C" {
 
-void call(const char *toPrint)
+void call(const char* toPrint)
 {
     if (toPrint) {
         fprintf(stderr, "ok... %s \n", toPrint);
@@ -72,12 +73,12 @@ void call(const char *toPrint)
     }
 }
 
-const char *toChar()
+const char* toChar()
 {
     int a = 12345;
     size_t len = snprintf(NULL, 0, "%d", a);
     len += 1;
-    char *abc = (char *)malloc(len);
+    char* abc = (char*)malloc(len);
     memset(abc, len, sizeof(char));
     snprintf(abc, len, "%d", a);
 
@@ -104,7 +105,7 @@ std::int64_t last(std::int64_t index)
  *
  * ============================================
  */
-void toDo(const char *f, const char *s, std::pair<std::string, Int_e> &b)
+void toDo(const char* f, const char* s, std::pair<std::string, Int_e>& b)
 {
     e2::ParserCtx ctx;
 
@@ -120,33 +121,33 @@ void toDo(const char *f, const char *s, std::pair<std::string, Int_e> &b)
 
     std::string name = "last";
     std::string cname = "call";
-    std::int64_t a = 19;
+    Int_e a = 19;
     CodeGenContext context;
-
+    context.toDebug();
     createCoreFunctions(context);
     ArgType arg(1, E2LType(context.getGlobalContext()));
     context.ExternBuild(E2LType(context.getGlobalContext()), arg,
-                        (std::int64_t *)last, name);
+                        (std::int64_t*)last, name);
 
-    llvm::Type *charType = E2LStr(context.getGlobalContext());
-    llvm::Type *rType = E2LVoid(context.getGlobalContext());
+    llvm::Type* charType = E2LStr(context.getGlobalContext());
+    llvm::Type* rType = E2LVoid(context.getGlobalContext());
     ArgType carg(1, charType);
-    context.ExternBuild(rType, carg, (void *)call, cname);
+    context.ExternBuild(rType, carg, (void*)call, cname);
 
     ArgType targ;
     std::string tochar = "tochar";
-    context.ExternBuild(charType, targ, (void *)toChar, tochar);
+    context.ExternBuild(charType, targ, (void*)toChar, tochar);
 
     if (b.first.length() > 0) {
         context.OutGlobalVar(b.first, b.second);
     }
-    Block *block = ctx.RootBlock();
+    Block* block = ctx.RootBlock();
     bool isgc = context.generateCode(block);
 
     if (isgc) {
         context.runCode();
-        int ret = context.runFunction(a, a);
-        llog::echo("ret:", ret);
+        Int_e ret = context.runFunction(a, a);
+        llog::echo("runFunction:", ret);
     }
     else {
         llog::bug("generateCode is error");
@@ -161,10 +162,10 @@ void toDo(const char *f, const char *s, std::pair<std::string, Int_e> &b)
  *  Description:
  * ============================================
  */
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
-    char *f = nullptr;
-    char *s = nullptr;
+    char* f = nullptr;
+    char* s = nullptr;
 
     if (argc > 2) {
         s = argv[2];

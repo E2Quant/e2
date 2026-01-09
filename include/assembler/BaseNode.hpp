@@ -86,16 +86,11 @@
 #include <llvm/Transforms/Scalar/Reassociate.h>
 #include <llvm/Transforms/Scalar/SimplifyCFG.h>
 
-#include <algorithm>
-#include <atomic>
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
-#include <iostream>
-#include <iterator>
 #include <map>
 #include <queue>
-#include <stack>
+#include <set>
 #include <string>
 #include <utility>
 #include <vector>
@@ -105,25 +100,28 @@
 namespace e2 {
 
 using retType = llvm::Type;
-using ArgType = std::vector<llvm::Type *>;
+using ArgType = std::vector<llvm::Type*>;
 inline std::size_t variable_str_num = 1;
 /**
  * code in codeGen , conver to the next
+ * 如果定义时候，有上一级别的 union id 就加进来
  */
-#define UNION_NAME(u)                   \
-    do {                                \
-        if (!_union_name.empty()) {     \
-            u->union_name(_union_name); \
-        }                               \
+#define UNION_NAME(u, ctx)                         \
+    do {                                           \
+        std::string union_parent = ctx.topUnion(); \
+        if (union_parent.length()) {               \
+            u->union_name(union_parent);           \
+        }                                          \
     } while (0)
 
 #define CodeGen(hs)                                                  \
     ({                                                               \
-        llvm::Value *__rhs = nullptr;                                \
+        llvm::Value* __rhs = nullptr;                                \
         do {                                                         \
+            std::string cname = "";                                  \
             if (hs->getType() == NodeType::_identifier) {            \
-                Identifier *ids = dynamic_cast<Identifier *>(hs);    \
-                std::string cname = ids->name();                     \
+                Identifier* ids = dynamic_cast<Identifier*>(hs);     \
+                cname = ids->name();                                 \
                 bool __ok_find = false;                              \
                 std::map<std::string, Int_e>::iterator _it =         \
                     _GlobalVariables.find(cname);                    \
@@ -131,7 +129,7 @@ inline std::size_t variable_str_num = 1;
                     __ok_find = true;                                \
                 }                                                    \
                 if (ids->idType() == IDType::_global || __ok_find) { \
-                    llvm::GlobalVariable *gVar =                     \
+                    llvm::GlobalVariable* gVar =                     \
                         context.getModule()->getNamedGlobal(cname);  \
                     if (gVar != nullptr) {                           \
                         __rhs = gVar->getOperand(0);                 \
@@ -147,16 +145,25 @@ inline std::size_t variable_str_num = 1;
 
 #define E2LType(con)                              \
     ({                                            \
-        retType *__TPtr;                          \
+        retType* __TPtr;                          \
         do {                                      \
             __TPtr = llvm::Type::getInt64Ty(con); \
         } while (0);                              \
         __TPtr;                                   \
     })
 
+#define E2L32Type(con)                            \
+    ({                                            \
+        retType* __TPtr;                          \
+        do {                                      \
+            __TPtr = llvm::Type::getInt32Ty(con); \
+        } while (0);                              \
+        __TPtr;                                   \
+    })
+
 #define E2LVoid(con)                                \
     ({                                              \
-        retType *__VoidPtr;                         \
+        retType* __VoidPtr;                         \
         do {                                        \
             __VoidPtr = llvm::Type::getVoidTy(con); \
         } while (0);                                \
@@ -165,7 +172,7 @@ inline std::size_t variable_str_num = 1;
 
 #define E2LStr(con)                                    \
     ({                                                 \
-        retType *__StrPtr;                             \
+        retType* __StrPtr;                             \
         do {                                           \
             __StrPtr = llvm::IntegerType::get(con, 8); \
         } while (0);                                   \
@@ -174,7 +181,7 @@ inline std::size_t variable_str_num = 1;
 
 #define E2LBool(con)                                \
     ({                                              \
-        retType *__boolPtr;                         \
+        retType* __boolPtr;                         \
         do {                                        \
             __boolPtr = llvm::Type::getInt1Ty(con); \
         } while (0);                                \
@@ -186,7 +193,7 @@ inline std::size_t variable_str_num = 1;
         do {                                                             \
             if (args->getType()->getTypeID() !=                          \
                 llvm::Type::TypeID::IntegerTyID) {                       \
-                retType *t = E2LBool(con.getGlobalContext());            \
+                retType* t = E2LBool(con.getGlobalContext());            \
                 auto cinstr =                                            \
                     llvm::CastInst::getCastOpcode(args, true, t, true);  \
                 args = llvm::CastInst::Create(cinstr, args, t, "castdb", \
@@ -198,9 +205,9 @@ inline std::size_t variable_str_num = 1;
 //
 #define BuildGlobal(context, type, name, val)                               \
     ({                                                                      \
-        llvm::GlobalVariable *__GPtr;                                       \
+        llvm::GlobalVariable* __GPtr;                                       \
         do {                                                                \
-            llvm::Constant *__init_val = llvm::ConstantInt::get(type, val); \
+            llvm::Constant* __init_val = llvm::ConstantInt::get(type, val); \
             context.getModule()->getOrInsertGlobal(name, type);             \
             __GPtr = context.getModule()->getNamedGlobal(name);             \
             __GPtr->setConstant(true);                                      \
@@ -210,7 +217,82 @@ inline std::size_t variable_str_num = 1;
         __GPtr;                                                             \
     })
 
-typedef int (*funPtr)(Int_e, Int_e);
+/* debug start*/
+
+#ifdef E2L_DEBUG
+inline std::size_t _code_gen_number = 0;
+
+#define EnterCode(gen)                                                  \
+    ({                                                                  \
+        do {                                                            \
+            _code_gen_number++;                                         \
+            llog::debug(llog::format("-> %ld.", _code_gen_number), gen, \
+                        " (code line:", _codeLine, ")");                \
+        } while (0);                                                    \
+    })
+
+#define ExitCode(gen)                                                   \
+    ({                                                                  \
+        do {                                                            \
+            llog::warn(llog::format("<- %ld.", _code_gen_number), gen); \
+            _code_gen_number--;                                         \
+        } while (0);                                                    \
+    })
+
+#endif
+/* debug end*/
+
+// context.currentBlock()->getName().str()
+#define NameSpaceSelfArg(func_name)      \
+    ({                                   \
+        std::string __arg = "";          \
+        do {                             \
+            __arg = func_name + "_self"; \
+        } while (0);                     \
+        __arg;                           \
+    })
+
+#define NameSpaceFunc(a, b)      \
+    ({                           \
+        std::string __nsf = "";  \
+        do {                     \
+            __nsf = a + "_" + b; \
+        } while (0);             \
+        __nsf;                   \
+    })
+
+#define UnionName(a)           \
+    ({                         \
+        std::string __nn = ""; \
+        do {                   \
+            __nn = "." + a;    \
+        } while (0);           \
+        __nn;                  \
+    })
+
+#define NameSpaceCallTagName(a, b)     \
+    ({                                 \
+        std::string __nsctn = "";      \
+        do {                           \
+            __nsctn = a + "_tag_" + b; \
+        } while (0);                   \
+        __nsctn;                       \
+    })
+
+#define NameSpaceInitName(n)     \
+    ({                           \
+        std::string __nsin = ""; \
+        do {                     \
+            __nsin = n + "_#";   \
+        } while (0);             \
+        __nsin;                  \
+    })
+
+typedef Int_e (*funPtr)(Int_e, Int_e);
+
+#define ALLOCAINST_SIZE 0
+
+static llvm::Align storeinst_align(8);
 
 class CodeGenContext;
 class Identifier;
@@ -240,15 +322,16 @@ public:
     virtual ~BaseNode() = default;
 
     /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context) = 0;
+    virtual llvm::Value* codeGen(CodeGenContext& context) = 0;
 
     /* Returns the type of the node. */
     virtual NodeType getType() = 0;
 
     /* virtual void visit() = 0; */
     /* =============  MUTATORS      =================== */
-    virtual Identifier *id() = 0;
-
+    virtual Identifier* id() = 0;
+    std::size_t line() { return _codeLine; }
+    std::string path() { return _path; }
     /* =============  OPERATORS     =================== */
 
 protected:
@@ -277,19 +360,22 @@ public:
     /* =============  ACCESSORS     =================== */
     virtual NodeType getType() { return NodeType::_expression; }
     /* =============  MUTATORS      =================== */
-    Identifier *id() { return _id; };
+    Identifier* id() { return _id; };
 
     /**
      * union name
      */
-    void union_name(const std::string name)
+    void union_name(const std::string uname)
     {
         if (_union_name.empty()) {
-            _union_name = name;
+            _union_name = uname;
         }
         else {
-            _union_name += "." + name;
+            _union_name += "." + uname;
         }
+#ifdef E2L_DEBUG
+        llog::echo("un:", _union_name);
+#endif
     }
     const std::string uname();
 
@@ -299,14 +385,13 @@ protected:
     /* =============  METHODS       =================== */
 
     /* =============  DATA MEMBERS  =================== */
-    Identifier *_id{nullptr};
-    std::string _union_name = "";
+    Identifier* _id{nullptr};
 
 private:
     /* =============  METHODS       =================== */
 
     /* =============  DATA MEMBERS  =================== */
-
+    std::string _union_name = "";
 }; /* -----  end of class Expression  ----- */
 
 /*
@@ -326,24 +411,41 @@ public:
     ~Identifier() {};
 
     /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context);
+    virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_identifier; }
     /* =============  MUTATORS      =================== */
 
     void codeLine(size_t line) { _codeLine = line; };
-    void codePath(const char *path)
+    void codePath(const char* path)
     {
         if (path != nullptr) {
             _path = std::string(path);
         }
     };
     size_t size() { return _name.size(); }
-    const iterable_queue<std::string> &qname() { return _name; }
-    void push_back(std::string name) { _name.push(name); };
+    const iterable_queue<std::string>& qname() { return _name; }
+    void push_back(Identifier* it) { _name.push(it->name()); };
+    void push_back(std::string it) { _name.push(it); };
     const std::string name();
     const std::string real_name();
+    const std::string id_name();
     IDType idType() { return _idtype; }
     void idType(IDType it) { _idtype = it; }
+    void nss(NameSpaceStatus n) { _nss = n; }
+    NameSpaceStatus nss() { return _nss; }
+
+    std::string NameSpaceTag()
+    {
+        //  _name.back() + "_tag_" + _name_space_tag;
+        return NameSpaceCallTagName(_name.back(), _name_space_tag);
+    };
+    std::string Tag() { return _name_space_tag; };
+    void NameSpaceTag(std::string n)
+    {
+        if (n.length() > 4) {
+            _name_space_tag = n.substr(1, n.length() - 4);
+        }
+    };
     /* =============  OPERATORS     =================== */
 
 protected:
@@ -356,8 +458,12 @@ private:
     /* =============  DATA MEMBERS  =================== */
     iterable_queue<std::string> _name;
     IDType _idtype = IDType::_normal;
+
+    NameSpaceStatus _nss = NameSpaceStatus::_n_null;
+
+    std::string _name_space_tag = "";
 }; /* -----  end of class Identifier  ----- */
-typedef std::vector<Expression *> ExpressionList;
+typedef std::vector<Expression*> ExpressionList;
 
 /*
  * ================================
@@ -374,7 +480,7 @@ public:
     }; /* constructor */
 
     /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context);
+    virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_module; }
     /* =============  MUTATORS      =================== */
     std::string value() { return _mod; };
@@ -408,7 +514,12 @@ public:
     /* =============  ACCESSORS     =================== */
 
     virtual NodeType getType() { return NodeType::_statement; }
-
+    void idType(IDType it)
+    {
+        if (_id != nullptr) {
+            _id->idType(it);
+        }
+    }
     /* =============  MUTATORS      =================== */
 
     /* =============  OPERATORS     =================== */
@@ -425,7 +536,75 @@ private:
 
 }; /* -----  end of class Statement  ----- */
 
-typedef std::vector<Statement *> StatementList;
+typedef std::vector<Statement*> StatementList;
+
+/*
+ * ======================Assignment==========
+ *        Class:  Assignment
+ *  Description:  主要用在 取 右则变量 和 method call 上面
+ *  eg.
+ *  call.   echo(a);  echo(3);
+ * ================================
+ */
+class Assignment : public Expression {
+public:
+    /* =============  LIFECYCLE     =================== */
+    Assignment(Identifier* id, Expression* exp, size_t line, const char* path)
+        : _rhs(exp)
+    {
+        _id = std::move(id);
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
+
+    }; /* constructor */
+    ~Assignment()
+    {
+        RELEASE(_id);
+        RELEASE(_rhs);
+    }
+    /* =============  ACCESSORS     =================== */
+    virtual llvm::Value* codeGen(CodeGenContext& context);
+    Expression* getRhs() { return _rhs; }
+    NodeType getType() { return NodeType::_binaryop; }
+    const std::string name()
+    {
+        if (_rhs == nullptr) {
+            return _id->uname() + " []";
+        }
+        else {
+            return _id->uname() + " - " + _rhs->uname();
+        }
+    };
+
+    void NsVarInit(bool f) { _ns_var_init = f; };
+    bool checkNsInit() { return _ns_var_init; }
+
+    /* =============  MUTATORS      =================== */
+
+    /* =============  OPERATORS     =================== */
+
+protected:
+    /* =============  METHODS       =================== */
+
+    /* =============  DATA MEMBERS  =================== */
+
+private:
+    /* =============  METHODS       =================== */
+
+    /* =============  DATA MEMBERS  =================== */
+
+    // name space init var
+    // 初始化的 assig
+    bool _ns_var_init = false;
+    Expression* _rhs{nullptr};
+}; /* -----  end of class Assignment  ----- */
+
+// 保存 namespace 表达式的 map
+using NameSpaceInitCodeAssign = std::set<Assignment*>;
+// namespace->assign
+using NameSpaceinitCode = std::map<std::string, NameSpaceInitCodeAssign>;
 
 /*
  * ================================
@@ -436,7 +615,7 @@ typedef std::vector<Statement *> StatementList;
 class Block : public Statement {
 public:
     /* =============  LIFECYCLE     =================== */
-    Block(const std::string name, size_t line, const char *path) : _name(name)
+    Block(const std::string name, size_t line, const char* path) : _name(name)
     {
         if (path != nullptr) {
             _path = std::string(path);
@@ -458,7 +637,7 @@ public:
         _exps.clear();
     };
     /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context);
+    virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_block; }
     NodeType getType(size_t index)
     {
@@ -466,6 +645,34 @@ public:
             llog::bug("statement index:", index);
         }
         return _statements.at(index)->getType();
+    }
+    std::string getIdName(size_t index)
+    {
+        if (_statements.size() < index) {
+            llog::bug("statement index:", index);
+        }
+        return _statements.at(index)->id()->name();
+    }
+
+    void updateIdName(size_t idx, Identifier* id)
+    {
+        if (_statements.size() < idx) {
+            // llog::bug("statement index:", index);
+            return;
+        }
+        _statements.at(idx)->id()->push_back(id);
+    }
+    void erase_id(NodeType nt)
+    {
+        for (auto it = _statements.begin(); it != _statements.end();) {
+            if ((*it)->getType() == nt) {
+                llog::echo("earase variable");
+                it = _statements.erase(it);
+            }
+            else {
+                ++it;
+            }
+        }
     }
 
     bool importnull(std::string l) { return _imports.count(l) == 0; }
@@ -477,9 +684,11 @@ public:
         return _imports.at(l);
     }
     /* =============  MUTATORS      =================== */
-    void push_back(Expression *exp);
-    void push_back(Statement *stat);
-    void push_back(Block *stat);
+    void push_back(Expression* exp);
+    void push_back(Statement* stat);
+    void push_back(Block* block);
+
+    Statement* getStatement(std::size_t idx);
 
     void update(std::string mod);
 
@@ -490,7 +699,7 @@ public:
     }
 
     size_t size() { return _statements.size(); }
-    const std::string &name() { return _name; }
+    const std::string& name() { return _name; }
 
     /* =============  OPERATORS     =================== */
 

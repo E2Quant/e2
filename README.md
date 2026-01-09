@@ -32,6 +32,88 @@ E2L Script 运行思维图:
 
 E2L 详细底层系统 API 请参考 [e2l_api](https://e2q-doc.readthedocs.io/e2l_api/).
 
+## E2L [IR](https://llvm.org/docs/LangRef.html) 状态 
+> LLVM 的设计核心是与语言无关的中间表示 (IR)，它是一种可移植的高级汇编语言 ，可以通过多次迭代进行各种转换优化 。
+
+---
+
+### E2L 基本语法展示
+
+```c++
+#--------
+# Name:function
+#   Parameters:
+# - arg1: xxx
+# - arg2: xxx
+# -> return 
+# Description: 
+#  
+#--------	
+func main() {
+    hello = 1;
+    return hello;
+}
+#----- func end
+ret = main();
+```
+
+### E2L IR 代码
+
+```
+Function return type does not match operand type of return inst!
+  ret void
+ i64Call parameter type does not match function signature!
+i64* getelementptr inbounds ([43 x i64], [43 x i64]* @.str, i64 0, i64 0)
+ i64  %0 = call i64 (i64, ...) @printf(i64* getelementptr inbounds ([43 x i64], [43 x i64]* @.str, i64 0, i64 0), i64 %codeLine, i64 %varname, i64 %toPrint, i64 %varpath)
+Function arguments must have first-class types!
+void %val17008502563505747485
+Function return type does not match operand type of return inst!
+  ret void
+ i64Global variable initializer type does not match global variable type!
+[43 x i64]* @.str
+; ModuleID = 'e2l.1804289383'
+source_filename = "e2l.1804289383"
+
+@.str = private constant [43 x i64] c"%ld [echo varname: %s  line:%ld, file:%s]\0A\00"
+@sfd.ssfd.sfd = internal global i64 11980000
+
+declare i64 @printf(i64, ...)
+
+define internal void @echo(i64 %codeLine, i64 %varname, i64 %toPrint, i64 %varpath) {
+entry:
+  %0 = call i64 (i64, ...) @printf(i64* getelementptr inbounds ([43 x i64], [43 x i64]* @.str, i64 0, i64 0), i64 %codeLine, i64 %varname, i64 %toPrint, i64 %varpath)
+  ret void
+}
+
+declare i64 @last(i64)
+
+declare void @call(i8)
+
+declare i8 @tochar(...)
+
+declare void @FPrintCurrentPath(void)
+
+declare void @FVersion(...)
+
+declare void @FGlobalUnion(...)
+
+define internal i64 @main846930886(i64 %argc, i64 %argv) {
+entry.846930886:
+  %ret = alloca i64, align 8
+  %0 = call i64 @main()
+  store i64 %0, i64* %ret, align 8
+  ret void
+}
+
+define internal i64 @main() {
+main:
+  %hello = alloca i64, align 8
+  store i64 10000, i64* %hello, align 8
+  %hello1 = load i64, i64* %hello, align 8
+  ret i64 %hello1
+}
+```
+
 ## E2L 运行状态
 
 ### Init - `E2L::INIT`
@@ -92,33 +174,6 @@ union UOMSRisk{
     I_EA = 2;
 } 
 ```
-
-
-### E2L 关键词
-
-#### 这是 E2L 中的保留字列表。因为它们为语言所用，故这些关键词不可用于重定义。
-
-- Body 类
-    - "union" { 结构体 }
-    - "func"  { 函数体 }
-    - "import" { 引入代码 }
-- 多条件类
-    - "switch"		
-    - "case"		
-    - "default"		
-- 单条件类
-    - "if"		
-    - "else"			
-- 循环类
-    - "for"		
-    - "do"			
-    - "while"			
-- 跳转类
-    - "continue"		
-    - "break"			
-    - "return"		
-
-
 
 ### 语法描述
 

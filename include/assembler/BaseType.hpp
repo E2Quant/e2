@@ -44,10 +44,14 @@
 
 #ifndef BASETYPE_INC
 #define BASETYPE_INC
-#include <array>
 #include <cstdint>
+#include <list>
 #include <map>
 #include <string>
+
+#include "llvm/IR/Instruction.h"
+#include "llvm/IR/Instructions.h"
+#include "llvm/IR/Type.h"
 namespace e2 {
 using Int_e = std::int64_t;
 
@@ -62,24 +66,25 @@ enum __NodeType {
     _function,    // 4
     _methodcall,  // 5
     _union,       // 6
-    _return,      // 7
+    _namespace,   // 7
+    _return,      // 8
 
-    _block,  // 8
+    _block,  // 9
 
-    _binaryop,  // 9
+    _binaryop,  // 10
 
-    _ifcf,      // 10
-    _switchcf,  // 11
-    _flowiter,  // 12
+    _ifcf,      // 11
+    _switchcf,  // 12
+    _flowiter,  // 13
 
-    _assign,      // 13
-    _expression,  // 14
-    _comp,        // 15
-    _string,      // 16
-    _module,      // 17
+    _assign,      // 14
+    _expression,  // 15
+    _comp,        // 16
+    _string,      // 17
+    _module,      // 18
 
-    _break  // 18
-};          /* ----------  end of enum Nodetype  ---------- */
+    _break  // 19
+}; /* ----------  end of enum Nodetype  ---------- */
 
 typedef enum __NodeType NodeType;
 
@@ -104,22 +109,55 @@ enum __Selection {
 typedef enum __Selection Selection;
 
 enum __IDType {
-    _normal,  //  normal
-    _global,  // global id
-
+    _normal,         //  normal
+    _global,         // global id
+    _ns_private,     // namespace private var or fun
+    _ns_public,      // namespace public var or fun
+    _ns_methodcall,  // namespace fun call
 }; /* ----------  end of enum IDType  ---------- */
 
 typedef enum __IDType IDType;
 
 enum __ScopeKind {
-    _sk_null,   // null sk
-    _sk_fun,    // function declaration
-    _sk_union,  // union declaration
-    _sk_flow,   // control flow
-    _sk_main,   // variable
-};              /* ----------  end of enum ScopeKind  ---------- */
+    _sk_null,       // null sk
+    _sk_fun,        // function declaration
+    _sk_union,      // union declaration
+    _sk_flow,       // control flow
+    _sk_namespace,  // namespace
+    _sk_main,       // variable
+}; /* ----------  end of enum ScopeKind  ---------- */
 
 typedef enum __ScopeKind ScopeKind;
+
+enum __NameSpaceStatus {
+    _n_null,             // default
+    _n_attr_definition,  // definition
+    _n_attr_expression,  // expression
+}; /* ----------  end of enum __NameSpaceStatus  ---------- */
+
+typedef enum __NameSpaceStatus NameSpaceStatus;
+
+//< Maps a variable name of a class definition to its position in the llvm
+//< structure type.
+// name_space_variable -> type -> gep
+using NameSpaceValueNames = std::map<std::string, std::tuple<int, llvm::Type*>>;
+//< Maps a class name to its attributes (member variables).
+using NameSpaceAttributes = std::map<std::string, NameSpaceValueNames>;
+
+using NameSpaceVarMap = std::map<std::string, llvm::Instruction*>;
+
+using NameSpaceVarInstList = std::list<NameSpaceVarMap>;
+
+struct __NSTagProperty {
+    // tag global alloca
+    llvm::AllocaInst* _alloca;
+    // tag namespace init var
+    std::list<std::string> _tag_init_var;
+}; /* ----------  end of struct NSTagProperty  ---------- */
+
+typedef struct __NSTagProperty NameSpaceTagProperty;
+// ns _ tag -> alloca
+using NameSpaceTagCallMap = std::map<std::string, NameSpaceTagProperty>;
 
 inline std::map<std::string, Int_e> _GlobalVariables = {};
 
@@ -202,7 +240,7 @@ inline std::map<std::string, Int_e> _GlobalVariables = {};
 /**
  * check memory
  */
-//#define CMALLOC 1
+// #define CMALLOC 1
 
 #if (defined E2L_DEBUG && defined CMALLOC)
 inline std::atomic<int> ptr_number = 0;
@@ -213,7 +251,7 @@ inline std::atomic<int> ptr_number = 0;
             ptr = nullptr;                                            \
             int num = ptr_number.load(std::memory_order_acquire) - 1; \
             ptr_number.store(num, std::memory_order_release);         \
-            e2::llog::bug("release, num:", num);                       \
+            e2::llog::bug("release, num:", num);                      \
         }                                                             \
     } while (0)
 #else
@@ -229,10 +267,10 @@ inline std::atomic<int> ptr_number = 0;
 #if (defined E2L_DEBUG && defined CMALLOC)
 #define MALLOC(obj, args...)                                               \
     ({                                                                     \
-        obj *__ptr = nullptr;                                              \
+        obj* __ptr = nullptr;                                              \
         do {                                                               \
             int _num = ptr_number.fetch_add(1, std::memory_order_release); \
-            e2::llog::info("new obj, num:", _num);                          \
+            e2::llog::info("new obj, num:", _num);                         \
             __ptr = new obj(args);                                         \
         } while (0);                                                       \
         __ptr;                                                             \
@@ -240,7 +278,7 @@ inline std::atomic<int> ptr_number = 0;
 #else
 #define MALLOC(obj, args...)       \
     ({                             \
-        obj *__ptr = nullptr;      \
+        obj* __ptr = nullptr;      \
         do {                       \
             __ptr = new obj(args); \
         } while (0);               \

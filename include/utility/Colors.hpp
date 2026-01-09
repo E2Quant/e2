@@ -53,7 +53,9 @@
 #define KMAG "\x1B[35m"
 #define KCYN "\x1B[36m"
 #define KWHT "\x1B[37m"
+#define KBMAG "\x1B[45m"
 #define KORG "\x1B[93m"
+#define KLGRN "\x1B[92m"
 
 #define FRED(x) KRED x RST
 #define FGRN(x) KGRN x RST

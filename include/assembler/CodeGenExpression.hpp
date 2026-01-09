@@ -69,8 +69,12 @@ namespace e2 {
 class Number : public Expression {
 public:
     /* =============  LIFECYCLE     =================== */
-    Number(Int_e value)
+    Number(Int_e value, size_t line, const char* path)
     {
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
         /**
          * cmake set
          */
@@ -80,8 +84,12 @@ public:
         _value = value;
 #endif
     };
-    Number(Int_e value, bool t)
+    Number(Int_e value, bool t, size_t line, const char* path)
     {
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
         /**
          * cmake set
          */
@@ -95,16 +103,24 @@ public:
         }
     };
     /* constructor */
-    Number(float value)
+    Number(float value, size_t line, const char* path)
     {
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
 #ifdef NUMBER_DECI
         _value = (Int_e)(value * NUMBER_DECI);
 #else
         _value = (Int_e)(value);
 #endif
     };
-    Number(float value, bool t)
+    Number(float value, bool t, size_t line, const char* path)
     {
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
 #ifdef NUMBER_DECI
         _value = (Int_e)(value * NUMBER_DECI);
 #else
@@ -115,7 +131,7 @@ public:
         }
     };
     /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context);
+    virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_number; }
     /* =============  MUTATORS      =================== */
     void negative()
@@ -150,7 +166,7 @@ private:
 class StrObj : public Expression {
 public:
     /* =============  LIFECYCLE     =================== */
-    StrObj(std::string str, size_t line, const char *path)
+    StrObj(std::string str, size_t line, const char* path)
     {
         _str = str.substr(1, str.length() - 2);
         if (path != nullptr) {
@@ -164,7 +180,7 @@ public:
     /* constructor */
 
     /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context);
+    virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_string; }
 
     /* =============  MUTATORS      =================== */
@@ -201,8 +217,8 @@ private:
 class BinaryOperator : public Expression {
 public:
     /* =============  LIFECYCLE     =================== */
-    BinaryOperator(Expression *lhs, int op, Expression *rhs, size_t line,
-                   const char *path)
+    BinaryOperator(Expression* lhs, int op, Expression* rhs, size_t line,
+                   const char* path)
         : _op(op), _lhs(lhs), _rhs(rhs)
     {
         if (path != nullptr) {
@@ -210,7 +226,7 @@ public:
         }
         _codeLine = line;
     };
-    BinaryOperator(Expression *lhs, int op, size_t line, const char *path)
+    BinaryOperator(Expression* lhs, int op, size_t line, const char* path)
         : _op(op), _lhs(lhs)
     {
         if (path != nullptr) {
@@ -227,7 +243,7 @@ public:
         RELEASE(_rhs);
     }
     /* =============  ACCESSORS     =================== */
-    llvm::Value *codeGen(CodeGenContext &context);
+    llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_binaryop; }
 
     const std::string name()
@@ -243,8 +259,8 @@ public:
 
     /* =============  MUTATORS      =================== */
 
-    Expression *lhs() { return _lhs; }
-    Expression *rhs() { return _rhs; }
+    Expression* lhs() { return _lhs; }
+    Expression* rhs() { return _rhs; }
     int op() { return _op; }
     /* =============  OPERATORS     =================== */
 
@@ -259,66 +275,10 @@ private:
     /* =============  DATA MEMBERS  =================== */
 
     int _op{0};
-    Expression *_lhs{nullptr};
-    Expression *_rhs{nullptr};
+    Expression* _lhs{nullptr};
+    Expression* _rhs{nullptr};
 
 }; /* -----  end of class BinaryOperator  ----- */
-
-/*
- * ================================
- *        Class:  Assignment
- *  Description:  主要用在 取 右则变量 和 method call 上面
- *  eg.
- *  call.   echo(a);  echo(3);
- * ================================
- */
-class Assignment : public Expression {
-public:
-    /* =============  LIFECYCLE     =================== */
-    Assignment(Identifier *id, Expression *exp, size_t line, const char *path)
-        : _rhs(exp)
-    {
-        _id = std::move(id);
-        if (path != nullptr) {
-            _path = std::string(path);
-        }
-        _codeLine = line;
-
-    }; /* constructor */
-    ~Assignment()
-    {
-        RELEASE(_id);
-        RELEASE(_rhs);
-    }
-    /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context);
-    NodeType getType() { return NodeType::_binaryop; }
-    const std::string name()
-    {
-        if (_rhs == nullptr) {
-            return _id->uname() + " []";
-        }
-        else {
-            return _id->uname() + " - " + _rhs->uname();
-        }
-    };
-
-    /* =============  MUTATORS      =================== */
-
-    /* =============  OPERATORS     =================== */
-
-protected:
-    /* =============  METHODS       =================== */
-
-    /* =============  DATA MEMBERS  =================== */
-
-private:
-    /* =============  METHODS       =================== */
-
-    /* =============  DATA MEMBERS  =================== */
-
-    Expression *_rhs{nullptr};
-}; /* -----  end of class Assignment  ----- */
 
 /*
  * ================================
@@ -330,8 +290,8 @@ private:
 class CompOperator : public Expression {
 public:
     /* =============  LIFECYCLE     =================== */
-    CompOperator(Expression *lhs, int op, Expression *rhs, size_t line,
-                 const char *path)
+    CompOperator(Expression* lhs, int op, Expression* rhs, size_t line,
+                 const char* path)
         : _op(op), _lhs(lhs), _rhs(rhs)
     {
         if (path != nullptr) {
@@ -340,7 +300,7 @@ public:
         _codeLine = line;
     }; /* constructor */
 
-    CompOperator(Expression *lhs, size_t line, const char *path) : _lhs(lhs)
+    CompOperator(Expression* lhs, size_t line, const char* path) : _lhs(lhs)
     {
         if (path != nullptr) {
             _path = std::string(path);
@@ -353,7 +313,7 @@ public:
         RELEASE(_rhs);
     }
     /* =============  ACCESSORS     =================== */
-    virtual llvm::Value *codeGen(CodeGenContext &context);
+    virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_comp; }
     /* =============  MUTATORS      =================== */
 
@@ -370,8 +330,8 @@ private:
     /* =============  DATA MEMBERS  =================== */
 
     int _op{0};
-    Expression *_lhs{nullptr};
-    Expression *_rhs{nullptr};
+    Expression* _lhs{nullptr};
+    Expression* _rhs{nullptr};
 }; /* -----  end of class CompOperator  ----- */
 
 }  // namespace e2
