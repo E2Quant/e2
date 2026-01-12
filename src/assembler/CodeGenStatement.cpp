@@ -120,6 +120,7 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
     llvm::AllocaInst* alloca = nullptr;
 
     if (idt == IDType::_ns_methodcall) {
+        // tag call
         if (context.isTagInitVariable(_id->NameSpaceTag())) {
             isInit = true;
         }
@@ -141,10 +142,10 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
         }
     }
 
-    if (idt == IDType::_ns_private) {
-        // 内部调用
+    if (idt == IDType::_ns_private || idt == IDType::_ns_init) {
+        // name space in site call
         std::string name_space = context.getNameSpace();
-        cname = NameSpaceFunc(name_space, cname);  // name_space + "_" + cname ;
+
         if (name_space.length() == 0) {
             llog::bug("name space not found!");
             context.DontRun();
@@ -154,7 +155,16 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
             return nullptr;
         }
 
+        // 内部调用
+        cname = NameSpaceFunc(name_space, cname);  // name_space + "_" + cname ;
+        // 私有函数，还得再处理一下
+
+        if (context.isNSSelfFunc(cname)) {
+            cname = NameSpaceSelfFunc(cname);
+        }
+
         llvm::Value* self_alloca = context.function_self_current();
+
         if (self_alloca != nullptr) {
             args.push_back(self_alloca);
         }
@@ -241,7 +251,7 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
      * check func arg size and type is the same
      */
     if (func->arg_size() != args.size()) {
-        e2::llog::bug("call name ,", cname,
+        e2::llog::bug("call name :", cname,
                       " arg size not eq ! args size:", args.size(),
                       " line:", _codeLine, " path:", _path);
         context.DontRun();
@@ -652,7 +662,7 @@ llvm::Value* UnaryOperator::codeGen(CodeGenContext& context)
  * ===  FUNCTION  =============================
  *
  *         Name:  FunctionDeclaration::codeGen
- *  ->  void *
+ *  ->  void ;*
  *  Parameters:
  *  - size_t  arg
  *  Description:
@@ -674,6 +684,12 @@ llvm::Value* FunctionDeclaration::codeGen(CodeGenContext& context)
     if (!name_space.empty()) {
         llvm::Type* nstype = context.getNSType(name_space);
         argTypes.push_back(llvm::PointerType::getUnqual(nstype));
+
+        if (_id->idType() == IDType::_ns_private) {
+            context.addNSSelfFunc(func_name);
+            //  私有函数,需要更改函数名
+            func_name = NameSpaceSelfFunc(func_name);
+        }
     }
     if (_arguments != nullptr) {
         for (auto it : *_arguments) {
@@ -908,6 +924,7 @@ llvm::Value* NameSpace::codeGen(CodeGenContext& context)
 
     value = _block->codeGen(context);
 
+    context.cleanSelfFunc();
     context.endNameSpace();
 
 #ifdef E2L_DEBUG
@@ -930,7 +947,7 @@ llvm::Value* NameSpace::codeGen(CodeGenContext& context)
 void NameSpace::InitFunc()
 {
     std::string init_name = NameSpaceInitName(_id->name());
-    Identifier* fname = MALLOC(Identifier, init_name, IDType::_ns_private);
+    Identifier* fname = MALLOC(Identifier, init_name, IDType::_ns_init);
     fname->push_back(_id);
 
     e2::FunctionDeclaration* ns = MALLOC(FunctionDeclaration, fname, nullptr,
@@ -960,12 +977,10 @@ void NameSpace::constructStructFields(std::vector<llvm::Type*>& StructTy_fields,
     auto structName = _id->name();
 
     std::size_t block_size = _block->size();
-    llog::echo("block size:", block_size);
     for (std::size_t idx = 0; idx < block_size; idx++) {
         NodeType nt = _block->getType(idx);
 
         if (nt == NodeType::_variable) {
-            llog::echo("variable");
             StructTy_fields.push_back(E2LType(context.getGlobalContext()));
         }
 
@@ -1002,7 +1017,6 @@ void NameSpace::addVarsToClassAttributes(
         if (nt == NodeType::_variable) {
             Statement* val = _block->getStatement(idx);
             std::string varName = val->id()->real_name();
-            llog::echo("variable var name:", varName, " idx:", idx);
             context.NameSpaceAddVariableAccess(varName, idx,
                                                StructTy_fields[idx]);
 
@@ -1030,7 +1044,7 @@ void NameSpace::addVarsToClassAttributes(
                     context.addNameSpaceinitCode(structName, nass);
                 }
                 else {
-                    llog::bug("hasrhs false");
+                    llog::bug("has rhs false");
                 }
             }
             else {

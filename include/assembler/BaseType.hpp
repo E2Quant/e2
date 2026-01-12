@@ -109,11 +109,12 @@ enum __Selection {
 typedef enum __Selection Selection;
 
 enum __IDType {
-    _normal,         //  normal
-    _global,         // global id
-    _ns_private,     // namespace private var or fun
-    _ns_public,      // namespace public var or fun
-    _ns_methodcall,  // namespace fun call
+    _normal,         // 0  normal
+    _global,         // 1 global id
+    _ns_init,        // 2 namespace init fun
+    _ns_private,     // 3 namespace private var or fun
+    _ns_public,      // 4 namespace public var or fun
+    _ns_methodcall,  // 5 namespace fun call
 }; /* ----------  end of enum IDType  ---------- */
 
 typedef enum __IDType IDType;
@@ -158,6 +159,8 @@ struct __NSTagProperty {
 typedef struct __NSTagProperty NameSpaceTagProperty;
 // ns _ tag -> alloca
 using NameSpaceTagCallMap = std::map<std::string, NameSpaceTagProperty>;
+// ns -> self function list
+using NameSpaceSelfFuncList = std::set<std::string>;
 
 inline std::map<std::string, Int_e> _GlobalVariables = {};
 

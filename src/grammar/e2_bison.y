@@ -500,6 +500,12 @@ namespace_body
             $$ = MALLOC(e2::Block, "namespace_member", code_line, ctx.path() ); 
             $$->push_back($1);
         }
+    | SELF function_definition
+        {
+            $2->idType(e2::IDType::_ns_private); 
+            $$ = MALLOC(e2::Block, "namespace_func", code_line, ctx.path());
+            $$->push_back($2);
+        }
     | function_definition
         {
             $1->idType(e2::IDType::_ns_public); 
@@ -507,16 +513,19 @@ namespace_body
             $$ = MALLOC(e2::Block, "namespace_func", code_line, ctx.path());
             $$->push_back($1);
         } 
-    | SELF function_definition
-        {
-            $2->idType(e2::IDType::_ns_private); 
-
-            $$ = MALLOC(e2::Block, "namespace_func", code_line, ctx.path());
-            $$->push_back($2);
-        }
     | namespace_body namespace_member {$$=$1; $1->push_back($2);}
-    | namespace_body function_definition {$$=$1; $1->push_back($2);}
-    | namespace_body SELF function_definition {$$=$1; $1->push_back($3);}
+    | namespace_body SELF function_definition 
+        {
+            $$=$1; 
+            $3->idType(e2::IDType::_ns_private); 
+            $1->push_back($3);
+        }
+    | namespace_body function_definition 
+        {
+            $$=$1; 
+            $2->idType(e2::IDType::_ns_public);  
+            $1->push_back($2);
+        }
     ;
 
 namespace_definition

@@ -152,7 +152,6 @@ void toDo(const char* f, const char* s, std::pair<std::string, Int_e>& b)
     else {
         llog::bug("generateCode is error");
     }
-    llog::echo("-----------");
 
 } /* -----  end of function toDo  ----- */
 

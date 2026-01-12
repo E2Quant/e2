@@ -200,7 +200,6 @@ llvm::Value* Identifier::codeGen(CodeGenContext& context)
     bool _gl = FIND_GV(cname);
     std::string name_space = context.getNameSpace();
 
-    llog::info("cname:", cname);
     if (_idtype == IDType::_global || _gl) {
         llvm::GlobalVariable* gVar = context.getModule()->getNamedGlobal(cname);
         if (gVar == nullptr) {
@@ -230,12 +229,8 @@ llvm::Value* Identifier::codeGen(CodeGenContext& context)
             return val;
         }
     }
-    NameSpaceStatus _nss = _id->nss();
 
     if (name_space.length() > 0 && _idtype == IDType::_ns_private) {
-        llog::echo("name:", cname, " idtype:", _idtype, " nss:", _nss,
-                   " nt:", _id->getType());
-
         NameSpaceInitCodeAssign assptr = context.getNameSpaceAssign(name_space);
 
         llvm::Value* nsalloc = nullptr;
@@ -248,8 +243,7 @@ llvm::Value* Identifier::codeGen(CodeGenContext& context)
                                                             ass_name, nullptr);
                 if (nsalloc == nullptr) {
                     // block ns var 这儿如果没有初始化，才会进这儿来
-                    llog::echo("it type:", it->getType(),
-                               " it name:", ass_name);
+
                     nsalloc = it->codeGen(context);
                 }
 
@@ -596,11 +590,11 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
     if (idVal == nullptr) {
         std::string name_space = context.getNameSpace();
         if (_id->idType() == IDType::_ns_private && name_space.length() > 0) {
-            llog::info("name space variable:", cname, " nt:", nt);
-
             std::string func = context.currentFuncName();
             std::string arg_name = NameSpaceSelfArg(func);
-
+            if (context.isNSSelfFunc(func)) {
+                arg_name = NameSpaceSelfFunc(arg_name);
+            }
             llvm::AllocaInst* ns_Val = context.findBlockId(arg_name);
 
             if (ns_Val == nullptr) {
@@ -622,18 +616,14 @@ llvm::Value* Assignment::codeGen(CodeGenContext& context)
 #endif
                 return nullptr;
             }
-            if (checkNsInit()) {
-                llvm::StringRef sr = context.currentBlock()->getName();
-                llog::echo("it's ns init variable ns:", name_space,
-                           " function:", sr.str());
+            if (!checkNsInit()) {
                 // 同时再检查同一个 ns 中的 cname 是不是在之前就来过儿
                 // 如果来过了，ns init 就要 设置 就不需要再来 store 了
                 // 毕竟儿是在 右值这儿调用的
-            }
-            else {
-                llvm::StringRef sr = context.currentBlock()->getName();
-                llog::echo("it's ns init variable ns:", name_space,
-                           " function:", sr.str());
+
+                // llvm::StringRef sr = context.currentBlock()->getName();
+                // llog::echo("it's ns init variable ns:", name_space,
+                //            " function:", sr.str());
                 new llvm::StoreInst(value, gep, false, storeinst_align,
                                     context.currentBlock());
             }

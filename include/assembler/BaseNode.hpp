@@ -261,6 +261,15 @@ inline std::size_t _code_gen_number = 0;
         __nsf;                   \
     })
 
+#define NameSpaceSelfFunc(a)    \
+    ({                          \
+        std::string __nsf = ""; \
+        do {                    \
+            __nsf = "-" + a;    \
+        } while (0);            \
+        __nsf;                  \
+    })
+
 #define UnionName(a)           \
     ({                         \
         std::string __nn = ""; \
@@ -666,7 +675,6 @@ public:
     {
         for (auto it = _statements.begin(); it != _statements.end();) {
             if ((*it)->getType() == nt) {
-                llog::echo("earase variable");
                 it = _statements.erase(it);
             }
             else {

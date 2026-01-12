@@ -47,9 +47,9 @@
 // "%code requires" blocks.
 #line 29 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
 
-	/* you may need these header files 
-	 * add more header file if you need more
-	 */
+    /* you may need these header files 
+     * add more header file if you need more
+     */
     #include <stdio.h>
     #include <iostream>
     #include <list>
@@ -57,14 +57,14 @@
     #include <functional>
 
 
-    #include "ast/ParserCtx.hpp"
+#include "ast/ParserCtx.hpp"
     #include "utility/Log.hpp"
     #include "assembler/BaseNode.hpp"
     extern  int code_line;
 
-	/* define the sturctures using as types for non-terminals */
+/* define the sturctures using as types for non-terminals */
 
-	/* end the structures for non-terminal types */
+/* end the structures for non-terminal types */
 
 #line 70 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.hpp"
 
@@ -401,6 +401,7 @@ namespace yy {
       // compound_statement
       // compound_block
       // union_list
+      // namespace_body
       char dummy1[sizeof (e2::Block *)];
 
       // expression
@@ -422,7 +423,13 @@ namespace yy {
       // function_definition
       char dummy5[sizeof (e2::FunctionDeclaration *)];
 
-      // identifier_list
+      // primary_lvalue
+      // id_func_call_name
+      // id_ns_gl_name
+      // id_ns_name
+      // global_union_variable
+      // namespace_variable
+      // identifier_str
       char dummy6[sizeof (e2::Identifier *)];
 
       // import_module
@@ -438,26 +445,31 @@ namespace yy {
       // method_call
       char dummy10[sizeof (e2::MethodCall *)];
 
+      // namespace_definition
+      char dummy11[sizeof (e2::NameSpace *)];
+
       // block
       // statement
       // selection_statement
       // for_range
       // jump_statement
-      char dummy11[sizeof (e2::Statement *)];
+      char dummy12[sizeof (e2::Statement *)];
 
       // unary_val
-      char dummy12[sizeof (e2::UnaryOperator *)];
+      char dummy13[sizeof (e2::UnaryOperator *)];
 
       // union_definition
-      char dummy13[sizeof (e2::UnionDeclaration *)];
+      char dummy14[sizeof (e2::UnionDeclaration *)];
 
       // variable_val
       // union_statement
-      char dummy14[sizeof (e2::VariableStatement *)];
+      // namespace_member
+      char dummy15[sizeof (e2::VariableStatement *)];
 
       // FCONSTANT
-      char dummy15[sizeof (float)];
+      char dummy16[sizeof (float)];
 
+      // NAMESPACE_ATTR
       // OP_LE
       // OP_GE
       // OP_EQ
@@ -490,22 +502,23 @@ namespace yy {
       // '&'
       // '^'
       // '|'
+      // unary
       // add_arithmetic
       // mul_arithmetic
       // shift_arithmetic
       // comparison
       // logical
-      // unary
       // assignment
-      char dummy16[sizeof (int)];
+      char dummy17[sizeof (int)];
 
       // CONSTANT
-      char dummy17[sizeof (std::int64_t)];
+      char dummy18[sizeof (std::int64_t)];
 
       // IDENTIFIER
       // STRING_LITERAL
       // IMPORT_LITERAL
-      char dummy18[sizeof (std::string)];
+      // NSFUNC_CALL
+      char dummy19[sizeof (std::string)];
     };
 
     /// The size of the largest semantic type.
@@ -558,45 +571,50 @@ namespace yy {
     IDENTIFIER = 258,              // IDENTIFIER
     STRING_LITERAL = 259,          // STRING_LITERAL
     IMPORT_LITERAL = 260,          // IMPORT_LITERAL
-    CONSTANT = 261,                // CONSTANT
-    FCONSTANT = 262,               // FCONSTANT
-    OP_LE = 263,                   // OP_LE
-    OP_GE = 264,                   // OP_GE
-    OP_EQ = 265,                   // OP_EQ
-    OP_NE = 266,                   // OP_NE
-    LOGICAL_AND = 267,             // LOGICAL_AND
-    LOGICAL_OR = 268,              // LOGICAL_OR
-    LOGICAL_NOT = 269,             // LOGICAL_NOT
-    ASSIGN_MUL = 270,              // ASSIGN_MUL
-    ASSIGN_DIV = 271,              // ASSIGN_DIV
-    ASSIGN_MOD = 272,              // ASSIGN_MOD
-    ASSIGN_ADD = 273,              // ASSIGN_ADD
-    ASSIGN_SUB = 274,              // ASSIGN_SUB
-    ASSIGN_LEFT = 275,             // ASSIGN_LEFT
-    ASSIGN_RIGHT = 276,            // ASSIGN_RIGHT
-    ASSIGN_AND = 277,              // ASSIGN_AND
-    ASSIGN_XOR = 278,              // ASSIGN_XOR
-    ASSIGN_OR = 279,               // ASSIGN_OR
-    ARITH_LEFT = 280,              // ARITH_LEFT
-    ARITH_RIGHT = 281,             // ARITH_RIGHT
-    UNARY_INC = 282,               // UNARY_INC
-    UNARY_DEC = 283,               // UNARY_DEC
-    ASSIGN_EQ = 284,               // ASSIGN_EQ
-    UNION = 285,                   // UNION
-    FUNCTION = 286,                // FUNCTION
-    EXTERN = 287,                  // EXTERN
-    IMPORT = 288,                  // IMPORT
-    IF = 289,                      // IF
-    ELSE = 290,                    // ELSE
-    SWITCH = 291,                  // SWITCH
-    CASE = 292,                    // CASE
-    DEFAULT = 293,                 // DEFAULT
-    WHILE = 294,                   // WHILE
-    DO = 295,                      // DO
-    FOR = 296,                     // FOR
-    CONTINUE = 297,                // CONTINUE
-    BREAK = 298,                   // BREAK
-    RETURN = 299                   // RETURN
+    NSFUNC_CALL = 261,             // NSFUNC_CALL
+    CONSTANT = 262,                // CONSTANT
+    FCONSTANT = 263,               // FCONSTANT
+    NAMESPACE_ATTR = 264,          // NAMESPACE_ATTR
+    OP_LE = 265,                   // OP_LE
+    OP_GE = 266,                   // OP_GE
+    OP_EQ = 267,                   // OP_EQ
+    OP_NE = 268,                   // OP_NE
+    LOGICAL_AND = 269,             // LOGICAL_AND
+    LOGICAL_OR = 270,              // LOGICAL_OR
+    LOGICAL_NOT = 271,             // LOGICAL_NOT
+    ASSIGN_MUL = 272,              // ASSIGN_MUL
+    ASSIGN_DIV = 273,              // ASSIGN_DIV
+    ASSIGN_MOD = 274,              // ASSIGN_MOD
+    ASSIGN_ADD = 275,              // ASSIGN_ADD
+    ASSIGN_SUB = 276,              // ASSIGN_SUB
+    ASSIGN_LEFT = 277,             // ASSIGN_LEFT
+    ASSIGN_RIGHT = 278,            // ASSIGN_RIGHT
+    ASSIGN_AND = 279,              // ASSIGN_AND
+    ASSIGN_XOR = 280,              // ASSIGN_XOR
+    ASSIGN_OR = 281,               // ASSIGN_OR
+    ARITH_LEFT = 282,              // ARITH_LEFT
+    ARITH_RIGHT = 283,             // ARITH_RIGHT
+    UNARY_INC = 284,               // UNARY_INC
+    UNARY_DEC = 285,               // UNARY_DEC
+    ASSIGN_EQ = 286,               // ASSIGN_EQ
+    NAMESPACE = 287,               // NAMESPACE
+    UNION = 288,                   // UNION
+    FUNCTION = 289,                // FUNCTION
+    EXTERN = 290,                  // EXTERN
+    IMPORT = 291,                  // IMPORT
+    THIS = 292,                    // THIS
+    SELF = 293,                    // SELF
+    IF = 294,                      // IF
+    ELSE = 295,                    // ELSE
+    SWITCH = 296,                  // SWITCH
+    CASE = 297,                    // CASE
+    DEFAULT = 298,                 // DEFAULT
+    WHILE = 299,                   // WHILE
+    DO = 300,                      // DO
+    FOR = 301,                     // FOR
+    CONTINUE = 302,                // CONTINUE
+    BREAK = 303,                   // BREAK
+    RETURN = 304                   // RETURN
       };
       /// Backward compatibility alias (Bison 3.6).
       typedef token_kind_type yytokentype;
@@ -613,7 +631,7 @@ namespace yy {
     {
       enum symbol_kind_type
       {
-        YYNTOKENS = 67, ///< Number of tokens.
+        YYNTOKENS = 72, ///< Number of tokens.
         S_YYEMPTY = -2,
         S_YYEOF = 0,                             // END
         S_YYerror = 1,                           // error
@@ -621,105 +639,119 @@ namespace yy {
         S_IDENTIFIER = 3,                        // IDENTIFIER
         S_STRING_LITERAL = 4,                    // STRING_LITERAL
         S_IMPORT_LITERAL = 5,                    // IMPORT_LITERAL
-        S_CONSTANT = 6,                          // CONSTANT
-        S_FCONSTANT = 7,                         // FCONSTANT
-        S_OP_LE = 8,                             // OP_LE
-        S_OP_GE = 9,                             // OP_GE
-        S_OP_EQ = 10,                            // OP_EQ
-        S_OP_NE = 11,                            // OP_NE
-        S_LOGICAL_AND = 12,                      // LOGICAL_AND
-        S_LOGICAL_OR = 13,                       // LOGICAL_OR
-        S_LOGICAL_NOT = 14,                      // LOGICAL_NOT
-        S_ASSIGN_MUL = 15,                       // ASSIGN_MUL
-        S_ASSIGN_DIV = 16,                       // ASSIGN_DIV
-        S_ASSIGN_MOD = 17,                       // ASSIGN_MOD
-        S_ASSIGN_ADD = 18,                       // ASSIGN_ADD
-        S_ASSIGN_SUB = 19,                       // ASSIGN_SUB
-        S_ASSIGN_LEFT = 20,                      // ASSIGN_LEFT
-        S_ASSIGN_RIGHT = 21,                     // ASSIGN_RIGHT
-        S_ASSIGN_AND = 22,                       // ASSIGN_AND
-        S_ASSIGN_XOR = 23,                       // ASSIGN_XOR
-        S_ASSIGN_OR = 24,                        // ASSIGN_OR
-        S_ARITH_LEFT = 25,                       // ARITH_LEFT
-        S_ARITH_RIGHT = 26,                      // ARITH_RIGHT
-        S_UNARY_INC = 27,                        // UNARY_INC
-        S_UNARY_DEC = 28,                        // UNARY_DEC
-        S_ASSIGN_EQ = 29,                        // ASSIGN_EQ
-        S_30_ = 30,                              // '*'
-        S_31_ = 31,                              // '/'
-        S_32_ = 32,                              // '%'
-        S_33_ = 33,                              // '+'
-        S_34_ = 34,                              // '-'
-        S_35_ = 35,                              // '<'
-        S_36_ = 36,                              // '>'
-        S_37_ = 37,                              // '&'
-        S_38_ = 38,                              // '^'
-        S_39_ = 39,                              // '|'
-        S_UNION = 40,                            // UNION
-        S_FUNCTION = 41,                         // FUNCTION
-        S_EXTERN = 42,                           // EXTERN
-        S_IMPORT = 43,                           // IMPORT
-        S_IF = 44,                               // IF
-        S_ELSE = 45,                             // ELSE
-        S_SWITCH = 46,                           // SWITCH
-        S_CASE = 47,                             // CASE
-        S_DEFAULT = 48,                          // DEFAULT
-        S_WHILE = 49,                            // WHILE
-        S_DO = 50,                               // DO
-        S_FOR = 51,                              // FOR
-        S_CONTINUE = 52,                         // CONTINUE
-        S_BREAK = 53,                            // BREAK
-        S_RETURN = 54,                           // RETURN
-        S_55_ = 55,                              // '='
-        S_56_ = 56,                              // "!="
-        S_57_ = 57,                              // "<="
-        S_58_ = 58,                              // ">="
-        S_59_ = 59,                              // ';'
-        S_60_ = 60,                              // '('
-        S_61_ = 61,                              // ')'
-        S_62_ = 62,                              // '{'
-        S_63_ = 63,                              // '}'
-        S_64_ = 64,                              // ':'
-        S_65_ = 65,                              // ','
-        S_66_ = 66,                              // '.'
-        S_YYACCEPT = 67,                         // $accept
-        S_translation_unit = 68,                 // translation_unit
-        S_import_module = 69,                    // import_module
-        S_block = 70,                            // block
-        S_variable_val = 71,                     // variable_val
-        S_unary_val = 72,                        // unary_val
-        S_expression = 73,                       // expression
-        S_additive_expression = 74,              // additive_expression
-        S_add_arithmetic = 75,                   // add_arithmetic
-        S_multiplicative_expression = 76,        // multiplicative_expression
-        S_mul_arithmetic = 77,                   // mul_arithmetic
-        S_shift_expression = 78,                 // shift_expression
-        S_shift_arithmetic = 79,                 // shift_arithmetic
-        S_conditional = 80,                      // conditional
-        S_expression_rvalue = 81,                // expression_rvalue
-        S_comparison = 82,                       // comparison
-        S_logical = 83,                          // logical
-        S_unary = 84,                            // unary
-        S_assignment = 85,                       // assignment
-        S_compound_statement = 86,               // compound_statement
-        S_compound_block = 87,                   // compound_block
-        S_statement = 88,                        // statement
-        S_labled_if = 89,                        // labled_if
-        S_labeled_switch = 90,                   // labeled_switch
-        S_selection_statement = 91,              // selection_statement
-        S_for_range = 92,                        // for_range
-        S_iteration_statement = 93,              // iteration_statement
-        S_jump_statement = 94,                   // jump_statement
-        S_parameter_list = 95,                   // parameter_list
-        S_function_parameter = 96,               // function_parameter
-        S_function_definition = 97,              // function_definition
-        S_method_call = 98,                      // method_call
-        S_extern_call = 99,                      // extern_call
-        S_union_statement = 100,                 // union_statement
-        S_union_list = 101,                      // union_list
-        S_union_definition = 102,                // union_definition
-        S_primary_rvalue = 103,                  // primary_rvalue
-        S_identifier_list = 104                  // identifier_list
+        S_NSFUNC_CALL = 6,                       // NSFUNC_CALL
+        S_CONSTANT = 7,                          // CONSTANT
+        S_FCONSTANT = 8,                         // FCONSTANT
+        S_NAMESPACE_ATTR = 9,                    // NAMESPACE_ATTR
+        S_OP_LE = 10,                            // OP_LE
+        S_OP_GE = 11,                            // OP_GE
+        S_OP_EQ = 12,                            // OP_EQ
+        S_OP_NE = 13,                            // OP_NE
+        S_LOGICAL_AND = 14,                      // LOGICAL_AND
+        S_LOGICAL_OR = 15,                       // LOGICAL_OR
+        S_LOGICAL_NOT = 16,                      // LOGICAL_NOT
+        S_ASSIGN_MUL = 17,                       // ASSIGN_MUL
+        S_ASSIGN_DIV = 18,                       // ASSIGN_DIV
+        S_ASSIGN_MOD = 19,                       // ASSIGN_MOD
+        S_ASSIGN_ADD = 20,                       // ASSIGN_ADD
+        S_ASSIGN_SUB = 21,                       // ASSIGN_SUB
+        S_ASSIGN_LEFT = 22,                      // ASSIGN_LEFT
+        S_ASSIGN_RIGHT = 23,                     // ASSIGN_RIGHT
+        S_ASSIGN_AND = 24,                       // ASSIGN_AND
+        S_ASSIGN_XOR = 25,                       // ASSIGN_XOR
+        S_ASSIGN_OR = 26,                        // ASSIGN_OR
+        S_ARITH_LEFT = 27,                       // ARITH_LEFT
+        S_ARITH_RIGHT = 28,                      // ARITH_RIGHT
+        S_UNARY_INC = 29,                        // UNARY_INC
+        S_UNARY_DEC = 30,                        // UNARY_DEC
+        S_ASSIGN_EQ = 31,                        // ASSIGN_EQ
+        S_32_ = 32,                              // '*'
+        S_33_ = 33,                              // '/'
+        S_34_ = 34,                              // '%'
+        S_35_ = 35,                              // '+'
+        S_36_ = 36,                              // '-'
+        S_37_ = 37,                              // '<'
+        S_38_ = 38,                              // '>'
+        S_39_ = 39,                              // '&'
+        S_40_ = 40,                              // '^'
+        S_41_ = 41,                              // '|'
+        S_NAMESPACE = 42,                        // NAMESPACE
+        S_UNION = 43,                            // UNION
+        S_FUNCTION = 44,                         // FUNCTION
+        S_EXTERN = 45,                           // EXTERN
+        S_IMPORT = 46,                           // IMPORT
+        S_THIS = 47,                             // THIS
+        S_SELF = 48,                             // SELF
+        S_IF = 49,                               // IF
+        S_ELSE = 50,                             // ELSE
+        S_SWITCH = 51,                           // SWITCH
+        S_CASE = 52,                             // CASE
+        S_DEFAULT = 53,                          // DEFAULT
+        S_WHILE = 54,                            // WHILE
+        S_DO = 55,                               // DO
+        S_FOR = 56,                              // FOR
+        S_CONTINUE = 57,                         // CONTINUE
+        S_BREAK = 58,                            // BREAK
+        S_RETURN = 59,                           // RETURN
+        S_60_ = 60,                              // '='
+        S_61_ = 61,                              // "!="
+        S_62_ = 62,                              // "<="
+        S_63_ = 63,                              // ">="
+        S_64_ = 64,                              // ';'
+        S_65_ = 65,                              // '('
+        S_66_ = 66,                              // ')'
+        S_67_ = 67,                              // '{'
+        S_68_ = 68,                              // '}'
+        S_69_ = 69,                              // ':'
+        S_70_ = 70,                              // ','
+        S_71_ = 71,                              // '.'
+        S_YYACCEPT = 72,                         // $accept
+        S_translation_unit = 73,                 // translation_unit
+        S_import_module = 74,                    // import_module
+        S_block = 75,                            // block
+        S_unary_val = 76,                        // unary_val
+        S_unary = 77,                            // unary
+        S_variable_val = 78,                     // variable_val
+        S_expression = 79,                       // expression
+        S_additive_expression = 80,              // additive_expression
+        S_add_arithmetic = 81,                   // add_arithmetic
+        S_multiplicative_expression = 82,        // multiplicative_expression
+        S_mul_arithmetic = 83,                   // mul_arithmetic
+        S_shift_expression = 84,                 // shift_expression
+        S_shift_arithmetic = 85,                 // shift_arithmetic
+        S_conditional = 86,                      // conditional
+        S_expression_rvalue = 87,                // expression_rvalue
+        S_comparison = 88,                       // comparison
+        S_logical = 89,                          // logical
+        S_assignment = 90,                       // assignment
+        S_compound_statement = 91,               // compound_statement
+        S_compound_block = 92,                   // compound_block
+        S_statement = 93,                        // statement
+        S_labled_if = 94,                        // labled_if
+        S_labeled_switch = 95,                   // labeled_switch
+        S_selection_statement = 96,              // selection_statement
+        S_for_range = 97,                        // for_range
+        S_iteration_statement = 98,              // iteration_statement
+        S_jump_statement = 99,                   // jump_statement
+        S_parameter_list = 100,                  // parameter_list
+        S_function_parameter = 101,              // function_parameter
+        S_function_definition = 102,             // function_definition
+        S_method_call = 103,                     // method_call
+        S_extern_call = 104,                     // extern_call
+        S_union_statement = 105,                 // union_statement
+        S_union_list = 106,                      // union_list
+        S_union_definition = 107,                // union_definition
+        S_namespace_member = 108,                // namespace_member
+        S_namespace_body = 109,                  // namespace_body
+        S_namespace_definition = 110,            // namespace_definition
+        S_primary_lvalue = 111,                  // primary_lvalue
+        S_primary_rvalue = 112,                  // primary_rvalue
+        S_id_func_call_name = 113,               // id_func_call_name
+        S_id_ns_gl_name = 114,                   // id_ns_gl_name
+        S_id_ns_name = 115,                      // id_ns_name
+        S_global_union_variable = 116,           // global_union_variable
+        S_namespace_variable = 117,              // namespace_variable
+        S_identifier_str = 118                   // identifier_str
       };
     };
 
@@ -760,6 +792,7 @@ namespace yy {
       case symbol_kind::S_compound_statement: // compound_statement
       case symbol_kind::S_compound_block: // compound_block
       case symbol_kind::S_union_list: // union_list
+      case symbol_kind::S_namespace_body: // namespace_body
         value.move< e2::Block * > (std::move (that.value));
         break;
 
@@ -786,7 +819,13 @@ namespace yy {
         value.move< e2::FunctionDeclaration * > (std::move (that.value));
         break;
 
-      case symbol_kind::S_identifier_list: // identifier_list
+      case symbol_kind::S_primary_lvalue: // primary_lvalue
+      case symbol_kind::S_id_func_call_name: // id_func_call_name
+      case symbol_kind::S_id_ns_gl_name: // id_ns_gl_name
+      case symbol_kind::S_id_ns_name: // id_ns_name
+      case symbol_kind::S_global_union_variable: // global_union_variable
+      case symbol_kind::S_namespace_variable: // namespace_variable
+      case symbol_kind::S_identifier_str: // identifier_str
         value.move< e2::Identifier * > (std::move (that.value));
         break;
 
@@ -807,6 +846,10 @@ namespace yy {
         value.move< e2::MethodCall * > (std::move (that.value));
         break;
 
+      case symbol_kind::S_namespace_definition: // namespace_definition
+        value.move< e2::NameSpace * > (std::move (that.value));
+        break;
+
       case symbol_kind::S_block: // block
       case symbol_kind::S_statement: // statement
       case symbol_kind::S_selection_statement: // selection_statement
@@ -825,6 +868,7 @@ namespace yy {
 
       case symbol_kind::S_variable_val: // variable_val
       case symbol_kind::S_union_statement: // union_statement
+      case symbol_kind::S_namespace_member: // namespace_member
         value.move< e2::VariableStatement * > (std::move (that.value));
         break;
 
@@ -832,6 +876,7 @@ namespace yy {
         value.move< float > (std::move (that.value));
         break;
 
+      case symbol_kind::S_NAMESPACE_ATTR: // NAMESPACE_ATTR
       case symbol_kind::S_OP_LE: // OP_LE
       case symbol_kind::S_OP_GE: // OP_GE
       case symbol_kind::S_OP_EQ: // OP_EQ
@@ -854,22 +899,22 @@ namespace yy {
       case symbol_kind::S_UNARY_INC: // UNARY_INC
       case symbol_kind::S_UNARY_DEC: // UNARY_DEC
       case symbol_kind::S_ASSIGN_EQ: // ASSIGN_EQ
-      case symbol_kind::S_30_: // '*'
-      case symbol_kind::S_31_: // '/'
-      case symbol_kind::S_32_: // '%'
-      case symbol_kind::S_33_: // '+'
-      case symbol_kind::S_34_: // '-'
-      case symbol_kind::S_35_: // '<'
-      case symbol_kind::S_36_: // '>'
-      case symbol_kind::S_37_: // '&'
-      case symbol_kind::S_38_: // '^'
-      case symbol_kind::S_39_: // '|'
+      case symbol_kind::S_32_: // '*'
+      case symbol_kind::S_33_: // '/'
+      case symbol_kind::S_34_: // '%'
+      case symbol_kind::S_35_: // '+'
+      case symbol_kind::S_36_: // '-'
+      case symbol_kind::S_37_: // '<'
+      case symbol_kind::S_38_: // '>'
+      case symbol_kind::S_39_: // '&'
+      case symbol_kind::S_40_: // '^'
+      case symbol_kind::S_41_: // '|'
+      case symbol_kind::S_unary: // unary
       case symbol_kind::S_add_arithmetic: // add_arithmetic
       case symbol_kind::S_mul_arithmetic: // mul_arithmetic
       case symbol_kind::S_shift_arithmetic: // shift_arithmetic
       case symbol_kind::S_comparison: // comparison
       case symbol_kind::S_logical: // logical
-      case symbol_kind::S_unary: // unary
       case symbol_kind::S_assignment: // assignment
         value.move< int > (std::move (that.value));
         break;
@@ -881,6 +926,7 @@ namespace yy {
       case symbol_kind::S_IDENTIFIER: // IDENTIFIER
       case symbol_kind::S_STRING_LITERAL: // STRING_LITERAL
       case symbol_kind::S_IMPORT_LITERAL: // IMPORT_LITERAL
+      case symbol_kind::S_NSFUNC_CALL: // NSFUNC_CALL
         value.move< std::string > (std::move (that.value));
         break;
 
@@ -1048,6 +1094,20 @@ namespace yy {
 #endif
 
 #if 201103L <= YY_CPLUSPLUS
+      basic_symbol (typename Base::kind_type t, e2::NameSpace *&& v, location_type&& l)
+        : Base (t)
+        , value (std::move (v))
+        , location (std::move (l))
+      {}
+#else
+      basic_symbol (typename Base::kind_type t, const e2::NameSpace *& v, const location_type& l)
+        : Base (t)
+        , value (v)
+        , location (l)
+      {}
+#endif
+
+#if 201103L <= YY_CPLUSPLUS
       basic_symbol (typename Base::kind_type t, e2::Statement *&& v, location_type&& l)
         : Base (t)
         , value (std::move (v))
@@ -1187,6 +1247,7 @@ switch (yykind)
       case symbol_kind::S_compound_statement: // compound_statement
       case symbol_kind::S_compound_block: // compound_block
       case symbol_kind::S_union_list: // union_list
+      case symbol_kind::S_namespace_body: // namespace_body
         value.template destroy< e2::Block * > ();
         break;
 
@@ -1213,7 +1274,13 @@ switch (yykind)
         value.template destroy< e2::FunctionDeclaration * > ();
         break;
 
-      case symbol_kind::S_identifier_list: // identifier_list
+      case symbol_kind::S_primary_lvalue: // primary_lvalue
+      case symbol_kind::S_id_func_call_name: // id_func_call_name
+      case symbol_kind::S_id_ns_gl_name: // id_ns_gl_name
+      case symbol_kind::S_id_ns_name: // id_ns_name
+      case symbol_kind::S_global_union_variable: // global_union_variable
+      case symbol_kind::S_namespace_variable: // namespace_variable
+      case symbol_kind::S_identifier_str: // identifier_str
         value.template destroy< e2::Identifier * > ();
         break;
 
@@ -1234,6 +1301,10 @@ switch (yykind)
         value.template destroy< e2::MethodCall * > ();
         break;
 
+      case symbol_kind::S_namespace_definition: // namespace_definition
+        value.template destroy< e2::NameSpace * > ();
+        break;
+
       case symbol_kind::S_block: // block
       case symbol_kind::S_statement: // statement
       case symbol_kind::S_selection_statement: // selection_statement
@@ -1252,6 +1323,7 @@ switch (yykind)
 
       case symbol_kind::S_variable_val: // variable_val
       case symbol_kind::S_union_statement: // union_statement
+      case symbol_kind::S_namespace_member: // namespace_member
         value.template destroy< e2::VariableStatement * > ();
         break;
 
@@ -1259,6 +1331,7 @@ switch (yykind)
         value.template destroy< float > ();
         break;
 
+      case symbol_kind::S_NAMESPACE_ATTR: // NAMESPACE_ATTR
       case symbol_kind::S_OP_LE: // OP_LE
       case symbol_kind::S_OP_GE: // OP_GE
       case symbol_kind::S_OP_EQ: // OP_EQ
@@ -1281,22 +1354,22 @@ switch (yykind)
       case symbol_kind::S_UNARY_INC: // UNARY_INC
       case symbol_kind::S_UNARY_DEC: // UNARY_DEC
       case symbol_kind::S_ASSIGN_EQ: // ASSIGN_EQ
-      case symbol_kind::S_30_: // '*'
-      case symbol_kind::S_31_: // '/'
-      case symbol_kind::S_32_: // '%'
-      case symbol_kind::S_33_: // '+'
-      case symbol_kind::S_34_: // '-'
-      case symbol_kind::S_35_: // '<'
-      case symbol_kind::S_36_: // '>'
-      case symbol_kind::S_37_: // '&'
-      case symbol_kind::S_38_: // '^'
-      case symbol_kind::S_39_: // '|'
+      case symbol_kind::S_32_: // '*'
+      case symbol_kind::S_33_: // '/'
+      case symbol_kind::S_34_: // '%'
+      case symbol_kind::S_35_: // '+'
+      case symbol_kind::S_36_: // '-'
+      case symbol_kind::S_37_: // '<'
+      case symbol_kind::S_38_: // '>'
+      case symbol_kind::S_39_: // '&'
+      case symbol_kind::S_40_: // '^'
+      case symbol_kind::S_41_: // '|'
+      case symbol_kind::S_unary: // unary
       case symbol_kind::S_add_arithmetic: // add_arithmetic
       case symbol_kind::S_mul_arithmetic: // mul_arithmetic
       case symbol_kind::S_shift_arithmetic: // shift_arithmetic
       case symbol_kind::S_comparison: // comparison
       case symbol_kind::S_logical: // logical
-      case symbol_kind::S_unary: // unary
       case symbol_kind::S_assignment: // assignment
         value.template destroy< int > ();
         break;
@@ -1308,6 +1381,7 @@ switch (yykind)
       case symbol_kind::S_IDENTIFIER: // IDENTIFIER
       case symbol_kind::S_STRING_LITERAL: // STRING_LITERAL
       case symbol_kind::S_IMPORT_LITERAL: // IMPORT_LITERAL
+      case symbol_kind::S_NSFUNC_CALL: // NSFUNC_CALL
         value.template destroy< std::string > ();
         break;
 
@@ -1580,6 +1654,21 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
+      make_NSFUNC_CALL (std::string v, location_type l)
+      {
+        return symbol_type (token::NSFUNC_CALL, std::move (v), std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_NSFUNC_CALL (const std::string& v, const location_type& l)
+      {
+        return symbol_type (token::NSFUNC_CALL, v, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
       make_CONSTANT (std::int64_t v, location_type l)
       {
         return symbol_type (token::CONSTANT, std::move (v), std::move (l));
@@ -1605,6 +1694,21 @@ switch (yykind)
       make_FCONSTANT (const float& v, const location_type& l)
       {
         return symbol_type (token::FCONSTANT, v, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_NAMESPACE_ATTR (int v, location_type l)
+      {
+        return symbol_type (token::NAMESPACE_ATTR, std::move (v), std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_NAMESPACE_ATTR (const int& v, const location_type& l)
+      {
+        return symbol_type (token::NAMESPACE_ATTR, v, l);
       }
 #endif
 #if 201103L <= YY_CPLUSPLUS
@@ -1940,6 +2044,21 @@ switch (yykind)
 #if 201103L <= YY_CPLUSPLUS
       static
       symbol_type
+      make_NAMESPACE (location_type l)
+      {
+        return symbol_type (token::NAMESPACE, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_NAMESPACE (const location_type& l)
+      {
+        return symbol_type (token::NAMESPACE, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
       make_UNION (location_type l)
       {
         return symbol_type (token::UNION, std::move (l));
@@ -1995,6 +2114,36 @@ switch (yykind)
       make_IMPORT (const location_type& l)
       {
         return symbol_type (token::IMPORT, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_THIS (location_type l)
+      {
+        return symbol_type (token::THIS, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_THIS (const location_type& l)
+      {
+        return symbol_type (token::THIS, l);
+      }
+#endif
+#if 201103L <= YY_CPLUSPLUS
+      static
+      symbol_type
+      make_SELF (location_type l)
+      {
+        return symbol_type (token::SELF, std::move (l));
+      }
+#else
+      static
+      symbol_type
+      make_SELF (const location_type& l)
+      {
+        return symbol_type (token::SELF, l);
       }
 #endif
 #if 201103L <= YY_CPLUSPLUS
@@ -2237,7 +2386,7 @@ switch (yykind)
     // YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
     // Performed when YYTABLE does not specify something else to do.  Zero
     // means the default is an error.
-    static const signed char yydefact_[];
+    static const unsigned char yydefact_[];
 
     // YYPGOTO[NTERM-NUM].
     static const short yypgoto_[];
@@ -2248,7 +2397,7 @@ switch (yykind)
     // YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
     // positive, shift that token.  If negative, reduce the rule whose
     // number is the opposite.  If YYTABLE_NINF, syntax error.
-    static const unsigned char yytable_[];
+    static const short yytable_[];
 
     static const short yycheck_[];
 
@@ -2492,9 +2641,9 @@ switch (yykind)
     /// Constants.
     enum
     {
-      yylast_ = 268,     ///< Last index in yytable_.
-      yynnts_ = 38,  ///< Number of nonterminal symbols.
-      yyfinal_ = 22 ///< Termination state number.
+      yylast_ = 354,     ///< Last index in yytable_.
+      yynnts_ = 47,  ///< Number of nonterminal symbols.
+      yyfinal_ = 29 ///< Termination state number.
     };
 
 
@@ -2518,16 +2667,16 @@ switch (yykind)
        0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,    32,    37,     2,
-      60,    61,    30,    33,    65,    34,    66,    31,     2,     2,
-       2,     2,     2,     2,     2,     2,     2,     2,    64,    59,
-      35,    55,    36,     2,     2,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,    34,    39,     2,
+      65,    66,    32,    35,    70,    36,    71,    33,     2,     2,
+       2,     2,     2,     2,     2,     2,     2,     2,    69,    64,
+      37,    60,    38,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,     2,    38,     2,     2,     2,     2,     2,
+       2,     2,     2,     2,    40,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
-       2,     2,     2,    62,    39,    63,     2,     2,     2,     2,
+       2,     2,     2,    67,    41,    68,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -2543,12 +2692,12 @@ switch (yykind)
        2,     2,     2,     2,     2,     2,     1,     2,     3,     4,
        5,     6,     7,     8,     9,    10,    11,    12,    13,    14,
       15,    16,    17,    18,    19,    20,    21,    22,    23,    24,
-      25,    26,    27,    28,    29,    40,    41,    42,    43,    44,
+      25,    26,    27,    28,    29,    30,    31,    42,    43,    44,
       45,    46,    47,    48,    49,    50,    51,    52,    53,    54,
-      56,    57,    58
+      55,    56,    57,    58,    59,    61,    62,    63
     };
     // Last valid token kind.
-    const int code_max = 302;
+    const int code_max = 307;
 
     if (t <= 0)
       return symbol_kind::S_YYEOF;
@@ -2571,6 +2720,7 @@ switch (yykind)
       case symbol_kind::S_compound_statement: // compound_statement
       case symbol_kind::S_compound_block: // compound_block
       case symbol_kind::S_union_list: // union_list
+      case symbol_kind::S_namespace_body: // namespace_body
         value.copy< e2::Block * > (YY_MOVE (that.value));
         break;
 
@@ -2597,7 +2747,13 @@ switch (yykind)
         value.copy< e2::FunctionDeclaration * > (YY_MOVE (that.value));
         break;
 
-      case symbol_kind::S_identifier_list: // identifier_list
+      case symbol_kind::S_primary_lvalue: // primary_lvalue
+      case symbol_kind::S_id_func_call_name: // id_func_call_name
+      case symbol_kind::S_id_ns_gl_name: // id_ns_gl_name
+      case symbol_kind::S_id_ns_name: // id_ns_name
+      case symbol_kind::S_global_union_variable: // global_union_variable
+      case symbol_kind::S_namespace_variable: // namespace_variable
+      case symbol_kind::S_identifier_str: // identifier_str
         value.copy< e2::Identifier * > (YY_MOVE (that.value));
         break;
 
@@ -2618,6 +2774,10 @@ switch (yykind)
         value.copy< e2::MethodCall * > (YY_MOVE (that.value));
         break;
 
+      case symbol_kind::S_namespace_definition: // namespace_definition
+        value.copy< e2::NameSpace * > (YY_MOVE (that.value));
+        break;
+
       case symbol_kind::S_block: // block
       case symbol_kind::S_statement: // statement
       case symbol_kind::S_selection_statement: // selection_statement
@@ -2636,6 +2796,7 @@ switch (yykind)
 
       case symbol_kind::S_variable_val: // variable_val
       case symbol_kind::S_union_statement: // union_statement
+      case symbol_kind::S_namespace_member: // namespace_member
         value.copy< e2::VariableStatement * > (YY_MOVE (that.value));
         break;
 
@@ -2643,6 +2804,7 @@ switch (yykind)
         value.copy< float > (YY_MOVE (that.value));
         break;
 
+      case symbol_kind::S_NAMESPACE_ATTR: // NAMESPACE_ATTR
       case symbol_kind::S_OP_LE: // OP_LE
       case symbol_kind::S_OP_GE: // OP_GE
       case symbol_kind::S_OP_EQ: // OP_EQ
@@ -2665,22 +2827,22 @@ switch (yykind)
       case symbol_kind::S_UNARY_INC: // UNARY_INC
       case symbol_kind::S_UNARY_DEC: // UNARY_DEC
       case symbol_kind::S_ASSIGN_EQ: // ASSIGN_EQ
-      case symbol_kind::S_30_: // '*'
-      case symbol_kind::S_31_: // '/'
-      case symbol_kind::S_32_: // '%'
-      case symbol_kind::S_33_: // '+'
-      case symbol_kind::S_34_: // '-'
-      case symbol_kind::S_35_: // '<'
-      case symbol_kind::S_36_: // '>'
-      case symbol_kind::S_37_: // '&'
-      case symbol_kind::S_38_: // '^'
-      case symbol_kind::S_39_: // '|'
+      case symbol_kind::S_32_: // '*'
+      case symbol_kind::S_33_: // '/'
+      case symbol_kind::S_34_: // '%'
+      case symbol_kind::S_35_: // '+'
+      case symbol_kind::S_36_: // '-'
+      case symbol_kind::S_37_: // '<'
+      case symbol_kind::S_38_: // '>'
+      case symbol_kind::S_39_: // '&'
+      case symbol_kind::S_40_: // '^'
+      case symbol_kind::S_41_: // '|'
+      case symbol_kind::S_unary: // unary
       case symbol_kind::S_add_arithmetic: // add_arithmetic
       case symbol_kind::S_mul_arithmetic: // mul_arithmetic
       case symbol_kind::S_shift_arithmetic: // shift_arithmetic
       case symbol_kind::S_comparison: // comparison
       case symbol_kind::S_logical: // logical
-      case symbol_kind::S_unary: // unary
       case symbol_kind::S_assignment: // assignment
         value.copy< int > (YY_MOVE (that.value));
         break;
@@ -2692,6 +2854,7 @@ switch (yykind)
       case symbol_kind::S_IDENTIFIER: // IDENTIFIER
       case symbol_kind::S_STRING_LITERAL: // STRING_LITERAL
       case symbol_kind::S_IMPORT_LITERAL: // IMPORT_LITERAL
+      case symbol_kind::S_NSFUNC_CALL: // NSFUNC_CALL
         value.copy< std::string > (YY_MOVE (that.value));
         break;
 
@@ -2730,6 +2893,7 @@ switch (yykind)
       case symbol_kind::S_compound_statement: // compound_statement
       case symbol_kind::S_compound_block: // compound_block
       case symbol_kind::S_union_list: // union_list
+      case symbol_kind::S_namespace_body: // namespace_body
         value.move< e2::Block * > (YY_MOVE (s.value));
         break;
 
@@ -2756,7 +2920,13 @@ switch (yykind)
         value.move< e2::FunctionDeclaration * > (YY_MOVE (s.value));
         break;
 
-      case symbol_kind::S_identifier_list: // identifier_list
+      case symbol_kind::S_primary_lvalue: // primary_lvalue
+      case symbol_kind::S_id_func_call_name: // id_func_call_name
+      case symbol_kind::S_id_ns_gl_name: // id_ns_gl_name
+      case symbol_kind::S_id_ns_name: // id_ns_name
+      case symbol_kind::S_global_union_variable: // global_union_variable
+      case symbol_kind::S_namespace_variable: // namespace_variable
+      case symbol_kind::S_identifier_str: // identifier_str
         value.move< e2::Identifier * > (YY_MOVE (s.value));
         break;
 
@@ -2777,6 +2947,10 @@ switch (yykind)
         value.move< e2::MethodCall * > (YY_MOVE (s.value));
         break;
 
+      case symbol_kind::S_namespace_definition: // namespace_definition
+        value.move< e2::NameSpace * > (YY_MOVE (s.value));
+        break;
+
       case symbol_kind::S_block: // block
       case symbol_kind::S_statement: // statement
       case symbol_kind::S_selection_statement: // selection_statement
@@ -2795,6 +2969,7 @@ switch (yykind)
 
       case symbol_kind::S_variable_val: // variable_val
       case symbol_kind::S_union_statement: // union_statement
+      case symbol_kind::S_namespace_member: // namespace_member
         value.move< e2::VariableStatement * > (YY_MOVE (s.value));
         break;
 
@@ -2802,6 +2977,7 @@ switch (yykind)
         value.move< float > (YY_MOVE (s.value));
         break;
 
+      case symbol_kind::S_NAMESPACE_ATTR: // NAMESPACE_ATTR
       case symbol_kind::S_OP_LE: // OP_LE
       case symbol_kind::S_OP_GE: // OP_GE
       case symbol_kind::S_OP_EQ: // OP_EQ
@@ -2824,22 +3000,22 @@ switch (yykind)
       case symbol_kind::S_UNARY_INC: // UNARY_INC
       case symbol_kind::S_UNARY_DEC: // UNARY_DEC
       case symbol_kind::S_ASSIGN_EQ: // ASSIGN_EQ
-      case symbol_kind::S_30_: // '*'
-      case symbol_kind::S_31_: // '/'
-      case symbol_kind::S_32_: // '%'
-      case symbol_kind::S_33_: // '+'
-      case symbol_kind::S_34_: // '-'
-      case symbol_kind::S_35_: // '<'
-      case symbol_kind::S_36_: // '>'
-      case symbol_kind::S_37_: // '&'
-      case symbol_kind::S_38_: // '^'
-      case symbol_kind::S_39_: // '|'
+      case symbol_kind::S_32_: // '*'
+      case symbol_kind::S_33_: // '/'
+      case symbol_kind::S_34_: // '%'
+      case symbol_kind::S_35_: // '+'
+      case symbol_kind::S_36_: // '-'
+      case symbol_kind::S_37_: // '<'
+      case symbol_kind::S_38_: // '>'
+      case symbol_kind::S_39_: // '&'
+      case symbol_kind::S_40_: // '^'
+      case symbol_kind::S_41_: // '|'
+      case symbol_kind::S_unary: // unary
       case symbol_kind::S_add_arithmetic: // add_arithmetic
       case symbol_kind::S_mul_arithmetic: // mul_arithmetic
       case symbol_kind::S_shift_arithmetic: // shift_arithmetic
       case symbol_kind::S_comparison: // comparison
       case symbol_kind::S_logical: // logical
-      case symbol_kind::S_unary: // unary
       case symbol_kind::S_assignment: // assignment
         value.move< int > (YY_MOVE (s.value));
         break;
@@ -2851,6 +3027,7 @@ switch (yykind)
       case symbol_kind::S_IDENTIFIER: // IDENTIFIER
       case symbol_kind::S_STRING_LITERAL: // STRING_LITERAL
       case symbol_kind::S_IMPORT_LITERAL: // IMPORT_LITERAL
+      case symbol_kind::S_NSFUNC_CALL: // NSFUNC_CALL
         value.move< std::string > (YY_MOVE (s.value));
         break;
 
@@ -2920,7 +3097,7 @@ switch (yykind)
 
 
 } // yy
-#line 2924 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.hpp"
+#line 3101 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.hpp"
 
 
 

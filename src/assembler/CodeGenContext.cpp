@@ -1166,17 +1166,13 @@ llvm::Instruction* CodeGenContext::getNameSpaceVarAccessInst(
     llvm::Instruction* instr = block_ns_var_current(var_name);
 
     if (instr != nullptr) {
-        llog::echo("instr is null");
+        llog::echo("instr is null", ns, " var_name:", var_name);
         return instr;
     }
 
     if (this_ptr == nullptr) {
-        llog::echo("instr is this_ptr");
-
         return nullptr;
     }
-
-    llog::echo("index:", index, " ns:", ns, " var:", var_name);
 
     std::vector<llvm::Value*> ptr_indices;
     llvm::ConstantInt* const_int32_0 =
@@ -1484,6 +1480,62 @@ bool CodeGenContext::isTagInitVariable(std::string tag)
 {
     return _NameSpaceTag.count(tag) == 0;
 } /* -----  end of function CodeGenContext::isTagInitVariable  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::addNSSelfFunc
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::addNSSelfFunc(std::string func)
+{
+    _NameSpaceSelfFuncList.insert(func);
+} /* -----  end of function CodeGenContext::addNSSelfFunc  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::isNSSelfFunc
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+bool CodeGenContext::isNSSelfFunc(std::string func)
+{
+    if (_NameSpaceSelfFuncList.empty()) {
+        return false;
+    }
+    auto search = _NameSpaceSelfFuncList.find(func);
+    if (search != _NameSpaceSelfFuncList.end()) {
+        return true;
+    }
+    return false;
+} /* -----  end of function CodeGenContext::isNSSelfFunc  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::cleanSelfFunc
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::cleanSelfFunc()
+{
+    _NameSpaceSelfFuncList.clear();
+} /* -----  end of function CodeGenContext::cleanSelfFunc  ----- */
+
 /*
  * ===  FUNCTION  =============================
  *

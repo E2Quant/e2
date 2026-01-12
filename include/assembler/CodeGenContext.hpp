@@ -310,6 +310,10 @@ public:
     llvm::AllocaInst* MethodCallInst(Identifier*);
     bool isTagInitVariable(std::string);
 
+    void addNSSelfFunc(std::string);
+    bool isNSSelfFunc(std::string);
+    void cleanSelfFunc();
+
     //----- namespace end
 
     const std::vector<ScriptList_t>& ScriptList();
@@ -380,6 +384,7 @@ private:
     // 全局保存 tag 的 allocainst 变量
     NameSpaceTagCallMap _NameSpaceTag;
 
+    NameSpaceSelfFuncList _NameSpaceSelfFuncList;
     /**
      * Identifier list
      */
