@@ -114,6 +114,13 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
 #endif
 
     std::string cname = _id->name();
+
+    CodeTreeLink one;
+    one.line = _codeLine;
+    one.cpath = _path;
+    one.fun = cname;
+    context.addCodeTree(one);
+
     IDType idt = _id->idType();
     std::vector<llvm::Value*> args;
     bool isInit = false;

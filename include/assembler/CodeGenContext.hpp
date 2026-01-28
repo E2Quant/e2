@@ -60,6 +60,8 @@
 #include "E2L/E2LType.hpp"
 #include "assembler/BaseNode.hpp"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/PassManager.h"
 #include "llvm/IR/Value.h"
 
 namespace e2 {
@@ -97,6 +99,14 @@ struct __ScriptError {
 
 typedef struct __ScriptError ScriptError_t;
 
+struct __CodeTreeLink {
+    std::size_t line;
+    std::string fun;
+    std::string cpath;
+}; /* ----------  end of struct __CodeTreeLink  ---------- */
+
+typedef struct __CodeTreeLink CodeTreeLink;
+inline std::list<CodeTreeLink> _CodeTreeLinkList;
 /*
  * ================================
  *        Class:  CodeGenBlock
@@ -149,6 +159,22 @@ private:
     ScopeKind _scope{_sk_main};
 
 }; /* -----  end of class CodeGenBlock  ----- */
+
+struct FunctionCounterPass : llvm::PassInfoMixin<FunctionCounterPass> {
+    llvm::PreservedAnalyses run(llvm::Module& M, llvm::ModuleAnalysisManager&)
+    {
+        int funcCount = 0;
+        for (const auto& F : M) {
+            funcCount++;
+            llvm::errs() << "Found function: " << F.getName() << "\n";
+        }
+        llvm::errs() << "Total functions in module '" << M.getName()
+                     << "': " << funcCount << "\n";
+        return llvm::PreservedAnalyses::none();  // This pass doesn't preserve
+                                                 // any analysis
+    }
+};
+
 /*
  * ================================
  *        Class:  CodeGenContext
@@ -327,8 +353,10 @@ public:
     );
     const std::vector<ScriptError_t>& ScriptError();
 
+    void addCodeTree(CodeTreeLink);
+    void popCodeTree();
     void DontRun();
-
+    void setupAndRunPasses();
     void toDebug();
     /* =============  OPERATORS     =================== */
 
@@ -343,6 +371,7 @@ private:
     void InitGlobalVar();
     void ExternGlobalVar(const std::string&, Int_e);
     void AddGlobal();
+
     /* =============  DATA MEMBERS  =================== */
 
     llvm::Module* _module{nullptr};

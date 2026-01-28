@@ -52,13 +52,11 @@
 
 #include <cassert>
 #include <cstddef>
-#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <functional>
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -66,13 +64,18 @@
 #include "assembler/BaseNode.hpp"
 #include "assembler/BaseType.hpp"
 #include "assembler/ExternFunction.hpp"
+#include "call_graph/E2CallGraph.hpp"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/Analysis/CGSCCPassManager.h"
+#include "llvm/Analysis/LoopAnalysisManager.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
+#include "llvm/IR/LegacyPassManager.h"
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Verifier.h"
+#include "llvm/Passes/PassBuilder.h"
 #include "llvm/Support/raw_ostream.h"
 #include "utility/pack.hpp"
 
@@ -347,10 +350,29 @@ Int_e CodeGenContext::runFunction(double arg1 = 0, double arg2 = 0)
     Int_e ret = _function(_arg1, _arg2);
 
     _GenericRet.IntVal = ret;
+
     return ret;
 }
 
 /* -----  end of function CodeGenContext::runFunction  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::setupAndRunPasses
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::setupAndRunPasses()
+{
+    llvm::legacy::PassManager pm;
+    pm.add(new E2CallGraphPass);
+    pm.run(*_module);
+} /* -----  end of function CodeGenContext::setupAndRunPasses  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -1631,6 +1653,40 @@ const std::vector<ScriptError_t>& CodeGenContext::ScriptError()
 {
     return _script_error;
 } /* -----  end of function CodeGenContext::ScriptError  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::addCodeTree
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::addCodeTree(CodeTreeLink one)
+{
+    _CodeTreeLinkList.push_front(one);
+} /* -----  end of function CodeGenContext::addCodeTree  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::popCodeTree
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::popCodeTree()
+{
+    if (_CodeTreeLinkList.size() > 0) {
+        _CodeTreeLinkList.pop_front();
+    }
+} /* -----  end of function CodeGenContext::popCodeTree  ----- */
 /*
  * ===  FUNCTION  =============================
  *

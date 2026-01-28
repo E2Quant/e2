@@ -131,11 +131,11 @@ Grammar
    91 function_parameter: '(' ')'
    92                   | '(' parameter_list ')'
 
-   93 function_definition: FUNCTION IDENTIFIER function_parameter compound_statement
+   93 function_definition: FUNCTION identifier_str function_parameter compound_statement
 
    94 method_call: id_func_call_name function_parameter
 
-   95 extern_call: EXTERN IDENTIFIER IDENTIFIER '(' IDENTIFIER primary_rvalue ')'
+   95 extern_call: EXTERN IDENTIFIER identifier_str '(' identifier_str primary_rvalue ')'
 
    96 union_statement: ';'
    97                | variable_val ';'
@@ -145,19 +145,19 @@ Grammar
   100           | union_definition
   101           | union_list union_definition
 
-  102 union_definition: UNION IDENTIFIER '{' union_list '}'
+  102 union_definition: UNION identifier_str '{' union_list '}'
 
   103 namespace_member: ';'
   104                 | variable_val ';'
 
   105 namespace_body: namespace_member
-  106               | function_definition
-  107               | SELF function_definition
+  106               | SELF function_definition
+  107               | function_definition
   108               | namespace_body namespace_member
-  109               | namespace_body function_definition
-  110               | namespace_body SELF function_definition
+  109               | namespace_body SELF function_definition
+  110               | namespace_body function_definition
 
-  111 namespace_definition: NAMESPACE IDENTIFIER '{' namespace_body '}'
+  111 namespace_definition: NAMESPACE identifier_str '{' namespace_body '}'
 
   112 primary_lvalue: id_ns_name
 
@@ -177,8 +177,8 @@ Grammar
   123 id_ns_name: identifier_str
   124           | namespace_variable
 
-  125 global_union_variable: IDENTIFIER '.' IDENTIFIER
-  126                      | global_union_variable '.' IDENTIFIER
+  125 global_union_variable: identifier_str '.' identifier_str
+  126                      | global_union_variable '.' identifier_str
 
   127 namespace_variable: THIS NAMESPACE_ATTR identifier_str
 
@@ -208,7 +208,7 @@ Terminals, with rules where they appear
     '|' <int> (124) 36
     '}' (125) 63 64 78 102 111
     error (256)
-    IDENTIFIER <std::string> (258) 93 95 102 111 125 126 128
+    IDENTIFIER <std::string> (258) 95 128
     STRING_LITERAL <std::string> (259) 118
     IMPORT_LITERAL <std::string> (260) 11
     NSFUNC_CALL <std::string> (261) 120
@@ -243,7 +243,7 @@ Terminals, with rules where they appear
     EXTERN (290) 95
     IMPORT (291) 11
     THIS (292) 127
-    SELF (293) 107 110
+    SELF (293) 106 109
     IF (294) 77
     ELSE (295) 73
     SWITCH (296) 78
@@ -401,7 +401,7 @@ Nonterminals, with rules where they appear
         on right: 124
     identifier_str <e2::Identifier *> (118)
         on left: 128
-        on right: 120 123 127
+        on right: 93 95 102 111 120 123 125 126 127
 
 
 State 0
@@ -442,28 +442,34 @@ State 1
 
 State 2
 
-  111 namespace_definition: NAMESPACE • IDENTIFIER '{' namespace_body '}'
+  111 namespace_definition: NAMESPACE • identifier_str '{' namespace_body '}'
 
-    IDENTIFIER  shift, and go to state 23
+    IDENTIFIER  shift, and go to state 1
+
+    identifier_str  go to state 23
 
 
 State 3
 
-  102 union_definition: UNION • IDENTIFIER '{' union_list '}'
+  102 union_definition: UNION • identifier_str '{' union_list '}'
 
-    IDENTIFIER  shift, and go to state 24
+    IDENTIFIER  shift, and go to state 1
+
+    identifier_str  go to state 24
 
 
 State 4
 
-   93 function_definition: FUNCTION • IDENTIFIER function_parameter compound_statement
+   93 function_definition: FUNCTION • identifier_str function_parameter compound_statement
 
-    IDENTIFIER  shift, and go to state 25
+    IDENTIFIER  shift, and go to state 1
+
+    identifier_str  go to state 25
 
 
 State 5
 
-   95 extern_call: EXTERN • IDENTIFIER IDENTIFIER '(' IDENTIFIER primary_rvalue ')'
+   95 extern_call: EXTERN • IDENTIFIER identifier_str '(' identifier_str primary_rvalue ')'
 
     IDENTIFIER  shift, and go to state 26
 
@@ -639,21 +645,21 @@ State 22
 
 State 23
 
-  111 namespace_definition: NAMESPACE IDENTIFIER • '{' namespace_body '}'
+  111 namespace_definition: NAMESPACE identifier_str • '{' namespace_body '}'
 
     '{'  shift, and go to state 57
 
 
 State 24
 
-  102 union_definition: UNION IDENTIFIER • '{' union_list '}'
+  102 union_definition: UNION identifier_str • '{' union_list '}'
 
     '{'  shift, and go to state 58
 
 
 State 25
 
-   93 function_definition: FUNCTION IDENTIFIER • function_parameter compound_statement
+   93 function_definition: FUNCTION identifier_str • function_parameter compound_statement
 
     '('  shift, and go to state 54
 
@@ -662,9 +668,11 @@ State 25
 
 State 26
 
-   95 extern_call: EXTERN IDENTIFIER • IDENTIFIER '(' IDENTIFIER primary_rvalue ')'
+   95 extern_call: EXTERN IDENTIFIER • identifier_str '(' identifier_str primary_rvalue ')'
 
-    IDENTIFIER  shift, and go to state 60
+    IDENTIFIER  shift, and go to state 1
+
+    identifier_str  go to state 60
 
 
 State 27
@@ -855,28 +863,28 @@ State 53
 
    19 variable_val: primary_lvalue assignment • expression
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
-    expression                 go to state 68
-    additive_expression        go to state 69
-    multiplicative_expression  go to state 70
-    shift_expression           go to state 71
-    conditional                go to state 72
-    expression_rvalue          go to state 73
-    method_call                go to state 74
-    primary_rvalue             go to state 75
+    expression                 go to state 67
+    additive_expression        go to state 68
+    multiplicative_expression  go to state 69
+    shift_expression           go to state 70
+    conditional                go to state 71
+    expression_rvalue          go to state 72
+    method_call                go to state 73
+    primary_rvalue             go to state 74
     id_func_call_name          go to state 19
-    id_ns_gl_name              go to state 76
-    id_ns_name                 go to state 77
-    global_union_variable      go to state 78
+    id_ns_gl_name              go to state 75
+    id_ns_name                 go to state 76
+    global_union_variable      go to state 77
     namespace_variable         go to state 21
-    identifier_str             go to state 22
+    identifier_str             go to state 78
 
 
 State 54
@@ -884,19 +892,19 @@ State 54
    91 function_parameter: '(' • ')'
    92                   | '(' • parameter_list ')'
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
     ')'             shift, and go to state 79
 
     parameter_list         go to state 80
     primary_rvalue         go to state 81
-    id_ns_gl_name          go to state 76
+    id_ns_gl_name          go to state 75
     id_ns_name             go to state 82
-    global_union_variable  go to state 78
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
     identifier_str         go to state 83
 
@@ -919,7 +927,7 @@ State 56
 
 State 57
 
-  111 namespace_definition: NAMESPACE IDENTIFIER '{' • namespace_body '}'
+  111 namespace_definition: NAMESPACE identifier_str '{' • namespace_body '}'
 
     IDENTIFIER  shift, and go to state 1
     FUNCTION    shift, and go to state 4
@@ -934,42 +942,42 @@ State 57
     primary_lvalue       go to state 91
     id_ns_name           go to state 92
     namespace_variable   go to state 21
-    identifier_str       go to state 83
+    identifier_str       go to state 93
 
 
 State 58
 
-  102 union_definition: UNION IDENTIFIER '{' • union_list '}'
+  102 union_definition: UNION identifier_str '{' • union_list '}'
 
     IDENTIFIER  shift, and go to state 1
     UNION       shift, and go to state 3
     THIS        shift, and go to state 7
-    ';'         shift, and go to state 93
+    ';'         shift, and go to state 94
 
-    variable_val        go to state 94
-    union_statement     go to state 95
-    union_list          go to state 96
-    union_definition    go to state 97
+    variable_val        go to state 95
+    union_statement     go to state 96
+    union_list          go to state 97
+    union_definition    go to state 98
     primary_lvalue      go to state 91
     id_ns_name          go to state 92
     namespace_variable  go to state 21
-    identifier_str      go to state 83
+    identifier_str      go to state 93
 
 
 State 59
 
-   93 function_definition: FUNCTION IDENTIFIER function_parameter • compound_statement
+   93 function_definition: FUNCTION identifier_str function_parameter • compound_statement
 
-    '{'  shift, and go to state 98
+    '{'  shift, and go to state 99
 
-    compound_statement  go to state 99
+    compound_statement  go to state 100
 
 
 State 60
 
-   95 extern_call: EXTERN IDENTIFIER IDENTIFIER • '(' IDENTIFIER primary_rvalue ')'
+   95 extern_call: EXTERN IDENTIFIER identifier_str • '(' identifier_str primary_rvalue ')'
 
-    '('  shift, and go to state 100
+    '('  shift, and go to state 101
 
 
 State 61
@@ -981,36 +989,26 @@ State 61
 
 State 62
 
-  125 global_union_variable: IDENTIFIER • '.' IDENTIFIER
-  128 identifier_str: IDENTIFIER •
-
-    '.'  shift, and go to state 101
-
-    $default  reduce using rule 128 (identifier_str)
-
-
-State 63
-
   118 primary_rvalue: STRING_LITERAL •
 
     $default  reduce using rule 118 (primary_rvalue)
 
 
-State 64
+State 63
 
   114 primary_rvalue: CONSTANT •
 
     $default  reduce using rule 114 (primary_rvalue)
 
 
-State 65
+State 64
 
   116 primary_rvalue: FCONSTANT •
 
     $default  reduce using rule 116 (primary_rvalue)
 
 
-State 66
+State 65
 
   115 primary_rvalue: '-' • CONSTANT
   117               | '-' • FCONSTANT
@@ -1019,42 +1017,42 @@ State 66
     FCONSTANT  shift, and go to state 103
 
 
-State 67
+State 66
 
    42 expression_rvalue: '(' • expression ')'
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
     expression                 go to state 104
-    additive_expression        go to state 69
-    multiplicative_expression  go to state 70
-    shift_expression           go to state 71
-    conditional                go to state 72
-    expression_rvalue          go to state 73
-    method_call                go to state 74
-    primary_rvalue             go to state 75
+    additive_expression        go to state 68
+    multiplicative_expression  go to state 69
+    shift_expression           go to state 70
+    conditional                go to state 71
+    expression_rvalue          go to state 72
+    method_call                go to state 73
+    primary_rvalue             go to state 74
     id_func_call_name          go to state 19
-    id_ns_gl_name              go to state 76
-    id_ns_name                 go to state 77
-    global_union_variable      go to state 78
+    id_ns_gl_name              go to state 75
+    id_ns_name                 go to state 76
+    global_union_variable      go to state 77
     namespace_variable         go to state 21
-    identifier_str             go to state 22
+    identifier_str             go to state 78
 
 
-State 68
+State 67
 
    19 variable_val: primary_lvalue assignment expression •
 
     $default  reduce using rule 19 (variable_val)
 
 
-State 69
+State 68
 
    20 expression: additive_expression •
    22 additive_expression: additive_expression • add_arithmetic multiplicative_expression
@@ -1067,7 +1065,7 @@ State 69
     add_arithmetic  go to state 107
 
 
-State 70
+State 69
 
    21 additive_expression: multiplicative_expression •
    26 multiplicative_expression: multiplicative_expression • mul_arithmetic shift_expression
@@ -1081,7 +1079,7 @@ State 70
     mul_arithmetic  go to state 111
 
 
-State 71
+State 70
 
    25 multiplicative_expression: shift_expression •
    31 shift_expression: shift_expression • shift_arithmetic conditional
@@ -1097,14 +1095,14 @@ State 71
     shift_arithmetic  go to state 117
 
 
-State 72
+State 71
 
    30 shift_expression: conditional •
 
     $default  reduce using rule 30 (shift_expression)
 
 
-State 73
+State 72
 
    37 conditional: expression_rvalue •
    38            | expression_rvalue • comparison expression_rvalue
@@ -1126,28 +1124,28 @@ State 73
     logical     go to state 128
 
 
-State 74
+State 73
 
    40 conditional: method_call •
 
     $default  reduce using rule 40 (conditional)
 
 
-State 75
+State 74
 
    41 expression_rvalue: primary_rvalue •
 
     $default  reduce using rule 41 (expression_rvalue)
 
 
-State 76
+State 75
 
   113 primary_rvalue: id_ns_gl_name •
 
     $default  reduce using rule 113 (primary_rvalue)
 
 
-State 77
+State 76
 
   119 id_func_call_name: id_ns_name •
   121 id_ns_gl_name: id_ns_name •
@@ -1156,14 +1154,26 @@ State 77
     $default  reduce using rule 121 (id_ns_gl_name)
 
 
-State 78
+State 77
 
   122 id_ns_gl_name: global_union_variable •
-  126 global_union_variable: global_union_variable • '.' IDENTIFIER
+  126 global_union_variable: global_union_variable • '.' identifier_str
 
     '.'  shift, and go to state 129
 
     $default  reduce using rule 122 (id_ns_gl_name)
+
+
+State 78
+
+  120 id_func_call_name: identifier_str • NSFUNC_CALL identifier_str
+  123 id_ns_name: identifier_str •
+  125 global_union_variable: identifier_str • '.' identifier_str
+
+    NSFUNC_CALL  shift, and go to state 56
+    '.'          shift, and go to state 130
+
+    $default  reduce using rule 123 (id_ns_name)
 
 
 State 79
@@ -1178,8 +1188,8 @@ State 80
    90 parameter_list: parameter_list • ',' primary_rvalue
    92 function_parameter: '(' parameter_list • ')'
 
-    ')'  shift, and go to state 130
-    ','  shift, and go to state 131
+    ')'  shift, and go to state 131
+    ','  shift, and go to state 132
 
 
 State 81
@@ -1199,6 +1209,9 @@ State 82
 State 83
 
   123 id_ns_name: identifier_str •
+  125 global_union_variable: identifier_str • '.' identifier_str
+
+    '.'  shift, and go to state 130
 
     $default  reduce using rule 123 (id_ns_name)
 
@@ -1212,11 +1225,11 @@ State 84
 
 State 85
 
-  107 namespace_body: SELF • function_definition
+  106 namespace_body: SELF • function_definition
 
     FUNCTION  shift, and go to state 4
 
-    function_definition  go to state 132
+    function_definition  go to state 133
 
 
 State 86
@@ -1230,14 +1243,14 @@ State 87
 
   104 namespace_member: variable_val • ';'
 
-    ';'  shift, and go to state 133
+    ';'  shift, and go to state 134
 
 
 State 88
 
-  106 namespace_body: function_definition •
+  107 namespace_body: function_definition •
 
-    $default  reduce using rule 106 (namespace_body)
+    $default  reduce using rule 107 (namespace_body)
 
 
 State 89
@@ -1250,24 +1263,24 @@ State 89
 State 90
 
   108 namespace_body: namespace_body • namespace_member
-  109               | namespace_body • function_definition
-  110               | namespace_body • SELF function_definition
-  111 namespace_definition: NAMESPACE IDENTIFIER '{' namespace_body • '}'
+  109               | namespace_body • SELF function_definition
+  110               | namespace_body • function_definition
+  111 namespace_definition: NAMESPACE identifier_str '{' namespace_body • '}'
 
     IDENTIFIER  shift, and go to state 1
     FUNCTION    shift, and go to state 4
     THIS        shift, and go to state 7
-    SELF        shift, and go to state 134
+    SELF        shift, and go to state 135
     ';'         shift, and go to state 86
-    '}'         shift, and go to state 135
+    '}'         shift, and go to state 136
 
     variable_val         go to state 87
-    function_definition  go to state 136
-    namespace_member     go to state 137
+    function_definition  go to state 137
+    namespace_member     go to state 138
     primary_lvalue       go to state 91
     id_ns_name           go to state 92
     namespace_variable   go to state 21
-    identifier_str       go to state 83
+    identifier_str       go to state 93
 
 
 State 91
@@ -1298,54 +1311,61 @@ State 92
 
 State 93
 
+  123 id_ns_name: identifier_str •
+
+    $default  reduce using rule 123 (id_ns_name)
+
+
+State 94
+
    96 union_statement: ';' •
 
     $default  reduce using rule 96 (union_statement)
 
 
-State 94
+State 95
 
    97 union_statement: variable_val • ';'
 
-    ';'  shift, and go to state 138
+    ';'  shift, and go to state 139
 
 
-State 95
+State 96
 
    98 union_list: union_statement •
 
     $default  reduce using rule 98 (union_list)
 
 
-State 96
+State 97
 
    99 union_list: union_list • union_statement
   101           | union_list • union_definition
-  102 union_definition: UNION IDENTIFIER '{' union_list • '}'
+  102 union_definition: UNION identifier_str '{' union_list • '}'
 
     IDENTIFIER  shift, and go to state 1
     UNION       shift, and go to state 3
     THIS        shift, and go to state 7
-    ';'         shift, and go to state 93
-    '}'         shift, and go to state 139
+    ';'         shift, and go to state 94
+    '}'         shift, and go to state 140
 
-    variable_val        go to state 94
-    union_statement     go to state 140
-    union_definition    go to state 141
+    variable_val        go to state 95
+    union_statement     go to state 141
+    union_definition    go to state 142
     primary_lvalue      go to state 91
     id_ns_name          go to state 92
     namespace_variable  go to state 21
-    identifier_str      go to state 83
+    identifier_str      go to state 93
 
 
-State 97
+State 98
 
   100 union_list: union_definition •
 
     $default  reduce using rule 100 (union_list)
 
 
-State 98
+State 99
 
    63 compound_statement: '{' • '}'
    64                   | '{' • compound_block '}'
@@ -1353,24 +1373,24 @@ State 98
     IDENTIFIER  shift, and go to state 1
     EXTERN      shift, and go to state 5
     THIS        shift, and go to state 7
-    IF          shift, and go to state 142
-    SWITCH      shift, and go to state 143
-    WHILE       shift, and go to state 144
-    DO          shift, and go to state 145
-    FOR         shift, and go to state 146
-    CONTINUE    shift, and go to state 147
-    BREAK       shift, and go to state 148
-    RETURN      shift, and go to state 149
-    '}'         shift, and go to state 150
+    IF          shift, and go to state 143
+    SWITCH      shift, and go to state 144
+    WHILE       shift, and go to state 145
+    DO          shift, and go to state 146
+    FOR         shift, and go to state 147
+    CONTINUE    shift, and go to state 148
+    BREAK       shift, and go to state 149
+    RETURN      shift, and go to state 150
+    '}'         shift, and go to state 151
 
-    block                go to state 151
+    block                go to state 152
     unary_val            go to state 11
     variable_val         go to state 12
-    compound_block       go to state 152
-    statement            go to state 153
-    selection_statement  go to state 154
-    iteration_statement  go to state 155
-    jump_statement       go to state 156
+    compound_block       go to state 153
+    statement            go to state 154
+    selection_statement  go to state 155
+    iteration_statement  go to state 156
+    jump_statement       go to state 157
     method_call          go to state 14
     extern_call          go to state 15
     primary_lvalue       go to state 18
@@ -1380,25 +1400,20 @@ State 98
     identifier_str       go to state 22
 
 
-State 99
+State 100
 
-   93 function_definition: FUNCTION IDENTIFIER function_parameter compound_statement •
+   93 function_definition: FUNCTION identifier_str function_parameter compound_statement •
 
     $default  reduce using rule 93 (function_definition)
 
 
-State 100
-
-   95 extern_call: EXTERN IDENTIFIER IDENTIFIER '(' • IDENTIFIER primary_rvalue ')'
-
-    IDENTIFIER  shift, and go to state 157
-
-
 State 101
 
-  125 global_union_variable: IDENTIFIER '.' • IDENTIFIER
+   95 extern_call: EXTERN IDENTIFIER identifier_str '(' • identifier_str primary_rvalue ')'
 
-    IDENTIFIER  shift, and go to state 158
+    IDENTIFIER  shift, and go to state 1
+
+    identifier_str  go to state 158
 
 
 State 102
@@ -1440,26 +1455,26 @@ State 107
 
    22 additive_expression: additive_expression add_arithmetic • multiplicative_expression
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
     multiplicative_expression  go to state 160
-    shift_expression           go to state 71
-    conditional                go to state 72
-    expression_rvalue          go to state 73
-    method_call                go to state 74
-    primary_rvalue             go to state 75
+    shift_expression           go to state 70
+    conditional                go to state 71
+    expression_rvalue          go to state 72
+    method_call                go to state 73
+    primary_rvalue             go to state 74
     id_func_call_name          go to state 19
-    id_ns_gl_name              go to state 76
-    id_ns_name                 go to state 77
-    global_union_variable      go to state 78
+    id_ns_gl_name              go to state 75
+    id_ns_name                 go to state 76
+    global_union_variable      go to state 77
     namespace_variable         go to state 21
-    identifier_str             go to state 22
+    identifier_str             go to state 78
 
 
 State 108
@@ -1487,25 +1502,25 @@ State 111
 
    26 multiplicative_expression: multiplicative_expression mul_arithmetic • shift_expression
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
     shift_expression       go to state 161
-    conditional            go to state 72
-    expression_rvalue      go to state 73
-    method_call            go to state 74
-    primary_rvalue         go to state 75
+    conditional            go to state 71
+    expression_rvalue      go to state 72
+    method_call            go to state 73
+    primary_rvalue         go to state 74
     id_func_call_name      go to state 19
-    id_ns_gl_name          go to state 76
-    id_ns_name             go to state 77
-    global_union_variable  go to state 78
+    id_ns_gl_name          go to state 75
+    id_ns_name             go to state 76
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
-    identifier_str         go to state 22
+    identifier_str         go to state 78
 
 
 State 112
@@ -1547,24 +1562,24 @@ State 117
 
    31 shift_expression: shift_expression shift_arithmetic • conditional
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
     conditional            go to state 162
-    expression_rvalue      go to state 73
-    method_call            go to state 74
-    primary_rvalue         go to state 75
+    expression_rvalue      go to state 72
+    method_call            go to state 73
+    primary_rvalue         go to state 74
     id_func_call_name      go to state 19
-    id_ns_gl_name          go to state 76
-    id_ns_name             go to state 77
-    global_union_variable  go to state 78
+    id_ns_gl_name          go to state 75
+    id_ns_name             go to state 76
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
-    identifier_str         go to state 22
+    identifier_str         go to state 78
 
 
 State 118
@@ -1634,19 +1649,19 @@ State 127
 
    38 conditional: expression_rvalue comparison • expression_rvalue
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
     expression_rvalue      go to state 163
-    primary_rvalue         go to state 75
-    id_ns_gl_name          go to state 76
+    primary_rvalue         go to state 74
+    id_ns_gl_name          go to state 75
     id_ns_name             go to state 82
-    global_union_variable  go to state 78
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
     identifier_str         go to state 83
 
@@ -1655,216 +1670,227 @@ State 128
 
    39 conditional: expression_rvalue logical • expression_rvalue
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
     expression_rvalue      go to state 164
-    primary_rvalue         go to state 75
-    id_ns_gl_name          go to state 76
+    primary_rvalue         go to state 74
+    id_ns_gl_name          go to state 75
     id_ns_name             go to state 82
-    global_union_variable  go to state 78
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
     identifier_str         go to state 83
 
 
 State 129
 
-  126 global_union_variable: global_union_variable '.' • IDENTIFIER
+  126 global_union_variable: global_union_variable '.' • identifier_str
 
-    IDENTIFIER  shift, and go to state 165
+    IDENTIFIER  shift, and go to state 1
+
+    identifier_str  go to state 165
 
 
 State 130
+
+  125 global_union_variable: identifier_str '.' • identifier_str
+
+    IDENTIFIER  shift, and go to state 1
+
+    identifier_str  go to state 166
+
+
+State 131
 
    92 function_parameter: '(' parameter_list ')' •
 
     $default  reduce using rule 92 (function_parameter)
 
 
-State 131
+State 132
 
    90 parameter_list: parameter_list ',' • primary_rvalue
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
 
-    primary_rvalue         go to state 166
-    id_ns_gl_name          go to state 76
+    primary_rvalue         go to state 167
+    id_ns_gl_name          go to state 75
     id_ns_name             go to state 82
-    global_union_variable  go to state 78
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
     identifier_str         go to state 83
 
 
-State 132
-
-  107 namespace_body: SELF function_definition •
-
-    $default  reduce using rule 107 (namespace_body)
-
-
 State 133
+
+  106 namespace_body: SELF function_definition •
+
+    $default  reduce using rule 106 (namespace_body)
+
+
+State 134
 
   104 namespace_member: variable_val ';' •
 
     $default  reduce using rule 104 (namespace_member)
 
 
-State 134
+State 135
 
-  110 namespace_body: namespace_body SELF • function_definition
+  109 namespace_body: namespace_body SELF • function_definition
 
     FUNCTION  shift, and go to state 4
 
-    function_definition  go to state 167
-
-
-State 135
-
-  111 namespace_definition: NAMESPACE IDENTIFIER '{' namespace_body '}' •
-
-    $default  reduce using rule 111 (namespace_definition)
+    function_definition  go to state 168
 
 
 State 136
 
-  109 namespace_body: namespace_body function_definition •
+  111 namespace_definition: NAMESPACE identifier_str '{' namespace_body '}' •
 
-    $default  reduce using rule 109 (namespace_body)
+    $default  reduce using rule 111 (namespace_definition)
 
 
 State 137
+
+  110 namespace_body: namespace_body function_definition •
+
+    $default  reduce using rule 110 (namespace_body)
+
+
+State 138
 
   108 namespace_body: namespace_body namespace_member •
 
     $default  reduce using rule 108 (namespace_body)
 
 
-State 138
+State 139
 
    97 union_statement: variable_val ';' •
 
     $default  reduce using rule 97 (union_statement)
 
 
-State 139
+State 140
 
-  102 union_definition: UNION IDENTIFIER '{' union_list '}' •
+  102 union_definition: UNION identifier_str '{' union_list '}' •
 
     $default  reduce using rule 102 (union_definition)
 
 
-State 140
+State 141
 
    99 union_list: union_list union_statement •
 
     $default  reduce using rule 99 (union_list)
 
 
-State 141
+State 142
 
   101 union_list: union_list union_definition •
 
     $default  reduce using rule 101 (union_list)
 
 
-State 142
-
-   77 selection_statement: IF • '(' conditional ')' labled_if
-
-    '('  shift, and go to state 168
-
-
 State 143
 
-   78 selection_statement: SWITCH • '(' conditional ')' '{' labeled_switch '}'
+   77 selection_statement: IF • '(' conditional ')' labled_if
 
     '('  shift, and go to state 169
 
 
 State 144
 
-   81 iteration_statement: WHILE • '(' conditional ')' compound_statement
+   78 selection_statement: SWITCH • '(' conditional ')' '{' labeled_switch '}'
 
     '('  shift, and go to state 170
 
 
 State 145
 
-   82 iteration_statement: DO • compound_statement WHILE '(' conditional ')' ';'
+   81 iteration_statement: WHILE • '(' conditional ')' compound_statement
 
-    '{'  shift, and go to state 98
-
-    compound_statement  go to state 171
+    '('  shift, and go to state 171
 
 
 State 146
 
-   83 iteration_statement: FOR • '(' variable_val ';' conditional ';' ')' compound_statement
-   84                    | FOR • '(' variable_val ';' conditional ';' for_range ')' compound_statement
+   82 iteration_statement: DO • compound_statement WHILE '(' conditional ')' ';'
 
-    '('  shift, and go to state 172
+    '{'  shift, and go to state 99
+
+    compound_statement  go to state 172
 
 
 State 147
 
-   85 jump_statement: CONTINUE • ';'
+   83 iteration_statement: FOR • '(' variable_val ';' conditional ';' ')' compound_statement
+   84                    | FOR • '(' variable_val ';' conditional ';' for_range ')' compound_statement
 
-    ';'  shift, and go to state 173
+    '('  shift, and go to state 173
 
 
 State 148
 
-   86 jump_statement: BREAK • ';'
+   85 jump_statement: CONTINUE • ';'
 
     ';'  shift, and go to state 174
 
 
 State 149
 
+   86 jump_statement: BREAK • ';'
+
+    ';'  shift, and go to state 175
+
+
+State 150
+
    87 jump_statement: RETURN • ';'
    88               | RETURN • primary_rvalue ';'
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    ';'             shift, and go to state 175
+    ';'             shift, and go to state 176
 
-    primary_rvalue         go to state 176
-    id_ns_gl_name          go to state 76
+    primary_rvalue         go to state 177
+    id_ns_gl_name          go to state 75
     id_ns_name             go to state 82
-    global_union_variable  go to state 78
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
     identifier_str         go to state 83
 
 
-State 150
+State 151
 
    63 compound_statement: '{' '}' •
 
     $default  reduce using rule 63 (compound_statement)
 
 
-State 151
+State 152
 
    65 compound_block: block •
 
     $default  reduce using rule 65 (compound_block)
 
 
-State 152
+State 153
 
    64 compound_statement: '{' compound_block • '}'
    67 compound_block: compound_block • block
@@ -1873,23 +1899,23 @@ State 152
     IDENTIFIER  shift, and go to state 1
     EXTERN      shift, and go to state 5
     THIS        shift, and go to state 7
-    IF          shift, and go to state 142
-    SWITCH      shift, and go to state 143
-    WHILE       shift, and go to state 144
-    DO          shift, and go to state 145
-    FOR         shift, and go to state 146
-    CONTINUE    shift, and go to state 147
-    BREAK       shift, and go to state 148
-    RETURN      shift, and go to state 149
-    '}'         shift, and go to state 177
+    IF          shift, and go to state 143
+    SWITCH      shift, and go to state 144
+    WHILE       shift, and go to state 145
+    DO          shift, and go to state 146
+    FOR         shift, and go to state 147
+    CONTINUE    shift, and go to state 148
+    BREAK       shift, and go to state 149
+    RETURN      shift, and go to state 150
+    '}'         shift, and go to state 178
 
-    block                go to state 178
+    block                go to state 179
     unary_val            go to state 11
     variable_val         go to state 12
-    statement            go to state 179
-    selection_statement  go to state 154
-    iteration_statement  go to state 155
-    jump_statement       go to state 156
+    statement            go to state 180
+    selection_statement  go to state 155
+    iteration_statement  go to state 156
+    jump_statement       go to state 157
     method_call          go to state 14
     extern_call          go to state 15
     primary_lvalue       go to state 18
@@ -1899,58 +1925,51 @@ State 152
     identifier_str       go to state 22
 
 
-State 153
+State 154
 
    66 compound_block: statement •
 
     $default  reduce using rule 66 (compound_block)
 
 
-State 154
+State 155
 
    69 statement: selection_statement •
 
     $default  reduce using rule 69 (statement)
 
 
-State 155
+State 156
 
    70 statement: iteration_statement •
 
     $default  reduce using rule 70 (statement)
 
 
-State 156
+State 157
 
    71 statement: jump_statement •
 
     $default  reduce using rule 71 (statement)
 
 
-State 157
-
-   95 extern_call: EXTERN IDENTIFIER IDENTIFIER '(' IDENTIFIER • primary_rvalue ')'
-
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
-    THIS            shift, and go to state 7
-
-    primary_rvalue         go to state 180
-    id_ns_gl_name          go to state 76
-    id_ns_name             go to state 82
-    global_union_variable  go to state 78
-    namespace_variable     go to state 21
-    identifier_str         go to state 83
-
-
 State 158
 
-  125 global_union_variable: IDENTIFIER '.' IDENTIFIER •
+   95 extern_call: EXTERN IDENTIFIER identifier_str '(' identifier_str • primary_rvalue ')'
 
-    $default  reduce using rule 125 (global_union_variable)
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
+    THIS            shift, and go to state 7
+
+    primary_rvalue         go to state 181
+    id_ns_gl_name          go to state 75
+    id_ns_name             go to state 82
+    global_union_variable  go to state 77
+    namespace_variable     go to state 21
+    identifier_str         go to state 83
 
 
 State 159
@@ -2013,105 +2032,112 @@ State 164
 
 State 165
 
-  126 global_union_variable: global_union_variable '.' IDENTIFIER •
+  126 global_union_variable: global_union_variable '.' identifier_str •
 
     $default  reduce using rule 126 (global_union_variable)
 
 
 State 166
 
+  125 global_union_variable: identifier_str '.' identifier_str •
+
+    $default  reduce using rule 125 (global_union_variable)
+
+
+State 167
+
    90 parameter_list: parameter_list ',' primary_rvalue •
 
     $default  reduce using rule 90 (parameter_list)
 
 
-State 167
-
-  110 namespace_body: namespace_body SELF function_definition •
-
-    $default  reduce using rule 110 (namespace_body)
-
-
 State 168
 
-   77 selection_statement: IF '(' • conditional ')' labled_if
+  109 namespace_body: namespace_body SELF function_definition •
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
-    THIS            shift, and go to state 7
-    '('             shift, and go to state 67
-
-    conditional            go to state 181
-    expression_rvalue      go to state 73
-    method_call            go to state 74
-    primary_rvalue         go to state 75
-    id_func_call_name      go to state 19
-    id_ns_gl_name          go to state 76
-    id_ns_name             go to state 77
-    global_union_variable  go to state 78
-    namespace_variable     go to state 21
-    identifier_str         go to state 22
+    $default  reduce using rule 109 (namespace_body)
 
 
 State 169
 
-   78 selection_statement: SWITCH '(' • conditional ')' '{' labeled_switch '}'
+   77 selection_statement: IF '(' • conditional ')' labled_if
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
     conditional            go to state 182
-    expression_rvalue      go to state 73
-    method_call            go to state 74
-    primary_rvalue         go to state 75
+    expression_rvalue      go to state 72
+    method_call            go to state 73
+    primary_rvalue         go to state 74
     id_func_call_name      go to state 19
-    id_ns_gl_name          go to state 76
-    id_ns_name             go to state 77
-    global_union_variable  go to state 78
+    id_ns_gl_name          go to state 75
+    id_ns_name             go to state 76
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
-    identifier_str         go to state 22
+    identifier_str         go to state 78
 
 
 State 170
 
-   81 iteration_statement: WHILE '(' • conditional ')' compound_statement
+   78 selection_statement: SWITCH '(' • conditional ')' '{' labeled_switch '}'
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
     conditional            go to state 183
-    expression_rvalue      go to state 73
-    method_call            go to state 74
-    primary_rvalue         go to state 75
+    expression_rvalue      go to state 72
+    method_call            go to state 73
+    primary_rvalue         go to state 74
     id_func_call_name      go to state 19
-    id_ns_gl_name          go to state 76
-    id_ns_name             go to state 77
-    global_union_variable  go to state 78
+    id_ns_gl_name          go to state 75
+    id_ns_name             go to state 76
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
-    identifier_str         go to state 22
+    identifier_str         go to state 78
 
 
 State 171
 
-   82 iteration_statement: DO compound_statement • WHILE '(' conditional ')' ';'
+   81 iteration_statement: WHILE '(' • conditional ')' compound_statement
 
-    WHILE  shift, and go to state 184
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
+    THIS            shift, and go to state 7
+    '('             shift, and go to state 66
+
+    conditional            go to state 184
+    expression_rvalue      go to state 72
+    method_call            go to state 73
+    primary_rvalue         go to state 74
+    id_func_call_name      go to state 19
+    id_ns_gl_name          go to state 75
+    id_ns_name             go to state 76
+    global_union_variable  go to state 77
+    namespace_variable     go to state 21
+    identifier_str         go to state 78
 
 
 State 172
+
+   82 iteration_statement: DO compound_statement • WHILE '(' conditional ')' ';'
+
+    WHILE  shift, and go to state 185
+
+
+State 173
 
    83 iteration_statement: FOR '(' • variable_val ';' conditional ';' ')' compound_statement
    84                    | FOR '(' • variable_val ';' conditional ';' for_range ')' compound_statement
@@ -2119,414 +2145,414 @@ State 172
     IDENTIFIER  shift, and go to state 1
     THIS        shift, and go to state 7
 
-    variable_val        go to state 185
+    variable_val        go to state 186
     primary_lvalue      go to state 91
     id_ns_name          go to state 92
     namespace_variable  go to state 21
-    identifier_str      go to state 83
+    identifier_str      go to state 93
 
 
-State 173
+State 174
 
    85 jump_statement: CONTINUE ';' •
 
     $default  reduce using rule 85 (jump_statement)
 
 
-State 174
+State 175
 
    86 jump_statement: BREAK ';' •
 
     $default  reduce using rule 86 (jump_statement)
 
 
-State 175
+State 176
 
    87 jump_statement: RETURN ';' •
 
     $default  reduce using rule 87 (jump_statement)
 
 
-State 176
+State 177
 
    88 jump_statement: RETURN primary_rvalue • ';'
 
-    ';'  shift, and go to state 186
+    ';'  shift, and go to state 187
 
 
-State 177
+State 178
 
    64 compound_statement: '{' compound_block '}' •
 
     $default  reduce using rule 64 (compound_statement)
 
 
-State 178
+State 179
 
    67 compound_block: compound_block block •
 
     $default  reduce using rule 67 (compound_block)
 
 
-State 179
+State 180
 
    68 compound_block: compound_block statement •
 
     $default  reduce using rule 68 (compound_block)
 
 
-State 180
-
-   95 extern_call: EXTERN IDENTIFIER IDENTIFIER '(' IDENTIFIER primary_rvalue • ')'
-
-    ')'  shift, and go to state 187
-
-
 State 181
 
-   77 selection_statement: IF '(' conditional • ')' labled_if
+   95 extern_call: EXTERN IDENTIFIER identifier_str '(' identifier_str primary_rvalue • ')'
 
     ')'  shift, and go to state 188
 
 
 State 182
 
-   78 selection_statement: SWITCH '(' conditional • ')' '{' labeled_switch '}'
+   77 selection_statement: IF '(' conditional • ')' labled_if
 
     ')'  shift, and go to state 189
 
 
 State 183
 
-   81 iteration_statement: WHILE '(' conditional • ')' compound_statement
+   78 selection_statement: SWITCH '(' conditional • ')' '{' labeled_switch '}'
 
     ')'  shift, and go to state 190
 
 
 State 184
 
-   82 iteration_statement: DO compound_statement WHILE • '(' conditional ')' ';'
+   81 iteration_statement: WHILE '(' conditional • ')' compound_statement
 
-    '('  shift, and go to state 191
+    ')'  shift, and go to state 191
 
 
 State 185
 
-   83 iteration_statement: FOR '(' variable_val • ';' conditional ';' ')' compound_statement
-   84                    | FOR '(' variable_val • ';' conditional ';' for_range ')' compound_statement
+   82 iteration_statement: DO compound_statement WHILE • '(' conditional ')' ';'
 
-    ';'  shift, and go to state 192
+    '('  shift, and go to state 192
 
 
 State 186
+
+   83 iteration_statement: FOR '(' variable_val • ';' conditional ';' ')' compound_statement
+   84                    | FOR '(' variable_val • ';' conditional ';' for_range ')' compound_statement
+
+    ';'  shift, and go to state 193
+
+
+State 187
 
    88 jump_statement: RETURN primary_rvalue ';' •
 
     $default  reduce using rule 88 (jump_statement)
 
 
-State 187
+State 188
 
-   95 extern_call: EXTERN IDENTIFIER IDENTIFIER '(' IDENTIFIER primary_rvalue ')' •
+   95 extern_call: EXTERN IDENTIFIER identifier_str '(' identifier_str primary_rvalue ')' •
 
     $default  reduce using rule 95 (extern_call)
 
 
-State 188
+State 189
 
    77 selection_statement: IF '(' conditional ')' • labled_if
 
-    '{'  shift, and go to state 98
+    '{'  shift, and go to state 99
 
-    compound_statement  go to state 193
-    labled_if           go to state 194
-
-
-State 189
-
-   78 selection_statement: SWITCH '(' conditional ')' • '{' labeled_switch '}'
-
-    '{'  shift, and go to state 195
+    compound_statement  go to state 194
+    labled_if           go to state 195
 
 
 State 190
 
-   81 iteration_statement: WHILE '(' conditional ')' • compound_statement
+   78 selection_statement: SWITCH '(' conditional ')' • '{' labeled_switch '}'
 
-    '{'  shift, and go to state 98
-
-    compound_statement  go to state 196
+    '{'  shift, and go to state 196
 
 
 State 191
 
-   82 iteration_statement: DO compound_statement WHILE '(' • conditional ')' ';'
+   81 iteration_statement: WHILE '(' conditional ')' • compound_statement
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
-    THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '{'  shift, and go to state 99
 
-    conditional            go to state 197
-    expression_rvalue      go to state 73
-    method_call            go to state 74
-    primary_rvalue         go to state 75
-    id_func_call_name      go to state 19
-    id_ns_gl_name          go to state 76
-    id_ns_name             go to state 77
-    global_union_variable  go to state 78
-    namespace_variable     go to state 21
-    identifier_str         go to state 22
+    compound_statement  go to state 197
 
 
 State 192
 
-   83 iteration_statement: FOR '(' variable_val ';' • conditional ';' ')' compound_statement
-   84                    | FOR '(' variable_val ';' • conditional ';' for_range ')' compound_statement
+   82 iteration_statement: DO compound_statement WHILE '(' • conditional ')' ';'
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
-    '('             shift, and go to state 67
+    '('             shift, and go to state 66
 
     conditional            go to state 198
-    expression_rvalue      go to state 73
-    method_call            go to state 74
-    primary_rvalue         go to state 75
+    expression_rvalue      go to state 72
+    method_call            go to state 73
+    primary_rvalue         go to state 74
     id_func_call_name      go to state 19
-    id_ns_gl_name          go to state 76
-    id_ns_name             go to state 77
-    global_union_variable  go to state 78
+    id_ns_gl_name          go to state 75
+    id_ns_name             go to state 76
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
-    identifier_str         go to state 22
+    identifier_str         go to state 78
 
 
 State 193
 
+   83 iteration_statement: FOR '(' variable_val ';' • conditional ';' ')' compound_statement
+   84                    | FOR '(' variable_val ';' • conditional ';' for_range ')' compound_statement
+
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
+    THIS            shift, and go to state 7
+    '('             shift, and go to state 66
+
+    conditional            go to state 199
+    expression_rvalue      go to state 72
+    method_call            go to state 73
+    primary_rvalue         go to state 74
+    id_func_call_name      go to state 19
+    id_ns_gl_name          go to state 75
+    id_ns_name             go to state 76
+    global_union_variable  go to state 77
+    namespace_variable     go to state 21
+    identifier_str         go to state 78
+
+
+State 194
+
    72 labled_if: compound_statement •
    73          | compound_statement • ELSE compound_statement
 
-    ELSE  shift, and go to state 199
+    ELSE  shift, and go to state 200
 
     $default  reduce using rule 72 (labled_if)
 
 
-State 194
+State 195
 
    77 selection_statement: IF '(' conditional ')' labled_if •
 
     $default  reduce using rule 77 (selection_statement)
 
 
-State 195
+State 196
 
    78 selection_statement: SWITCH '(' conditional ')' '{' • labeled_switch '}'
 
-    CASE  shift, and go to state 200
+    CASE  shift, and go to state 201
 
-    labeled_switch  go to state 201
+    labeled_switch  go to state 202
 
 
-State 196
+State 197
 
    81 iteration_statement: WHILE '(' conditional ')' compound_statement •
 
     $default  reduce using rule 81 (iteration_statement)
 
 
-State 197
+State 198
 
    82 iteration_statement: DO compound_statement WHILE '(' conditional • ')' ';'
 
-    ')'  shift, and go to state 202
-
-
-State 198
-
-   83 iteration_statement: FOR '(' variable_val ';' conditional • ';' ')' compound_statement
-   84                    | FOR '(' variable_val ';' conditional • ';' for_range ')' compound_statement
-
-    ';'  shift, and go to state 203
+    ')'  shift, and go to state 203
 
 
 State 199
 
-   73 labled_if: compound_statement ELSE • compound_statement
+   83 iteration_statement: FOR '(' variable_val ';' conditional • ';' ')' compound_statement
+   84                    | FOR '(' variable_val ';' conditional • ';' for_range ')' compound_statement
 
-    '{'  shift, and go to state 98
-
-    compound_statement  go to state 204
+    ';'  shift, and go to state 204
 
 
 State 200
 
+   73 labled_if: compound_statement ELSE • compound_statement
+
+    '{'  shift, and go to state 99
+
+    compound_statement  go to state 205
+
+
+State 201
+
    74 labeled_switch: CASE • primary_rvalue ':' compound_block
 
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
     THIS            shift, and go to state 7
 
-    primary_rvalue         go to state 205
-    id_ns_gl_name          go to state 76
+    primary_rvalue         go to state 206
+    id_ns_gl_name          go to state 75
     id_ns_name             go to state 82
-    global_union_variable  go to state 78
+    global_union_variable  go to state 77
     namespace_variable     go to state 21
     identifier_str         go to state 83
 
 
-State 201
+State 202
 
    75 labeled_switch: labeled_switch • CASE primary_rvalue ':' compound_block
    76               | labeled_switch • DEFAULT ':' compound_block
    78 selection_statement: SWITCH '(' conditional ')' '{' labeled_switch • '}'
 
-    CASE     shift, and go to state 206
-    DEFAULT  shift, and go to state 207
-    '}'      shift, and go to state 208
-
-
-State 202
-
-   82 iteration_statement: DO compound_statement WHILE '(' conditional ')' • ';'
-
-    ';'  shift, and go to state 209
+    CASE     shift, and go to state 207
+    DEFAULT  shift, and go to state 208
+    '}'      shift, and go to state 209
 
 
 State 203
+
+   82 iteration_statement: DO compound_statement WHILE '(' conditional ')' • ';'
+
+    ';'  shift, and go to state 210
+
+
+State 204
 
    83 iteration_statement: FOR '(' variable_val ';' conditional ';' • ')' compound_statement
    84                    | FOR '(' variable_val ';' conditional ';' • for_range ')' compound_statement
 
     IDENTIFIER  shift, and go to state 1
     THIS        shift, and go to state 7
-    ')'         shift, and go to state 210
+    ')'         shift, and go to state 211
 
-    unary_val           go to state 211
-    variable_val        go to state 212
-    for_range           go to state 213
+    unary_val           go to state 212
+    variable_val        go to state 213
+    for_range           go to state 214
     primary_lvalue      go to state 18
     id_ns_name          go to state 92
     namespace_variable  go to state 21
-    identifier_str      go to state 83
+    identifier_str      go to state 93
 
 
-State 204
+State 205
 
    73 labled_if: compound_statement ELSE compound_statement •
 
     $default  reduce using rule 73 (labled_if)
 
 
-State 205
+State 206
 
    74 labeled_switch: CASE primary_rvalue • ':' compound_block
 
-    ':'  shift, and go to state 214
-
-
-State 206
-
-   75 labeled_switch: labeled_switch CASE • primary_rvalue ':' compound_block
-
-    IDENTIFIER      shift, and go to state 62
-    STRING_LITERAL  shift, and go to state 63
-    CONSTANT        shift, and go to state 64
-    FCONSTANT       shift, and go to state 65
-    '-'             shift, and go to state 66
-    THIS            shift, and go to state 7
-
-    primary_rvalue         go to state 215
-    id_ns_gl_name          go to state 76
-    id_ns_name             go to state 82
-    global_union_variable  go to state 78
-    namespace_variable     go to state 21
-    identifier_str         go to state 83
+    ':'  shift, and go to state 215
 
 
 State 207
 
-   76 labeled_switch: labeled_switch DEFAULT • ':' compound_block
+   75 labeled_switch: labeled_switch CASE • primary_rvalue ':' compound_block
 
-    ':'  shift, and go to state 216
+    IDENTIFIER      shift, and go to state 1
+    STRING_LITERAL  shift, and go to state 62
+    CONSTANT        shift, and go to state 63
+    FCONSTANT       shift, and go to state 64
+    '-'             shift, and go to state 65
+    THIS            shift, and go to state 7
+
+    primary_rvalue         go to state 216
+    id_ns_gl_name          go to state 75
+    id_ns_name             go to state 82
+    global_union_variable  go to state 77
+    namespace_variable     go to state 21
+    identifier_str         go to state 83
 
 
 State 208
+
+   76 labeled_switch: labeled_switch DEFAULT • ':' compound_block
+
+    ':'  shift, and go to state 217
+
+
+State 209
 
    78 selection_statement: SWITCH '(' conditional ')' '{' labeled_switch '}' •
 
     $default  reduce using rule 78 (selection_statement)
 
 
-State 209
+State 210
 
    82 iteration_statement: DO compound_statement WHILE '(' conditional ')' ';' •
 
     $default  reduce using rule 82 (iteration_statement)
 
 
-State 210
+State 211
 
    83 iteration_statement: FOR '(' variable_val ';' conditional ';' ')' • compound_statement
 
-    '{'  shift, and go to state 98
+    '{'  shift, and go to state 99
 
-    compound_statement  go to state 217
+    compound_statement  go to state 218
 
 
-State 211
+State 212
 
    79 for_range: unary_val •
 
     $default  reduce using rule 79 (for_range)
 
 
-State 212
+State 213
 
    80 for_range: variable_val •
 
     $default  reduce using rule 80 (for_range)
 
 
-State 213
+State 214
 
    84 iteration_statement: FOR '(' variable_val ';' conditional ';' for_range • ')' compound_statement
 
-    ')'  shift, and go to state 218
+    ')'  shift, and go to state 219
 
 
-State 214
+State 215
 
    74 labeled_switch: CASE primary_rvalue ':' • compound_block
 
     IDENTIFIER  shift, and go to state 1
     EXTERN      shift, and go to state 5
     THIS        shift, and go to state 7
-    IF          shift, and go to state 142
-    SWITCH      shift, and go to state 143
-    WHILE       shift, and go to state 144
-    DO          shift, and go to state 145
-    FOR         shift, and go to state 146
-    CONTINUE    shift, and go to state 147
-    BREAK       shift, and go to state 148
-    RETURN      shift, and go to state 149
+    IF          shift, and go to state 143
+    SWITCH      shift, and go to state 144
+    WHILE       shift, and go to state 145
+    DO          shift, and go to state 146
+    FOR         shift, and go to state 147
+    CONTINUE    shift, and go to state 148
+    BREAK       shift, and go to state 149
+    RETURN      shift, and go to state 150
 
-    block                go to state 151
+    block                go to state 152
     unary_val            go to state 11
     variable_val         go to state 12
-    compound_block       go to state 219
-    statement            go to state 153
-    selection_statement  go to state 154
-    iteration_statement  go to state 155
-    jump_statement       go to state 156
+    compound_block       go to state 220
+    statement            go to state 154
+    selection_statement  go to state 155
+    iteration_statement  go to state 156
+    jump_statement       go to state 157
     method_call          go to state 14
     extern_call          go to state 15
     primary_lvalue       go to state 18
@@ -2536,37 +2562,37 @@ State 214
     identifier_str       go to state 22
 
 
-State 215
+State 216
 
    75 labeled_switch: labeled_switch CASE primary_rvalue • ':' compound_block
 
-    ':'  shift, and go to state 220
+    ':'  shift, and go to state 221
 
 
-State 216
+State 217
 
    76 labeled_switch: labeled_switch DEFAULT ':' • compound_block
 
     IDENTIFIER  shift, and go to state 1
     EXTERN      shift, and go to state 5
     THIS        shift, and go to state 7
-    IF          shift, and go to state 142
-    SWITCH      shift, and go to state 143
-    WHILE       shift, and go to state 144
-    DO          shift, and go to state 145
-    FOR         shift, and go to state 146
-    CONTINUE    shift, and go to state 147
-    BREAK       shift, and go to state 148
-    RETURN      shift, and go to state 149
+    IF          shift, and go to state 143
+    SWITCH      shift, and go to state 144
+    WHILE       shift, and go to state 145
+    DO          shift, and go to state 146
+    FOR         shift, and go to state 147
+    CONTINUE    shift, and go to state 148
+    BREAK       shift, and go to state 149
+    RETURN      shift, and go to state 150
 
-    block                go to state 151
+    block                go to state 152
     unary_val            go to state 11
     variable_val         go to state 12
-    compound_block       go to state 221
-    statement            go to state 153
-    selection_statement  go to state 154
-    iteration_statement  go to state 155
-    jump_statement       go to state 156
+    compound_block       go to state 222
+    statement            go to state 154
+    selection_statement  go to state 155
+    iteration_statement  go to state 156
+    jump_statement       go to state 157
     method_call          go to state 14
     extern_call          go to state 15
     primary_lvalue       go to state 18
@@ -2576,23 +2602,23 @@ State 216
     identifier_str       go to state 22
 
 
-State 217
+State 218
 
    83 iteration_statement: FOR '(' variable_val ';' conditional ';' ')' compound_statement •
 
     $default  reduce using rule 83 (iteration_statement)
 
 
-State 218
+State 219
 
    84 iteration_statement: FOR '(' variable_val ';' conditional ';' for_range ')' • compound_statement
 
-    '{'  shift, and go to state 98
+    '{'  shift, and go to state 99
 
-    compound_statement  go to state 222
+    compound_statement  go to state 223
 
 
-State 219
+State 220
 
    67 compound_block: compound_block • block
    68               | compound_block • statement
@@ -2601,57 +2627,24 @@ State 219
     IDENTIFIER  shift, and go to state 1
     EXTERN      shift, and go to state 5
     THIS        shift, and go to state 7
-    IF          shift, and go to state 142
-    SWITCH      shift, and go to state 143
-    WHILE       shift, and go to state 144
-    DO          shift, and go to state 145
-    FOR         shift, and go to state 146
-    CONTINUE    shift, and go to state 147
-    BREAK       shift, and go to state 148
-    RETURN      shift, and go to state 149
+    IF          shift, and go to state 143
+    SWITCH      shift, and go to state 144
+    WHILE       shift, and go to state 145
+    DO          shift, and go to state 146
+    FOR         shift, and go to state 147
+    CONTINUE    shift, and go to state 148
+    BREAK       shift, and go to state 149
+    RETURN      shift, and go to state 150
 
     $default  reduce using rule 74 (labeled_switch)
 
-    block                go to state 178
+    block                go to state 179
     unary_val            go to state 11
     variable_val         go to state 12
-    statement            go to state 179
-    selection_statement  go to state 154
-    iteration_statement  go to state 155
-    jump_statement       go to state 156
-    method_call          go to state 14
-    extern_call          go to state 15
-    primary_lvalue       go to state 18
-    id_func_call_name    go to state 19
-    id_ns_name           go to state 20
-    namespace_variable   go to state 21
-    identifier_str       go to state 22
-
-
-State 220
-
-   75 labeled_switch: labeled_switch CASE primary_rvalue ':' • compound_block
-
-    IDENTIFIER  shift, and go to state 1
-    EXTERN      shift, and go to state 5
-    THIS        shift, and go to state 7
-    IF          shift, and go to state 142
-    SWITCH      shift, and go to state 143
-    WHILE       shift, and go to state 144
-    DO          shift, and go to state 145
-    FOR         shift, and go to state 146
-    CONTINUE    shift, and go to state 147
-    BREAK       shift, and go to state 148
-    RETURN      shift, and go to state 149
-
-    block                go to state 151
-    unary_val            go to state 11
-    variable_val         go to state 12
-    compound_block       go to state 223
-    statement            go to state 153
-    selection_statement  go to state 154
-    iteration_statement  go to state 155
-    jump_statement       go to state 156
+    statement            go to state 180
+    selection_statement  go to state 155
+    iteration_statement  go to state 156
+    jump_statement       go to state 157
     method_call          go to state 14
     extern_call          go to state 15
     primary_lvalue       go to state 18
@@ -2663,31 +2656,28 @@ State 220
 
 State 221
 
-   67 compound_block: compound_block • block
-   68               | compound_block • statement
-   76 labeled_switch: labeled_switch DEFAULT ':' compound_block •
+   75 labeled_switch: labeled_switch CASE primary_rvalue ':' • compound_block
 
     IDENTIFIER  shift, and go to state 1
     EXTERN      shift, and go to state 5
     THIS        shift, and go to state 7
-    IF          shift, and go to state 142
-    SWITCH      shift, and go to state 143
-    WHILE       shift, and go to state 144
-    DO          shift, and go to state 145
-    FOR         shift, and go to state 146
-    CONTINUE    shift, and go to state 147
-    BREAK       shift, and go to state 148
-    RETURN      shift, and go to state 149
+    IF          shift, and go to state 143
+    SWITCH      shift, and go to state 144
+    WHILE       shift, and go to state 145
+    DO          shift, and go to state 146
+    FOR         shift, and go to state 147
+    CONTINUE    shift, and go to state 148
+    BREAK       shift, and go to state 149
+    RETURN      shift, and go to state 150
 
-    $default  reduce using rule 76 (labeled_switch)
-
-    block                go to state 178
+    block                go to state 152
     unary_val            go to state 11
     variable_val         go to state 12
-    statement            go to state 179
-    selection_statement  go to state 154
-    iteration_statement  go to state 155
-    jump_statement       go to state 156
+    compound_block       go to state 224
+    statement            go to state 154
+    selection_statement  go to state 155
+    iteration_statement  go to state 156
+    jump_statement       go to state 157
     method_call          go to state 14
     extern_call          go to state 15
     primary_lvalue       go to state 18
@@ -2699,12 +2689,48 @@ State 221
 
 State 222
 
+   67 compound_block: compound_block • block
+   68               | compound_block • statement
+   76 labeled_switch: labeled_switch DEFAULT ':' compound_block •
+
+    IDENTIFIER  shift, and go to state 1
+    EXTERN      shift, and go to state 5
+    THIS        shift, and go to state 7
+    IF          shift, and go to state 143
+    SWITCH      shift, and go to state 144
+    WHILE       shift, and go to state 145
+    DO          shift, and go to state 146
+    FOR         shift, and go to state 147
+    CONTINUE    shift, and go to state 148
+    BREAK       shift, and go to state 149
+    RETURN      shift, and go to state 150
+
+    $default  reduce using rule 76 (labeled_switch)
+
+    block                go to state 179
+    unary_val            go to state 11
+    variable_val         go to state 12
+    statement            go to state 180
+    selection_statement  go to state 155
+    iteration_statement  go to state 156
+    jump_statement       go to state 157
+    method_call          go to state 14
+    extern_call          go to state 15
+    primary_lvalue       go to state 18
+    id_func_call_name    go to state 19
+    id_ns_name           go to state 20
+    namespace_variable   go to state 21
+    identifier_str       go to state 22
+
+
+State 223
+
    84 iteration_statement: FOR '(' variable_val ';' conditional ';' for_range ')' compound_statement •
 
     $default  reduce using rule 84 (iteration_statement)
 
 
-State 223
+State 224
 
    67 compound_block: compound_block • block
    68               | compound_block • statement
@@ -2713,24 +2739,24 @@ State 223
     IDENTIFIER  shift, and go to state 1
     EXTERN      shift, and go to state 5
     THIS        shift, and go to state 7
-    IF          shift, and go to state 142
-    SWITCH      shift, and go to state 143
-    WHILE       shift, and go to state 144
-    DO          shift, and go to state 145
-    FOR         shift, and go to state 146
-    CONTINUE    shift, and go to state 147
-    BREAK       shift, and go to state 148
-    RETURN      shift, and go to state 149
+    IF          shift, and go to state 143
+    SWITCH      shift, and go to state 144
+    WHILE       shift, and go to state 145
+    DO          shift, and go to state 146
+    FOR         shift, and go to state 147
+    CONTINUE    shift, and go to state 148
+    BREAK       shift, and go to state 149
+    RETURN      shift, and go to state 150
 
     $default  reduce using rule 75 (labeled_switch)
 
-    block                go to state 178
+    block                go to state 179
     unary_val            go to state 11
     variable_val         go to state 12
-    statement            go to state 179
-    selection_statement  go to state 154
-    iteration_statement  go to state 155
-    jump_statement       go to state 156
+    statement            go to state 180
+    selection_statement  go to state 155
+    iteration_statement  go to state 156
+    jump_statement       go to state 157
     method_call          go to state 14
     extern_call          go to state 15
     primary_lvalue       go to state 18

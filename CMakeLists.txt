@@ -121,7 +121,7 @@ find_package(FLEX REQUIRED)
 #                    -DLLVM_TARGETS_TO_BUILD="ARM;X86;AArch64"
 # macos brew install llvm@14
 # cmake  -DUSE_CCACHE=ON -DE2L_DEBUG=ON  -DLLVM_DIR=/opt/homebrew/Cellar/llvm@14/14.0.6/lib/cmake/llvm ../ 
-find_package(LLVM REQUIRED CONFIG)
+find_package(LLVM REQUIRED CONFIG COMPONENTS Passes)
 message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 include(LLVMConfig)
@@ -135,6 +135,8 @@ llvm_map_components_to_libnames(
     ARM
     AArch64
     ipo
+
+    Passes
     )
 
 #  apt-get install -y  libpthreadpool-dev libpthreadpool0  zlib1g-dev zlib1g
@@ -191,6 +193,8 @@ file(GLOB SOURCES
     src/assembler/*.cpp
     src/utility/*.cpp
     src/ast/*.cpp
+    src/call_graph/*.cpp
+
     src/main.cpp
     )
 

@@ -1802,7 +1802,7 @@ yylhs.value.as < e2::LabledBlock * > ()->push(yystack_[0].value.as < e2::Block *
 
   case 87: // jump_statement: BREAK ';'
 #line 403 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                            {yylhs.value.as < e2::Statement * > () = MALLOC(e2::BreakStatement) ;}
+                            {yylhs.value.as < e2::Statement * > () = MALLOC(e2::BreakStatement, code_line, ctx.path()) ;}
 #line 1807 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
@@ -1842,262 +1842,314 @@ yylhs.value.as < e2::LabledBlock * > ()->push(yystack_[0].value.as < e2::Block *
 #line 1843 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
-  case 94: // function_definition: FUNCTION IDENTIFIER function_parameter compound_statement
-#line 422 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                                                {yylhs.value.as < e2::FunctionDeclaration * > () = MALLOC(e2::FunctionDeclaration,yystack_[2].value.as < std::string > (), yystack_[1].value.as < e2::ExpressionList * > (), yystack_[0].value.as < e2::Block * > ());}
-#line 1849 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+  case 94: // function_definition: FUNCTION identifier_str function_parameter compound_statement
+#line 423 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::FunctionDeclaration * > () = MALLOC(e2::FunctionDeclaration, yystack_[2].value.as < e2::Identifier * > (), yystack_[1].value.as < e2::ExpressionList * > (), yystack_[0].value.as < e2::Block * > (), code_line, ctx.path());
+        }
+#line 1851 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 95: // method_call: id_func_call_name function_parameter
-#line 427 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 430 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
                                           {
             yylhs.value.as < e2::MethodCall * > () = MALLOC(e2::MethodCall, yystack_[1].value.as < e2::Identifier * > (), yystack_[0].value.as < e2::ExpressionList * > (), code_line, ctx.path());
         }
-#line 1857 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 1859 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
-  case 96: // extern_call: EXTERN IDENTIFIER IDENTIFIER '(' IDENTIFIER primary_rvalue ')'
-#line 433 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                                                      { 
+  case 96: // extern_call: EXTERN IDENTIFIER identifier_str '(' identifier_str primary_rvalue ')'
+#line 436 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+                                                                              { 
         e2::ExpressionList *el = MALLOC(e2::ExpressionList); 
          el->push_back(yystack_[1].value.as < e2::Expression * > ()); 
-         yylhs.value.as < e2::ExternDeclaration * > () = MALLOC(e2::ExternDeclaration,yystack_[4].value.as < std::string > (),el);}
-#line 1866 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+         yylhs.value.as < e2::ExternDeclaration * > () = MALLOC(e2::ExternDeclaration,yystack_[4].value.as < e2::Identifier * > (),el);}
+#line 1868 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 97: // union_statement: ';'
-#line 440 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 443 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
           {yylhs.value.as < e2::VariableStatement * > () = nullptr; }
-#line 1872 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 1874 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 98: // union_statement: variable_val ';'
-#line 441 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                       {yylhs.value.as < e2::VariableStatement * > () = yystack_[1].value.as < e2::VariableStatement * > ();}
-#line 1878 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 445 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::VariableStatement * > () = yystack_[1].value.as < e2::VariableStatement * > ();  
+            yystack_[1].value.as < e2::VariableStatement * > ()->idType(e2::IDType::_global); 
+        }
+#line 1883 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 99: // union_list: union_statement
-#line 446 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 453 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
         {
             yylhs.value.as < e2::Block * > () = MALLOC(e2::Block, "union_list", code_line, ctx.path() ); 
             yylhs.value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::VariableStatement * > ());
         }
-#line 1887 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 1892 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 100: // union_list: union_list union_statement
-#line 450 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                    {yylhs.value.as < e2::Block * > () = yystack_[1].value.as < e2::Block * > (); yystack_[1].value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::VariableStatement * > ());}
-#line 1893 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 101: // union_list: union_definition
-#line 452 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 458 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
         {
-            yylhs.value.as < e2::Block * > () = MALLOC(e2::Block, "union_def", code_line, ctx.path() ); 
-            yylhs.value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::UnionDeclaration * > ());
+            yylhs.value.as < e2::Block * > () = yystack_[1].value.as < e2::Block * > (); 
+            yystack_[0].value.as < e2::VariableStatement * > ()->idType(e2::IDType::_global);
+            yystack_[1].value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::VariableStatement * > ()); 
         }
 #line 1902 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
-  case 102: // union_list: union_list union_definition
-#line 456 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                    {yylhs.value.as < e2::Block * > () = yystack_[1].value.as < e2::Block * > (); yystack_[1].value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::UnionDeclaration * > ());}
-#line 1908 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+  case 101: // union_list: union_definition
+#line 464 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yystack_[0].value.as < e2::UnionDeclaration * > ()->idType(e2::IDType::_global);
+            yylhs.value.as < e2::Block * > () = MALLOC(e2::Block, "union_def", code_line, ctx.path() ); 
+            yylhs.value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::UnionDeclaration * > ()); 
+        }
+#line 1912 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
-  case 103: // union_definition: UNION IDENTIFIER '{' union_list '}'
-#line 460 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                          {  yylhs.value.as < e2::UnionDeclaration * > () = MALLOC(e2::UnionDeclaration,yystack_[3].value.as < std::string > (),yystack_[1].value.as < e2::Block * > ());}
-#line 1914 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+  case 102: // union_list: union_list union_definition
+#line 470 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Block * > () = yystack_[1].value.as < e2::Block * > (); 
+            yystack_[0].value.as < e2::UnionDeclaration * > ()->idType(e2::IDType::_global); 
+            yystack_[1].value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::UnionDeclaration * > ());
+        }
+#line 1922 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 103: // union_definition: UNION identifier_str '{' union_list '}'
+#line 479 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {  
+            yylhs.value.as < e2::UnionDeclaration * > () = MALLOC(e2::UnionDeclaration,yystack_[3].value.as < e2::Identifier * > (),yystack_[1].value.as < e2::Block * > (), code_line, ctx.path());
+        }
+#line 1930 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 104: // namespace_member: ';'
-#line 465 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 486 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
           {yylhs.value.as < e2::VariableStatement * > () = nullptr; }
-#line 1920 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 1936 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 105: // namespace_member: variable_val ';'
-#line 466 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                           {yylhs.value.as < e2::VariableStatement * > () = yystack_[1].value.as < e2::VariableStatement * > ();}
-#line 1926 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 488 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::VariableStatement * > () = yystack_[1].value.as < e2::VariableStatement * > (); 
+            if(yystack_[1].value.as < e2::VariableStatement * > ()->id()->idType() ==e2::IDType::_ns_private){
+                yystack_[1].value.as < e2::VariableStatement * > ()->id()->nss(NameSpaceStatus::_n_attr_definition);
+            }
+        }
+#line 1947 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 106: // namespace_body: namespace_member
-#line 472 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 499 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
         {
             yylhs.value.as < e2::Block * > () = MALLOC(e2::Block, "namespace_member", code_line, ctx.path() ); 
             yylhs.value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::VariableStatement * > ());
         }
-#line 1935 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 1956 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
-  case 107: // namespace_body: function_definition
-#line 477 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+  case 107: // namespace_body: SELF function_definition
+#line 504 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
         {
-            yylhs.value.as < e2::Block * > () = MALLOC(e2::Block, "namespace_func", code_line, ctx.path() ); 
-
+            yystack_[0].value.as < e2::FunctionDeclaration * > ()->idType(e2::IDType::_ns_private); 
+            yylhs.value.as < e2::Block * > () = MALLOC(e2::Block, "namespace_func", code_line, ctx.path());
             yylhs.value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::FunctionDeclaration * > ());
         }
-#line 1945 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 1966 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
-  case 108: // namespace_body: SELF function_definition
-#line 483 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+  case 108: // namespace_body: function_definition
+#line 510 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
         {
-            yylhs.value.as < e2::Block * > () = MALLOC(e2::Block, "namespace_func", code_line, ctx.path() ); 
+            yystack_[0].value.as < e2::FunctionDeclaration * > ()->idType(e2::IDType::_ns_public); 
 
+            yylhs.value.as < e2::Block * > () = MALLOC(e2::Block, "namespace_func", code_line, ctx.path());
             yylhs.value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::FunctionDeclaration * > ());
         }
-#line 1955 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 1977 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 109: // namespace_body: namespace_body namespace_member
-#line 488 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 516 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
                                       {yylhs.value.as < e2::Block * > ()=yystack_[1].value.as < e2::Block * > (); yystack_[1].value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::VariableStatement * > ());}
-#line 1961 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 1983 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
-  case 110: // namespace_body: namespace_body function_definition
-#line 489 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                         {yylhs.value.as < e2::Block * > ()=yystack_[1].value.as < e2::Block * > (); yystack_[1].value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::FunctionDeclaration * > ());}
-#line 1967 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+  case 110: // namespace_body: namespace_body SELF function_definition
+#line 518 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Block * > ()=yystack_[2].value.as < e2::Block * > (); 
+            yystack_[0].value.as < e2::FunctionDeclaration * > ()->idType(e2::IDType::_ns_private); 
+            yystack_[2].value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::FunctionDeclaration * > ());
+        }
+#line 1993 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
-  case 111: // namespace_body: namespace_body SELF function_definition
-#line 490 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                              {yylhs.value.as < e2::Block * > ()=yystack_[2].value.as < e2::Block * > (); yystack_[2].value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::FunctionDeclaration * > ());}
-#line 1973 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 112: // namespace_definition: NAMESPACE IDENTIFIER '{' namespace_body '}'
-#line 495 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                                    {  yylhs.value.as < e2::NameSpace * > () = MALLOC(e2::NameSpace,yystack_[3].value.as < std::string > (),yystack_[1].value.as < e2::Block * > ());}
-#line 1979 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 113: // primary_lvalue: id_ns_name
-#line 501 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                 { yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > (); }
-#line 1985 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 114: // primary_rvalue: id_ns_gl_name
-#line 506 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                    { yylhs.value.as < e2::Expression * > () = yystack_[0].value.as < e2::Identifier * > (); }
-#line 1991 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 115: // primary_rvalue: CONSTANT
-#line 507 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                {yylhs.value.as < e2::Expression * > () = MALLOC(e2::Number,yystack_[0].value.as < std::int64_t > ());}
-#line 1997 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 116: // primary_rvalue: '-' CONSTANT
-#line 508 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                    {yylhs.value.as < e2::Expression * > () = MALLOC(e2::Number,yystack_[0].value.as < std::int64_t > (), true); }
+  case 111: // namespace_body: namespace_body function_definition
+#line 524 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Block * > ()=yystack_[1].value.as < e2::Block * > (); 
+            yystack_[0].value.as < e2::FunctionDeclaration * > ()->idType(e2::IDType::_ns_public);  
+            yystack_[1].value.as < e2::Block * > ()->push_back(yystack_[0].value.as < e2::FunctionDeclaration * > ());
+        }
 #line 2003 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
+  case 112: // namespace_definition: NAMESPACE identifier_str '{' namespace_body '}'
+#line 534 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {  
+            yylhs.value.as < e2::NameSpace * > () = MALLOC(e2::NameSpace, yystack_[3].value.as < e2::Identifier * > (), yystack_[1].value.as < e2::Block * > (), code_line, ctx.path());
+           
+        }
+#line 2012 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 113: // primary_lvalue: id_ns_name
+#line 543 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+                 { yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > (); }
+#line 2018 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 114: // primary_rvalue: id_ns_gl_name
+#line 548 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+                    { yylhs.value.as < e2::Expression * > () = yystack_[0].value.as < e2::Identifier * > (); }
+#line 2024 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 115: // primary_rvalue: CONSTANT
+#line 550 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Expression * > () = MALLOC(e2::Number,yystack_[0].value.as < std::int64_t > (), code_line, ctx.path());
+        }
+#line 2032 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 116: // primary_rvalue: '-' CONSTANT
+#line 554 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Expression * > () = MALLOC(e2::Number,yystack_[0].value.as < std::int64_t > (), true, code_line, ctx.path()); 
+        }
+#line 2040 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
   case 117: // primary_rvalue: FCONSTANT
-#line 509 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                 {yylhs.value.as < e2::Expression * > () = MALLOC(e2::Number,yystack_[0].value.as < float > ());}
-#line 2009 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 558 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Expression * > () = MALLOC(e2::Number,yystack_[0].value.as < float > (), code_line, ctx.path());
+        }
+#line 2048 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 118: // primary_rvalue: '-' FCONSTANT
-#line 510 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                     {yylhs.value.as < e2::Expression * > () = MALLOC(e2::Number,yystack_[0].value.as < float > (), true);}
-#line 2015 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 562 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Expression * > () = MALLOC(e2::Number,yystack_[0].value.as < float > (), true, code_line, ctx.path());
+        }
+#line 2056 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 119: // primary_rvalue: STRING_LITERAL
-#line 511 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                     {yylhs.value.as < e2::Expression * > () = MALLOC(e2::StrObj, yystack_[0].value.as < std::string > (), code_line, ctx.path()); }
-#line 2021 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 566 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Expression * > () = MALLOC(e2::StrObj, yystack_[0].value.as < std::string > (), code_line, ctx.path()); 
+        }
+#line 2064 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 120: // id_func_call_name: id_ns_name
-#line 516 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 573 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
                  {yylhs.value.as < e2::Identifier * > ()=yystack_[0].value.as < e2::Identifier * > ();}
-#line 2027 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 2070 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
   case 121: // id_func_call_name: identifier_str NSFUNC_CALL identifier_str
-#line 517 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                                {yylhs.value.as < e2::Identifier * > ()=yystack_[0].value.as < e2::Identifier * > ();}
-#line 2033 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 122: // id_ns_gl_name: id_ns_name
-#line 522 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                 { yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > (); }
-#line 2039 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 123: // id_ns_gl_name: global_union_variable
-#line 523 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                            { yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > (); }
-#line 2045 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 124: // id_ns_name: identifier_str
-#line 528 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                     { yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > (); }
-#line 2051 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 125: // id_ns_name: namespace_variable
-#line 529 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                         {yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > ();}
-#line 2057 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 126: // global_union_variable: IDENTIFIER '.' IDENTIFIER
-#line 535 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 575 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
         {
-            yylhs.value.as < e2::Identifier * > ()=MALLOC(e2::Identifier, yystack_[2].value.as < std::string > (), e2::IDType::_normal);  
-            yylhs.value.as < e2::Identifier * > ()->push_back(yystack_[0].value.as < std::string > ());
-            yylhs.value.as < e2::Identifier * > ()->idType(e2::IDType::_global);
-            yylhs.value.as < e2::Identifier * > ()->codeLine(code_line);
-            yylhs.value.as < e2::Identifier * > ()->codePath(ctx.path());
-        }
-#line 2069 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
-    break;
-
-  case 127: // global_union_variable: global_union_variable '.' IDENTIFIER
-#line 543 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-        {
-            yylhs.value.as < e2::Identifier * > ()=yystack_[2].value.as < e2::Identifier * > ();  
-            yystack_[2].value.as < e2::Identifier * > ()->push_back(yystack_[0].value.as < std::string > ());
-            yystack_[2].value.as < e2::Identifier * > ()->idType(e2::IDType::_global);
-            yystack_[2].value.as < e2::Identifier * > ()->codeLine(code_line);
-            yystack_[2].value.as < e2::Identifier * > ()->codePath(ctx.path());
+            yylhs.value.as < e2::Identifier * > ()=yystack_[0].value.as < e2::Identifier * > ();
+            yystack_[0].value.as < e2::Identifier * > ()->push_back(yystack_[2].value.as < e2::Identifier * > ());
+            yystack_[0].value.as < e2::Identifier * > ()->NameSpaceTag(yystack_[1].value.as < std::string > ());
+            yystack_[0].value.as < e2::Identifier * > ()->idType(IDType::_ns_methodcall); 
         }
 #line 2081 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
-  case 128: // namespace_variable: THIS NAMESPACE_ATTR identifier_str
-#line 555 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                                       { yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > ();  }
+  case 122: // id_ns_gl_name: id_ns_name
+#line 585 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+                 { yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > (); }
 #line 2087 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
+  case 123: // id_ns_gl_name: global_union_variable
+#line 586 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+                            { yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > (); }
+#line 2093 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 124: // id_ns_name: identifier_str
+#line 591 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+                     { yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > (); }
+#line 2099 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 125: // id_ns_name: namespace_variable
+#line 592 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+                         {yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > ();}
+#line 2105 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 126: // global_union_variable: identifier_str '.' identifier_str
+#line 598 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Identifier * > ()=yystack_[2].value.as < e2::Identifier * > ();  
+            yylhs.value.as < e2::Identifier * > ()->push_back(yystack_[0].value.as < e2::Identifier * > ());
+            yylhs.value.as < e2::Identifier * > ()->idType(e2::IDType::_global);
+            yylhs.value.as < e2::Identifier * > ()->codeLine(code_line);
+            yylhs.value.as < e2::Identifier * > ()->codePath(ctx.path());
+        }
+#line 2117 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 127: // global_union_variable: global_union_variable '.' identifier_str
+#line 606 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Identifier * > ()=yystack_[2].value.as < e2::Identifier * > ();  
+            yystack_[2].value.as < e2::Identifier * > ()->push_back(yystack_[0].value.as < e2::Identifier * > ());
+            yystack_[2].value.as < e2::Identifier * > ()->idType(e2::IDType::_global);
+            yystack_[2].value.as < e2::Identifier * > ()->codeLine(code_line);
+            yystack_[2].value.as < e2::Identifier * > ()->codePath(ctx.path());
+        }
+#line 2129 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
+  case 128: // namespace_variable: THIS NAMESPACE_ATTR identifier_str
+#line 619 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        { 
+            yylhs.value.as < e2::Identifier * > () = yystack_[0].value.as < e2::Identifier * > ();
+            yystack_[0].value.as < e2::Identifier * > ()->idType(e2::IDType::_ns_private); 
+            yystack_[0].value.as < e2::Identifier * > ()->nss(NameSpaceStatus::_n_attr_expression);
+        }
+#line 2139 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+    break;
+
   case 129: // identifier_str: IDENTIFIER
-#line 560 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
-                    {
-                yylhs.value.as < e2::Identifier * > () = MALLOC(e2::Identifier, yystack_[0].value.as < std::string > (), e2::IDType::_normal);
-                yylhs.value.as < e2::Identifier * > ()->codeLine(code_line);
-                yylhs.value.as < e2::Identifier * > ()->codePath(ctx.path());
-                }
-#line 2097 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 629 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+        {
+            yylhs.value.as < e2::Identifier * > () = MALLOC(e2::Identifier, yystack_[0].value.as < std::string > (), e2::IDType::_normal);
+            yylhs.value.as < e2::Identifier * > ()->codeLine(code_line);
+            yylhs.value.as < e2::Identifier * > ()->codePath(ctx.path());
+        }
+#line 2149 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
     break;
 
 
-#line 2101 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 2153 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
 
             default:
               break;
@@ -2449,36 +2501,36 @@ yylhs.value.as < e2::LabledBlock * > ()->push(yystack_[0].value.as < e2::Block *
   }
 
 
-  const short Parser::yypact_ninf_ = -178;
+  const short Parser::yypact_ninf_ = -145;
 
   const signed char Parser::yytable_ninf_ = -121;
 
   const short
   Parser::yypact_[] =
   {
-     236,  -178,    20,    29,    32,    37,    47,    46,   230,  -178,
-    -178,   -22,    -5,  -178,     6,    11,  -178,  -178,   283,    14,
-      17,  -178,    81,    23,    35,    14,    95,  -178,   100,  -178,
-    -178,  -178,  -178,  -178,  -178,  -178,  -178,  -178,  -178,  -178,
-    -178,  -178,  -178,  -178,  -178,  -178,  -178,  -178,  -178,  -178,
-    -178,  -178,  -178,    18,   163,  -178,   100,   190,    33,    42,
-      48,  -178,    40,  -178,  -178,  -178,    38,    18,  -178,    26,
-      16,   313,  -178,   282,  -178,  -178,  -178,    17,    44,  -178,
-     -63,  -178,  -178,  -178,  -178,    72,  -178,    57,  -178,  -178,
-     180,   312,  -178,  -178,    59,  -178,   134,  -178,   133,  -178,
-     121,   125,  -178,  -178,    65,  -178,  -178,    18,  -178,  -178,
-    -178,    18,  -178,  -178,  -178,  -178,  -178,    18,  -178,  -178,
-    -178,  -178,  -178,  -178,  -178,  -178,  -178,    18,    18,   135,
-    -178,   281,  -178,  -178,    72,  -178,  -178,  -178,  -178,  -178,
-    -178,  -178,    74,    77,    79,    42,    82,    89,    91,   161,
-    -178,  -178,   158,  -178,  -178,  -178,  -178,   281,  -178,  -178,
-      16,   313,  -178,  -178,  -178,  -178,  -178,  -178,    18,    18,
-      18,    92,    31,  -178,  -178,  -178,    94,  -178,  -178,  -178,
-      93,   106,   108,   109,   120,   122,  -178,  -178,    42,   127,
-      42,    18,    18,   145,  -178,   144,  -178,   138,   136,    42,
-     281,   -40,   142,    30,  -178,   149,   281,   151,  -178,  -178,
-      42,  -178,  -178,   156,   208,   162,   208,  -178,    42,   208,
-     208,   208,  -178,   208
+     251,  -145,    21,    21,    21,    26,     6,    -4,   285,  -145,
+    -145,   -16,   -13,  -145,    -3,    11,  -145,  -145,   331,    28,
+      32,  -145,    15,    24,    37,    28,    21,  -145,    21,  -145,
+    -145,  -145,  -145,  -145,  -145,  -145,  -145,  -145,  -145,  -145,
+    -145,  -145,  -145,  -145,  -145,  -145,  -145,  -145,  -145,  -145,
+    -145,  -145,  -145,   210,   176,  -145,    21,   129,    17,    41,
+      44,  -145,  -145,  -145,  -145,    25,   210,  -145,    10,    80,
+     339,  -145,   327,  -145,  -145,  -145,    32,    46,    12,  -145,
+     -44,  -145,  -145,    52,  -145,    38,  -145,    60,  -145,  -145,
+      71,    18,  -145,  -145,  -145,    61,  -145,    95,  -145,   182,
+    -145,    21,  -145,  -145,    67,  -145,  -145,   210,  -145,  -145,
+    -145,   210,  -145,  -145,  -145,  -145,  -145,   210,  -145,  -145,
+    -145,  -145,  -145,  -145,  -145,  -145,  -145,   210,   210,    21,
+      21,  -145,   300,  -145,  -145,    38,  -145,  -145,  -145,  -145,
+    -145,  -145,  -145,    69,    75,    76,    41,    82,    72,    81,
+     270,  -145,  -145,   204,  -145,  -145,  -145,  -145,   300,  -145,
+      80,   339,  -145,  -145,  -145,  -145,  -145,  -145,  -145,   210,
+     210,   210,    94,    20,  -145,  -145,  -145,    86,  -145,  -145,
+    -145,    92,    96,    99,   100,   102,   107,  -145,  -145,    41,
+     108,    41,   210,   210,   124,  -145,   126,  -145,   115,   118,
+      41,   300,   -40,   122,     3,  -145,   120,   300,   121,  -145,
+    -145,    41,  -145,  -145,   128,   267,   127,   267,  -145,    41,
+     267,   267,   267,  -145,   267
   };
 
   const unsigned char
@@ -2490,125 +2542,131 @@ yylhs.value.as < e2::LabledBlock * > ()->push(yystack_[0].value.as < e2::Block *
       11,     7,     9,    10,     8,    14,    13,    15,    16,    54,
       55,    56,    57,    58,    59,    60,    61,    62,    63,    18,
       19,    53,    17,     0,     0,    95,     0,     0,     0,     0,
-       0,   128,   129,   119,   115,   117,     0,     0,    20,    21,
-      22,    26,    31,    38,    41,    42,   114,   122,   123,    92,
-       0,    90,   122,   124,   121,     0,   104,     0,   107,   106,
-       0,     0,   113,    97,     0,    99,     0,   101,     0,    94,
-       0,     0,   116,   118,     0,    24,    25,     0,    28,    29,
+       0,   128,   119,   115,   117,     0,     0,    20,    21,    22,
+      26,    31,    38,    41,    42,   114,   122,   123,   124,    92,
+       0,    90,   122,   124,   121,     0,   104,     0,   108,   106,
+       0,     0,   113,   124,    97,     0,    99,     0,   101,     0,
+      94,     0,   116,   118,     0,    24,    25,     0,    28,    29,
       30,     0,    33,    34,    35,    36,    37,     0,    44,    45,
       46,    47,    51,    52,    50,    48,    49,     0,     0,     0,
-      93,     0,   108,   105,     0,   112,   110,   109,    98,   103,
-     100,   102,     0,     0,     0,     0,     0,     0,     0,     0,
-      64,    66,     0,    67,    70,    71,    72,     0,   126,    43,
-      23,    27,    32,    39,    40,   127,    91,   111,     0,     0,
-       0,     0,     0,    86,    87,    88,     0,    65,    68,    69,
-       0,     0,     0,     0,     0,     0,    89,    96,     0,     0,
-       0,     0,     0,    73,    78,     0,    82,     0,     0,     0,
-       0,     0,     0,     0,    74,     0,     0,     0,    79,    83,
-       0,    80,    81,     0,     0,     0,     0,    84,     0,    75,
-       0,    77,    85,    76
+       0,    93,     0,   107,   105,     0,   112,   111,   109,    98,
+     103,   100,   102,     0,     0,     0,     0,     0,     0,     0,
+       0,    64,    66,     0,    67,    70,    71,    72,     0,    43,
+      23,    27,    32,    39,    40,   127,   126,    91,   110,     0,
+       0,     0,     0,     0,    86,    87,    88,     0,    65,    68,
+      69,     0,     0,     0,     0,     0,     0,    89,    96,     0,
+       0,     0,     0,     0,    73,    78,     0,    82,     0,     0,
+       0,     0,     0,     0,     0,    74,     0,     0,     0,    79,
+      83,     0,    80,    81,     0,     0,     0,     0,    84,     0,
+      75,     0,    77,    85,    76
   };
 
   const short
   Parser::yypgoto_[] =
   {
-    -178,  -178,   224,     0,    39,  -178,   -52,   168,  -178,  -178,
-     129,  -178,   130,  -178,   -97,   -35,  -178,  -178,  -178,   -56,
-    -177,  -111,  -178,  -178,  -178,  -178,  -178,  -178,  -178,   215,
-       1,   -51,  -178,   147,  -178,     9,   155,  -178,   238,   -39,
-     -50,  -178,  -178,   -43,  -178,  -178,   -27
+    -145,  -145,   179,     0,    -7,  -145,   -43,   132,  -145,  -145,
+      97,  -145,    88,  -145,   -98,   -26,  -145,  -145,  -145,  -112,
+    -131,  -144,  -145,  -145,  -145,  -145,  -145,  -145,  -145,   177,
+       2,   -49,  -145,   104,  -145,     8,   131,  -145,   200,   -27,
+     -47,  -145,  -145,    98,  -145,  -145,    -1
   };
 
   const unsigned char
   Parser::yydefgoto_[] =
   {
-       0,     8,     9,   151,    11,    52,    12,    68,    69,   107,
-      70,   111,    71,   117,    72,    73,   127,   128,    53,    99,
-     152,   153,   194,   201,   154,   213,   155,   156,    80,    55,
-      13,    14,    15,    95,    96,    16,    89,    90,    17,    18,
-      75,    19,    76,    20,    78,    21,    22
+       0,     8,     9,   152,    11,    52,    12,    67,    68,   107,
+      69,   111,    70,   117,    71,    72,   127,   128,    53,   100,
+     153,   154,   195,   202,   155,   214,   156,   157,    80,    55,
+      13,    14,    15,    96,    97,    16,    89,    90,    17,    18,
+      74,    19,    75,    20,    77,    21,    22
   };
 
   const short
   Parser::yytable_[] =
   {
-      10,    61,    74,   130,    81,    87,    94,   131,    31,    32,
-      77,    82,   206,   207,    92,    92,    74,    33,    91,    91,
-     162,    62,    63,    23,    77,    64,    65,    83,   208,    84,
-      83,    83,    24,     1,     1,    25,     1,   219,    87,   221,
-      26,   179,    35,   223,    94,   102,   103,    92,   108,   109,
-     110,    91,    27,    92,    66,    28,    74,    91,    88,    36,
-      74,   105,   106,    83,    77,     7,    74,    97,    77,    83,
-      37,   181,   182,   183,    77,    38,     3,     7,     7,    54,
-       7,   166,  -120,    67,    82,    82,   132,    56,    82,   171,
-      57,   136,   163,   164,   197,   198,   210,    93,    60,   176,
-      83,    83,    58,     1,    83,   141,    82,   180,   179,    98,
-     179,   101,   179,   100,    82,   129,     4,    74,    74,    74,
-     185,   133,    83,   138,   157,    77,    77,    77,   158,    92,
-      83,   159,   193,    91,   196,   167,     1,     1,   165,   168,
-      74,    74,   169,   204,   170,    83,   184,   172,    77,    77,
-     205,   212,   178,   173,   217,   174,   215,    82,   186,   187,
-      92,     1,   222,    82,    62,    63,    62,    63,    64,    65,
-      64,    65,   188,    83,   189,   190,    83,     3,     5,    83,
-       7,     7,   142,     1,   143,   191,   192,   144,   145,   146,
-     147,   148,   149,     1,   195,   199,   200,    66,    93,    66,
-     203,   150,   139,     5,   202,     7,   209,   142,     7,   143,
-       7,     1,   144,   145,   146,   147,   148,   149,   214,   178,
-     216,   178,   218,   178,     4,   175,   177,     7,   134,    79,
-      29,   220,    30,     1,     4,   104,   160,     7,    85,     1,
-      59,   161,   211,   140,    86,   137,    34,     0,   135,     0,
-       0,     0,     0,     5,    86,     7,     0,   142,     0,   143,
-       0,     0,   144,   145,   146,   147,   148,   149,     0,     0,
-       0,     0,     2,     3,     4,     5,     6,     7,     2,     3,
-       4,     5,     6,     7,    62,    63,     0,     0,    64,    65,
-       0,     0,   118,   119,   120,   121,   122,   123,   124,     0,
-      39,    40,    41,    42,    43,    44,    45,    46,    47,    48,
-       0,     0,    49,    50,    51,     0,     0,    66,     0,   125,
-     126,     0,     0,     0,     0,     0,     0,     0,     7,    39,
-      40,    41,    42,    43,    44,    45,    46,    47,    48,     0,
-     112,   113,     0,    51,     0,     0,     0,     0,     0,     0,
-       0,     0,   114,   115,   116
+      10,    23,    24,    25,    73,    28,     1,    81,    31,   180,
+      32,    27,   207,   208,    87,    95,    33,    73,    56,   162,
+       1,    56,   131,     1,     1,    60,   132,    61,   209,    26,
+      91,    91,   102,   103,   172,    39,    40,    41,    42,    43,
+      44,    45,    46,    47,    48,   105,   106,    87,    35,    51,
+       7,    36,    78,    83,    95,    84,    93,    93,    73,    88,
+       3,    37,    73,    91,     7,    78,    98,     7,    73,   211,
+      91,   182,   183,   184,     1,    38,   180,   194,   180,   197,
+     180,    94,     4,   130,   220,   167,   222,   133,   205,    93,
+     224,    57,   137,    54,   198,   199,    93,  -120,     1,   218,
+     158,   163,   164,   177,    58,   142,    78,   223,    99,   101,
+      78,   181,   108,   109,   110,     4,    78,   129,     7,   135,
+      73,    73,    73,   130,   134,   139,    83,    83,   165,   166,
+     186,    83,     1,   159,   169,    86,   174,   168,     3,   136,
+     170,   171,     7,    73,    73,   175,    91,   173,   185,    83,
+     187,    76,    82,   179,   206,    92,    92,    83,   188,    94,
+     216,   213,   189,   140,    76,   190,   191,   192,    78,    78,
+      78,   193,    93,     4,   200,   196,     7,    85,   201,     1,
+      62,   203,   204,    63,    64,     1,   210,    30,    92,   215,
+     217,    78,    78,    86,   219,    92,   221,   212,   104,   161,
+      83,   141,    59,    93,   160,    76,    83,     1,    34,    76,
+       0,     0,    65,     1,    62,    76,     0,    63,    64,     0,
+     179,   138,   179,     7,   179,    82,    82,     5,     0,     7,
+      82,   143,     0,   144,     0,     0,   145,   146,   147,   148,
+     149,   150,    79,     0,     0,     0,    65,     0,    82,     5,
+     151,     7,     0,   143,     1,   144,    82,     7,   145,   146,
+     147,   148,   149,   150,     0,     0,     0,    76,    76,    76,
+       1,    92,   178,     1,    62,    66,     0,    63,    64,     0,
+       0,     0,     0,     0,     0,    29,     0,     0,     1,     0,
+      76,    76,     0,     2,     3,     4,     5,     6,     7,    82,
+       0,     0,    92,     1,    62,    82,    65,    63,    64,     0,
+       0,     0,     5,     0,     7,     0,   143,     7,   144,     0,
+       0,   145,   146,   147,   148,   149,   150,     2,     3,     4,
+       5,     6,     7,     0,   176,     0,    65,   118,   119,   120,
+     121,   122,   123,   124,     0,     0,     0,     7,    39,    40,
+      41,    42,    43,    44,    45,    46,    47,    48,     0,     0,
+      49,    50,    51,     0,   125,   126,   112,   113,     0,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,   114,   115,
+     116
   };
 
   const short
   Parser::yycheck_[] =
   {
-       0,    28,    53,    66,    54,    57,    58,    70,     8,     8,
-      53,    54,    52,    53,    57,    58,    67,     8,    57,    58,
-     117,     3,     4,     3,    67,     7,     8,    54,    68,    56,
-      57,    58,     3,     3,     3,     3,     3,   214,    90,   216,
-       3,   152,    64,   220,    96,     7,     8,    90,    32,    33,
-      34,    90,     5,    96,    36,     9,   107,    96,    57,    64,
-     111,    35,    36,    90,   107,    47,   117,    58,   111,    96,
-      64,   168,   169,   170,   117,    64,    43,    47,    47,    65,
-      47,   131,    65,    65,   127,   128,    85,     6,   131,   145,
-      67,    90,   127,   128,   191,   192,    66,    64,     3,   149,
-     127,   128,    67,     3,   131,    96,   149,   157,   219,    67,
-     221,    71,   223,    65,   157,    71,    44,   168,   169,   170,
-     172,    64,   149,    64,     3,   168,   169,   170,     3,   172,
-     157,    66,   188,   172,   190,   134,     3,     3,     3,    65,
-     191,   192,    65,   199,    65,   172,    54,    65,   191,   192,
-     200,   203,   152,    64,   210,    64,   206,   200,    64,    66,
-     203,     3,   218,   206,     3,     4,     3,     4,     7,     8,
-       7,     8,    66,   200,    66,    66,   203,    43,    45,   206,
-      47,    47,    49,     3,    51,    65,    64,    54,    55,    56,
-      57,    58,    59,     3,    67,    50,    52,    36,    64,    36,
-      64,    68,    68,    45,    66,    47,    64,    49,    47,    51,
-      47,     3,    54,    55,    56,    57,    58,    59,    69,   219,
-      69,   221,    66,   223,    44,    64,    68,    47,    48,    66,
-       0,    69,     8,     3,    44,    67,   107,    47,    48,     3,
-      25,   111,   203,    96,    64,    90,     8,    -1,    68,    -1,
-      -1,    -1,    -1,    45,    64,    47,    -1,    49,    -1,    51,
-      -1,    -1,    54,    55,    56,    57,    58,    59,    -1,    -1,
-      -1,    -1,    42,    43,    44,    45,    46,    47,    42,    43,
-      44,    45,    46,    47,     3,     4,    -1,    -1,     7,     8,
-      -1,    -1,    10,    11,    12,    13,    14,    15,    16,    -1,
-      17,    18,    19,    20,    21,    22,    23,    24,    25,    26,
-      -1,    -1,    29,    30,    31,    -1,    -1,    36,    -1,    37,
-      38,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    47,    17,
-      18,    19,    20,    21,    22,    23,    24,    25,    26,    -1,
-      27,    28,    -1,    31,    -1,    -1,    -1,    -1,    -1,    -1,
-      -1,    -1,    39,    40,    41
+       0,     2,     3,     4,    53,     9,     3,    54,     8,   153,
+       8,     5,    52,    53,    57,    58,     8,    66,     6,   117,
+       3,     6,    66,     3,     3,    26,    70,    28,    68,     3,
+      57,    58,     7,     8,   146,    17,    18,    19,    20,    21,
+      22,    23,    24,    25,    26,    35,    36,    90,    64,    31,
+      47,    64,    53,    54,    97,    56,    57,    58,   107,    57,
+      43,    64,   111,    90,    47,    66,    58,    47,   117,    66,
+      97,   169,   170,   171,     3,    64,   220,   189,   222,   191,
+     224,    64,    44,    71,   215,   132,   217,    85,   200,    90,
+     221,    67,    90,    65,   192,   193,    97,    65,     3,   211,
+     101,   127,   128,   150,    67,    97,   107,   219,    67,    65,
+     111,   158,    32,    33,    34,    44,   117,    71,    47,    48,
+     169,   170,   171,    71,    64,    64,   127,   128,   129,   130,
+     173,   132,     3,    66,    65,    64,    64,   135,    43,    68,
+      65,    65,    47,   192,   193,    64,   173,    65,    54,   150,
+      64,    53,    54,   153,   201,    57,    58,   158,    66,    64,
+     207,   204,    66,    68,    66,    66,    66,    65,   169,   170,
+     171,    64,   173,    44,    50,    67,    47,    48,    52,     3,
+       4,    66,    64,     7,     8,     3,    64,     8,    90,    69,
+      69,   192,   193,    64,    66,    97,    69,   204,    66,   111,
+     201,    97,    25,   204,   107,   107,   207,     3,     8,   111,
+      -1,    -1,    36,     3,     4,   117,    -1,     7,     8,    -1,
+     220,    90,   222,    47,   224,   127,   128,    45,    -1,    47,
+     132,    49,    -1,    51,    -1,    -1,    54,    55,    56,    57,
+      58,    59,    66,    -1,    -1,    -1,    36,    -1,   150,    45,
+      68,    47,    -1,    49,     3,    51,   158,    47,    54,    55,
+      56,    57,    58,    59,    -1,    -1,    -1,   169,   170,   171,
+       3,   173,    68,     3,     4,    65,    -1,     7,     8,    -1,
+      -1,    -1,    -1,    -1,    -1,     0,    -1,    -1,     3,    -1,
+     192,   193,    -1,    42,    43,    44,    45,    46,    47,   201,
+      -1,    -1,   204,     3,     4,   207,    36,     7,     8,    -1,
+      -1,    -1,    45,    -1,    47,    -1,    49,    47,    51,    -1,
+      -1,    54,    55,    56,    57,    58,    59,    42,    43,    44,
+      45,    46,    47,    -1,    64,    -1,    36,    10,    11,    12,
+      13,    14,    15,    16,    -1,    -1,    -1,    47,    17,    18,
+      19,    20,    21,    22,    23,    24,    25,    26,    -1,    -1,
+      29,    30,    31,    -1,    37,    38,    27,    28,    -1,    -1,
+      -1,    -1,    -1,    -1,    -1,    -1,    -1,    -1,    39,    40,
+      41
   };
 
   const signed char
@@ -2616,27 +2674,27 @@ yylhs.value.as < e2::LabledBlock * > ()->push(yystack_[0].value.as < e2::Block *
   {
        0,     3,    42,    43,    44,    45,    46,    47,    73,    74,
       75,    76,    78,   102,   103,   104,   107,   110,   111,   113,
-     115,   117,   118,     3,     3,     3,     3,     5,     9,     0,
+     115,   117,   118,   118,   118,   118,     3,     5,     9,     0,
       74,    75,   102,   107,   110,    64,    64,    64,    64,    17,
       18,    19,    20,    21,    22,    23,    24,    25,    26,    29,
       30,    31,    77,    90,    65,   101,     6,    67,    67,   101,
-       3,   118,     3,     4,     7,     8,    36,    65,    79,    80,
-      82,    84,    86,    87,   103,   112,   114,   115,   116,    66,
+     118,   118,     4,     7,     8,    36,    65,    79,    80,    82,
+      84,    86,    87,   103,   112,   114,   115,   116,   118,    66,
      100,   112,   115,   118,   118,    48,    64,    78,   102,   108,
-     109,   111,   115,    64,    78,   105,   106,   107,    67,    91,
-      65,    71,     7,     8,    79,    35,    36,    81,    32,    33,
+     109,   111,   115,   118,    64,    78,   105,   106,   107,    67,
+      91,    65,     7,     8,    79,    35,    36,    81,    32,    33,
       34,    83,    27,    28,    39,    40,    41,    85,    10,    11,
       12,    13,    14,    15,    16,    37,    38,    88,    89,    71,
-      66,    70,   102,    64,    48,    68,   102,   108,    64,    68,
-     105,   107,    49,    51,    54,    55,    56,    57,    58,    59,
-      68,    75,    92,    93,    96,    98,    99,     3,     3,    66,
-      82,    84,    86,    87,    87,     3,   112,   102,    65,    65,
-      65,    91,    65,    64,    64,    64,   112,    68,    75,    93,
-     112,    86,    86,    86,    54,    78,    64,    66,    66,    66,
-      66,    65,    64,    91,    94,    67,    91,    86,    86,    50,
-      52,    95,    66,    64,    91,   112,    52,    53,    68,    64,
-      66,    76,    78,    97,    69,   112,    69,    91,    66,    92,
-      69,    92,    91,    92
+      71,    66,    70,   102,    64,    48,    68,   102,   108,    64,
+      68,   105,   107,    49,    51,    54,    55,    56,    57,    58,
+      59,    68,    75,    92,    93,    96,    98,    99,   118,    66,
+      82,    84,    86,    87,    87,   118,   118,   112,   102,    65,
+      65,    65,    91,    65,    64,    64,    64,   112,    68,    75,
+      93,   112,    86,    86,    86,    54,    78,    64,    66,    66,
+      66,    66,    65,    64,    91,    94,    67,    91,    86,    86,
+      50,    52,    95,    66,    64,    91,   112,    52,    53,    68,
+      64,    66,    76,    78,    97,    69,   112,    69,    91,    66,
+      92,    69,    92,    91,    92
   };
 
   const signed char
@@ -2670,8 +2728,8 @@ yylhs.value.as < e2::LabledBlock * > ()->push(yystack_[0].value.as < e2::Block *
        1,     1,     1,     1,     3,     4,     5,     4,     5,     7,
        1,     1,     5,     7,     8,     9,     2,     2,     2,     3,
        1,     3,     2,     3,     4,     2,     7,     1,     2,     1,
-       2,     1,     2,     5,     1,     2,     1,     1,     2,     2,
-       2,     3,     5,     1,     1,     1,     2,     1,     2,     1,
+       2,     1,     2,     5,     1,     2,     1,     2,     1,     2,
+       3,     2,     5,     1,     1,     1,     2,     1,     2,     1,
        1,     3,     1,     1,     1,     1,     3,     3,     3,     1
   };
 
@@ -2724,10 +2782,10 @@ yylhs.value.as < e2::LabledBlock * > ()->push(yystack_[0].value.as < e2::Block *
      302,   303,   304,   305,   309,   310,   315,   316,   317,   318,
      323,   324,   325,   329,   335,   346,   351,   357,   365,   370,
      377,   378,   382,   386,   390,   394,   402,   403,   404,   405,
-     412,   413,   417,   418,   422,   427,   433,   440,   441,   445,
-     450,   451,   456,   460,   465,   466,   471,   476,   482,   488,
-     489,   490,   495,   501,   506,   507,   508,   509,   510,   511,
-     516,   517,   522,   523,   528,   529,   534,   542,   555,   560
+     412,   413,   417,   418,   422,   430,   436,   443,   444,   452,
+     457,   463,   469,   478,   486,   487,   498,   503,   509,   516,
+     517,   523,   533,   543,   548,   549,   553,   557,   561,   565,
+     573,   574,   585,   586,   591,   592,   597,   605,   618,   628
   };
 
   void
@@ -2759,9 +2817,9 @@ yylhs.value.as < e2::LabledBlock * > ()->push(yystack_[0].value.as < e2::Block *
 
 
 } // yy
-#line 2763 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
+#line 2821 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_bison.cpp"
 
-#line 566 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 635 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
 
 
 /**

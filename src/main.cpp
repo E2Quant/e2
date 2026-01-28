@@ -54,6 +54,7 @@
 #include <utility>
 
 #include "assembler/BaseType.hpp"
+#include "assembler/CodeGenContext.hpp"
 #include "ast/ParserCtx.hpp"
 
 /* #ifdef NUMBER_DECI */
@@ -91,6 +92,12 @@ std::int64_t last(std::int64_t index)
 {
     std::int64_t b = index + 6;
     std::cout << "b:" << b << std::endl;
+
+    std::cout << "code tree:" << std::endl;
+    for (auto it : _CodeTreeLinkList) {
+        std::cout << "fun:" << it.fun << " line:" << it.line
+                  << " path:" << it.cpath << std::endl;
+    }
     return b;
 }
 
@@ -147,6 +154,9 @@ void toDo(const char* f, const char* s, std::pair<std::string, Int_e>& b)
     if (isgc) {
         context.runCode();
         Int_e ret = context.runFunction(a, a);
+
+        context.setupAndRunPasses();
+
         llog::echo("runFunction:", ret);
     }
     else {
