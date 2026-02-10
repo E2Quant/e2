@@ -467,11 +467,11 @@ static const YY_CHAR yy_ec[256] =
        24,   25,   26,    1,   27,   27,   27,   27,   28,   29,
        30,   30,   30,   30,   30,   31,   30,   30,   30,   30,
        30,   30,   30,   30,   32,   30,   30,   33,   30,   30,
-        1,   34,    1,   35,   36,    1,   37,   38,   39,   40,
+        1,   34,    1,   35,   30,    1,   36,   37,   38,   39,
 
-       41,   42,   30,   43,   44,   30,   45,   46,   47,   48,
-       49,   50,   30,   51,   52,   53,   54,   30,   55,   56,
-       30,   30,   57,   58,   59,   60,    1,    1,    1,    1,
+       40,   41,   30,   42,   43,   30,   44,   45,   46,   47,
+       48,   49,   30,   50,   51,   52,   53,   30,   54,   55,
+       30,   30,   56,   57,   58,   59,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
@@ -488,39 +488,39 @@ static const YY_CHAR yy_ec[256] =
         1,    1,    1,    1,    1
     } ;
 
-static const YY_CHAR yy_meta[61] =
+static const YY_CHAR yy_meta[60] =
     {   0,
         1,    1,    2,    1,    1,    1,    1,    1,    3,    1,
         1,    1,    1,    1,    1,    1,    1,    4,    4,    4,
         1,    1,    1,    1,    1,    1,    4,    4,    4,    5,
-        5,    5,    5,    1,    1,    5,    4,    4,    4,    4,
-        4,    4,    5,    5,    5,    5,    5,    5,    5,    5,
-        5,    5,    5,    5,    5,    5,    1,    1,    1,    1
+        5,    5,    5,    1,    1,    4,    4,    4,    4,    4,
+        4,    5,    5,    5,    5,    5,    5,    5,    5,    5,
+        5,    5,    5,    5,    5,    1,    1,    1,    1
     } ;
 
 static const flex_int16_t yy_base[200] =
     {   0,
-        0,    0,  368,  369,  369,  369,  343,   56,    0,  342,
-       54,  331,  369,  369,  340,   50,  369,   49,   47,   51,
-       75,   63,  342,  369,   61,  338,   45,  369,    0,   67,
-      337,  309,   43,   30,   41,   50,   58,  322,  317,   47,
-      314,  308,  312,  369,   65,  369,  369,  369,   93,  369,
-      351,    0,  369,  369,  369,   92,  106,  369,  369,  369,
-      369,  369,  114,  107,  369,  120,  151,  139,   82,    0,
-        0,  369,   95,  147,  128,  121,  152,  369,  369,  329,
-        0,  113,  318,  369,  310,  298,  301,  306,    0,  295,
+        0,    0,  367,  368,  368,  368,  342,   55,    0,  341,
+       53,  330,  368,  368,  339,   49,  368,   48,   46,   50,
+       74,   62,  341,  368,   60,  337,   44,  368,    0,   66,
+      336,  309,   43,   30,   41,   50,   58,  322,  317,   47,
+      314,  308,  312,  368,   64,  368,  368,  368,   92,  368,
+      350,    0,  368,  368,  368,   91,  106,  368,  368,  368,
+      368,  368,  112,  105,  368,  140,  170,  118,  103,    0,
+        0,  368,   95,  126,  130,   97,  149,  368,  368,  328,
+        0,  111,  317,  368,  310,  298,  301,  306,    0,  295,
       293,  294,  296,    0,  278,  277,  265,  264,  265,  264,
 
-      262,  261,  369,  369,  369,  166,  369,  161,  369,  162,
-      171,  188,  369,  178,  156,  196,  187,  206,  162,  214,
-      369,  267,  262,  249,  264,  259,  258,    0,  259,  248,
-      252,  235,  245,  228,  224,  224,  225,  225,  228,  177,
-      195,  234,  369,  242,  246,  369,  236,  212,  247,  224,
-        0,  214,  202,    0,  204,    0,  200,  198,  189,    0,
-      197,    0,  186,  182,  260,  265,  270,    0,  173,  174,
-      156,  148,  144,  145,  107,    0,    0,   81,   77,    0,
-        0,   88,    0,    0,   83,    0,   83,    0,   76,    0,
-      369,  311,  316,  321,  326,  328,  333,  108,  338
+      262,  261,  368,  368,  368,  157,  368,  115,  368,  144,
+      206,  164,  368,  160,  143,  175,  176,  202,  148,  215,
+      368,  267,  262,  249,  264,  259,  258,    0,  259,  245,
+      249,  234,  240,  228,  228,  229,  225,  223,  230,  194,
+      196,  237,  368,  244,  247,  368,  237,  171,  184,  216,
+        0,  215,  201,    0,  203,    0,  195,  193,  189,    0,
+      200,    0,  186,  192,  254,  265,  270,    0,  172,  172,
+      167,  160,  162,  156,  125,    0,    0,   97,   92,    0,
+        0,   92,    0,    0,   84,    0,   85,    0,   72,    0,
+      368,  310,  315,  320,  325,  327,  332,  106,  337
 
     } ;
 
@@ -550,113 +550,113 @@ static const flex_int16_t yy_def[200] =
 
     } ;
 
-static const flex_int16_t yy_nxt[430] =
+static const flex_int16_t yy_nxt[428] =
     {   0,
         4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
        14,   15,   16,   17,   18,   19,   20,   21,   22,   22,
        23,   24,   25,   26,   27,   28,   29,   29,   29,   29,
-       30,   29,   29,    4,   31,    4,   29,   32,   33,   34,
-       35,   36,   29,   37,   29,   29,   29,   38,   29,   29,
-       39,   40,   41,   42,   43,   29,   44,   45,   46,   47,
-       50,   54,   59,   61,   63,   63,   63,   64,   79,   80,
-       88,   82,   62,   60,   65,   83,   74,   55,   89,   86,
-       71,   71,   71,   75,   76,   77,   90,   98,  103,   51,
-       66,   87,   67,   67,   67,  191,   91,   50,   92,   94,
+       30,   29,   29,    4,   31,   29,   32,   33,   34,   35,
+       36,   29,   37,   29,   29,   29,   38,   29,   29,   39,
+       40,   41,   42,   43,   29,   44,   45,   46,   47,   50,
+       54,   59,   61,   63,   63,   63,   64,   79,   80,   88,
+       82,   62,   60,   65,   83,   74,   55,   89,   86,   71,
+       71,   71,   75,   76,   77,   90,   98,  103,   51,   66,
+       87,   67,   67,   67,  191,   91,   50,   92,   94,  105,
 
-      105,   99,   68,   93,   95,   69,   69,   70,  191,  109,
-       74,  117,   69,   69,   56,   68,  190,   50,  191,   77,
-       69,  189,  104,  188,  187,   57,   51,   69,   69,  186,
-       70,   63,   63,   63,  185,   69,   74,  111,  111,  111,
-      110,  106,  107,   74,  107,   77,   51,  112,  113,  184,
-      113,  119,   77,  115,  106,  107,  116,  116,  116,  107,
-      112,  113,   74,  109,  109,  113,   66,   74,   67,   67,
-       67,   77,  120,  116,  116,  116,   77,   74,   68,  109,
-      138,  114,  114,  139,  139,  139,   77,  118,  111,  111,
-      111,   68,  183,  182,  110,  141,  114,  109,  142,  143,
+       99,   68,   93,   95,   69,   69,   70,  109,  191,  117,
+       74,  190,   74,   68,   56,   50,  191,  109,   69,   77,
+      104,   77,  189,  188,   57,   51,   69,  187,   70,   63,
+       63,   63,  115,   69,   69,  116,  116,  116,  110,  106,
+      107,   74,  107,  186,   51,   74,  109,   69,  110,  185,
+       77,  106,  107,  119,   77,   69,  107,  111,  111,  111,
+      116,  116,  116,   74,   74,  118,  184,  112,  113,  120,
+      113,  138,   77,   77,  139,  139,  139,  141,  144,  112,
+      113,  145,  145,  145,  113,   66,   74,   67,   67,   67,
+      114,  114,  116,  116,  116,  167,  109,   68,  109,   74,
 
-      181,  143,  144,  180,  114,  145,  145,  145,  114,  114,
-      110,  142,  143,  116,  116,  116,  143,  147,  147,  179,
-      178,   74,  177,  114,  146,  148,  146,   74,  141,   74,
-       77,  114,  147,  176,  149,  175,  167,  146,   77,  174,
-      147,  146,  139,  139,  139,  139,  139,  139,  165,  173,
-      172,  166,  166,  166,  171,  170,  107,  169,  107,  145,
-      145,  145,   74,  145,  145,  145,  147,  147,  168,  107,
-      164,   77,  163,  107,  113,  162,  113,  166,  166,  166,
-      161,  147,  166,  166,  166,   74,  160,  113,  159,  147,
-      120,  113,  158,  143,   77,  143,  157,  156,  155,  154,
+      114,  114,  183,  146,  114,  146,  147,  147,   77,   68,
+      182,  181,  114,  180,  114,  146,  179,   74,  178,  146,
+      147,  148,  114,  111,  111,  111,   77,  110,  147,  141,
+       74,  177,  176,  142,  143,  149,  143,  175,  174,   77,
+      139,  139,  139,  173,  172,  142,  143,  139,  139,  139,
+      143,  165,  171,  170,  166,  166,  166,  169,  107,  168,
+      107,  145,  145,  145,  145,  145,  145,  147,  147,  164,
+      107,  166,  166,  166,  107,  113,  163,  113,  162,  161,
+      160,  147,  166,  166,  166,   74,  159,  113,  158,  147,
+      120,  113,  157,  143,   77,  143,  156,  155,  154,  153,
 
-      153,  152,  151,  150,  137,  136,  143,  135,  134,  133,
-      143,   49,   49,   49,   49,   49,   52,  132,   52,   52,
-       52,   56,   56,  131,   56,   56,   73,  130,   73,   73,
-       73,   81,   81,  108,  108,  108,  108,  108,  140,  140,
-      140,  140,  140,  129,  128,  127,  126,  125,  124,  123,
-      122,   57,  121,  191,  102,  101,  100,   97,   96,   85,
-       84,   78,   72,   58,   57,   53,   48,  191,    3,  191,
+      152,  151,  150,  137,  136,  143,  135,  134,  133,  143,
+       49,   49,   49,   49,   49,   52,  132,   52,   52,   52,
+       56,   56,  131,   56,   56,   73,  130,   73,   73,   73,
+       81,   81,  108,  108,  108,  108,  108,  140,  140,  140,
+      140,  140,  129,  128,  127,  126,  125,  124,  123,  122,
+       57,  121,  191,  102,  101,  100,   97,   96,   85,   84,
+       78,   72,   58,   57,   53,   48,  191,    3,  191,  191,
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
 
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
-      191,  191,  191,  191,  191,  191,  191,  191,  191
+      191,  191,  191,  191,  191,  191,  191
     } ;
 
-static const flex_int16_t yy_chk[430] =
+static const flex_int16_t yy_chk[428] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        8,   11,   16,   18,   19,   19,   19,   20,   27,   27,
-       34,   30,   18,   16,   20,   30,   25,   11,   34,   33,
-       22,   22,   22,   25,   25,   25,   35,   40,   45,    8,
-       21,   33,   21,   21,   21,   22,   35,   49,   36,   37,
+        1,    1,    1,    1,    1,    1,    1,    1,    1,    8,
+       11,   16,   18,   19,   19,   19,   20,   27,   27,   34,
+       30,   18,   16,   20,   30,   25,   11,   34,   33,   22,
+       22,   22,   25,   25,   25,   35,   40,   45,    8,   21,
+       33,   21,   21,   21,   22,   35,   49,   36,   37,   56,
 
-       56,   40,   21,   36,   37,   21,   21,   21,   57,   64,
-       73,  198,   69,   69,   57,   21,  189,   82,   22,   73,
-       21,  187,   45,  185,  182,   56,   49,   69,   21,  179,
-       21,   63,   63,   63,  178,   69,   76,   66,   66,   66,
-       64,   63,   63,   75,   63,   76,   82,   66,   66,  175,
-       66,   75,   75,   68,   63,   63,   68,   68,   68,   63,
-       66,   66,   74,  108,  110,   66,   67,   77,   67,   67,
-       67,   74,   77,  115,  115,  115,   77,  119,   67,  140,
-      106,   67,   67,  106,  106,  106,  119,   74,  111,  111,
-      111,   67,  174,  173,  108,  110,   67,  141,  111,  111,
+       40,   21,   36,   37,   21,   21,   21,   64,   57,  198,
+       73,  189,   76,   21,   57,   82,   22,  108,   21,   73,
+       45,   76,  187,  185,   56,   49,   21,  182,   21,   63,
+       63,   63,   68,   69,   69,   68,   68,   68,   64,   63,
+       63,   74,   63,  179,   82,   75,  110,   69,  108,  178,
+       74,   63,   63,   75,   75,   69,   63,   66,   66,   66,
+      115,  115,  115,  119,   77,   74,  175,   66,   66,   77,
+       66,  106,  119,   77,  106,  106,  106,  110,  112,   66,
+       66,  112,  112,  112,   66,   67,  148,   67,   67,   67,
+      114,  114,  116,  116,  116,  148,  140,   67,  141,  149,
 
-      172,  111,  112,  171,   67,  112,  112,  112,  114,  114,
-      140,  111,  111,  116,  116,  116,  111,  117,  117,  170,
-      169,  118,  164,  114,  116,  118,  116,  148,  141,  120,
-      118,  114,  117,  163,  120,  161,  148,  116,  120,  159,
-      117,  116,  138,  138,  138,  139,  139,  139,  142,  158,
-      157,  142,  142,  142,  155,  153,  139,  152,  139,  144,
-      144,  144,  149,  145,  145,  145,  147,  147,  150,  139,
-      137,  149,  136,  139,  145,  135,  145,  165,  165,  165,
-      134,  147,  166,  166,  166,  167,  133,  145,  132,  147,
-      167,  145,  131,  166,  167,  166,  130,  129,  127,  126,
+       67,   67,  174,  116,  114,  116,  117,  117,  149,   67,
+      173,  172,  114,  171,   67,  116,  170,  118,  169,  116,
+      117,  118,   67,  111,  111,  111,  118,  140,  117,  141,
+      120,  164,  163,  111,  111,  120,  111,  161,  159,  120,
+      138,  138,  138,  158,  157,  111,  111,  139,  139,  139,
+      111,  142,  155,  153,  142,  142,  142,  152,  139,  150,
+      139,  144,  144,  144,  145,  145,  145,  147,  147,  137,
+      139,  165,  165,  165,  139,  145,  136,  145,  135,  134,
+      133,  147,  166,  166,  166,  167,  132,  145,  131,  147,
+      167,  145,  130,  166,  167,  166,  129,  127,  126,  125,
 
-      125,  124,  123,  122,  102,  101,  166,  100,   99,   98,
-      166,  192,  192,  192,  192,  192,  193,   97,  193,  193,
-      193,  194,  194,   96,  194,  194,  195,   95,  195,  195,
-      195,  196,  196,  197,  197,  197,  197,  197,  199,  199,
-      199,  199,  199,   93,   92,   91,   90,   88,   87,   86,
-       85,   83,   80,   51,   43,   42,   41,   39,   38,   32,
-       31,   26,   23,   15,   12,   10,    7,    3,  191,  191,
+      124,  123,  122,  102,  101,  166,  100,   99,   98,  166,
+      192,  192,  192,  192,  192,  193,   97,  193,  193,  193,
+      194,  194,   96,  194,  194,  195,   95,  195,  195,  195,
+      196,  196,  197,  197,  197,  197,  197,  199,  199,  199,
+      199,  199,   93,   92,   91,   90,   88,   87,   86,   85,
+       83,   80,   51,   43,   42,   41,   39,   38,   32,   31,
+       26,   23,   15,   12,   10,    7,    3,  191,  191,  191,
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
 
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
       191,  191,  191,  191,  191,  191,  191,  191,  191,  191,
-      191,  191,  191,  191,  191,  191,  191,  191,  191
+      191,  191,  191,  191,  191,  191,  191
     } ;
 
 static const flex_int16_t yy_rule_linenum[78] =
     {   0,
-       44,   45,   46,   47,   48,   49,   50,   52,   53,   54,
-       56,   57,   59,   60,   61,   63,   64,   65,   67,   68,
-       69,   70,   72,   73,   74,   76,   79,   81,   83,   84,
+       43,   44,   45,   46,   47,   48,   49,   51,   52,   53,
+       55,   56,   58,   59,   60,   62,   63,   64,   66,   67,
+       68,   69,   71,   72,   73,   75,   79,   81,   83,   84,
        86,   87,   88,   89,   90,   91,   92,   93,   94,   95,
        96,   98,   99,  100,  102,  103,  104,  105,  106,  107,
       109,  110,  111,  112,  113,  114,  115,  116,  117,  118,
@@ -672,7 +672,7 @@ static const flex_int16_t yy_rule_linenum[78] =
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 #line 1 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
-#line 11 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 10 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
     /* include */
     #include <iostream>
     #include <string>
@@ -1021,11 +1021,11 @@ YY_DECL
 
 	{
 /* %% [7.0] user's declarations go here */
-#line 37 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 36 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 
 
 
-#line 41 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 40 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 	loc.step();
 
 
@@ -1107,136 +1107,136 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 44 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 43 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_EXTERN(loc);}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 45 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 44 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_NAMESPACE(loc);}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 46 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 45 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_UNION(loc);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 47 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 46 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_FUNCTION(loc);}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 48 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 47 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_IMPORT(loc);}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 49 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 48 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_THIS(loc);}  
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 50 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 49 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_SELF(loc);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 52 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 51 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return  Parser::make_SWITCH(loc);}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 53 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 52 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_CASE(loc);}	
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 54 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 53 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_DEFAULT(loc);}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 56 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 55 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_IF(loc);}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 57 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 56 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_ELSE(loc);}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 59 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 58 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_FOR(loc);}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 60 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 59 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_DO(loc);}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 61 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 60 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_WHILE(loc);}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 63 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 62 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_CONTINUE(loc);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 64 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 63 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_BREAK(loc);}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 65 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 64 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_RETURN(loc);}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 67 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 66 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 68 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 67 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 69 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 68 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 22:
 /* rule 22 can match eol */
 YY_RULE_SETUP
-#line 70 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 69 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 72 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 71 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 73 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 72 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_FCONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 74 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 73 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_FCONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 76 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 75 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { 
-                            return Parser::make_IDENTIFIER(yytext, loc);
-                        }
+            return Parser::make_IDENTIFIER(yytext, loc);
+}
 	YY_BREAK
 case 27:
 /* rule 27 can match eol */

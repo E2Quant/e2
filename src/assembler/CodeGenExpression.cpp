@@ -424,8 +424,7 @@ llvm::Value* BinaryOperator::codeGen(CodeGenContext& context)
 
     if (rhs == nullptr) {
         llog::bug("rhs is nullptr:", _rhs->getType(),
-                  " name:", _rhs->id()->name(), " line:", _codeLine,
-                  " file:", _path);
+                  " name is null line:", _codeLine, " file:", _path);
         context.DontRun();
 #ifdef E2L_DEBUG
         ExitCode("BinaryOperator");
@@ -434,8 +433,7 @@ llvm::Value* BinaryOperator::codeGen(CodeGenContext& context)
     }
     if (lhs == nullptr) {
         llog::bug("lhs is nullptr:", _lhs->getType(),
-                  " name:", _lhs->id()->name(), " line:", _codeLine,
-                  " file:", _path);
+                  " name is null line:", _codeLine, " file:", _path);
 
         context.DontRun();
 #ifdef E2L_DEBUG
@@ -700,15 +698,16 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
                           " file:", _path);
             }
             else if (_rhs->id() == nullptr) {
-                llog::bug("rval or lval is nullptr, lhs id null:",
-                          " rhs id null :", " . line:", _codeLine,
-                          " file:", _path);
+                llog::bug(
+                    "rval or lval is nullptr, lhs id null:", _lhs->id()->name(),
+                    " rhs id null  . line:", _codeLine, " file:", _path);
             }
         }
         else {
             llog::bug("rval or lval is nullptr, lhs:", _lhs->id()->name(),
                       " rhs id null:", " . line:", _codeLine, " file:", _path);
         }
+
 #ifdef E2L_DEBUG
         ExitCode("CompOperator");
 #endif
@@ -731,13 +730,17 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
                 return lval;
             }
         }
-        if (lval->getType()->getTypeID() == llvm::Type::TypeID::IntegerTyID) {
+        if (_lhs->getType() != NodeType::_number) {
+            if (lval->getType()->getTypeID() ==
+                llvm::Type::TypeID::IntegerTyID) {
 #ifdef E2L_DEBUG
-            ExitCode("CompOperator");
+                ExitCode("CompOperator");
 #endif
-            return lval;
+                return lval;
+            }
         }
-        _op = yy::Parser::token::OP_NE;
+        // arg >= 0
+        _op = yy::Parser::token::OP_GE;
         Int_e a = 0;
         _rhs = MALLOC(Number, a, _codeLine, _path.c_str());
         _rhs->union_name("rhs_def");
@@ -803,8 +806,9 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
 
     ret = llvm::CmpInst::Create(oinstr, predicate, lval, rval, "cmptmp",
                                 context.currentBlock());
+
 #ifdef E2L_DEBUG
-    ExitCode("CompOperator");
+    ExitCode("CompOperator ret:");
 #endif
     return ret;
 } /* -----  end of function CompOperator::codeGen  ----- */

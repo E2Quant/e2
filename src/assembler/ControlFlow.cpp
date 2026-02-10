@@ -115,17 +115,21 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
 
     if (comp == nullptr) {
         if (_Comp->id() != nullptr) {
-            e2::llog::bug("comp value is nullptr, comp id:", _Comp->id()->name(),
-                         " codeline:", _codeLine, " path:", _path);
+            e2::llog::bug(
+                "comp value is nullptr, comp id:", _Comp->id()->name(),
+                " codeline:", _codeLine, " path:", _path);
         }
         else {
             e2::llog::bug("comp values error, codeline:", _codeLine,
-                         " path:", _path);
+                          " path:", _path);
         }
 
         context.DontRun();
         return nullptr;
     }
+
+    // llog::bug(comp->getType()->getTypeID());
+    // llog::bug(llvm::Type::TypeID::IntegerTyID);
 
     ToBool(comp, context);
 
@@ -311,7 +315,8 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     context.pushBlock(condBB, ScopeKind::_sk_flow);
     llvm::Value* condValue = _condition->codeGen(context);
     if (condValue == nullptr) {
-        e2::llog::bug("Code gen for condition expression in while loop failed.");
+        e2::llog::bug(
+            "Code gen for condition expression in while loop failed.");
         return nullptr;
     }
     ToBool(condValue, context);
@@ -403,7 +408,8 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
     context.pushBlock(condBB, ScopeKind::_sk_flow);
     llvm::Value* condValue = _condition->codeGen(context);
     if (condValue == nullptr) {
-        e2::llog::bug("Code gen for condition expression in while loop failed.");
+        e2::llog::bug(
+            "Code gen for condition expression in while loop failed.");
         return nullptr;
     }
     ToBool(condValue, context);

@@ -104,7 +104,7 @@ void ParserCtx::scan_begin()
         _file = fopen(_file_path, "r");
         if (_file == nullptr) {
             e2::llog::bug("cannot open ", std::string(_file_path), ": ",
-                         strerror(errno));
+                          strerror(errno));
             exit(EXIT_FAILURE);
         }
         yyset_in(_file, lexer);

@@ -122,6 +122,8 @@ struct E2CallGraphPass : public llvm::ModulePass {
                             continue;
                         }
                         // Direct Call
+                        // 以后再优化 可不可以在这儿修改 storeid 的参数，
+                        // 可以加入 路径 来作为不同的 ID 值
                         llvm::Function* calleeFunc =
                             callBase->getCalledFunction();
                         if (calleeFunc->isIntrinsic())

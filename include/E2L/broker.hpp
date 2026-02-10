@@ -146,6 +146,19 @@ void MatchEventInit(
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  MatchTrigger
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  false 陏时触发, true 有match 的时候才触发
+ * ============================================
+ */
+void MatchTrigger(e2::Bool);
+/* -----  end of function MatchTrigger  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  EnableExdividend
  *  ->  void *
  *  Parameters:
@@ -183,9 +196,6 @@ e2::Int_e ExDivPrice(e2::Int_e); /* -----  end of function ExDivPrice  ----- */
  */
 e2::Int_e ExDividendSize(
     e2::Int_e); /* -----  end of function ExDividendSize  ----- */
-
-
-
 
 /*
  * ===  FUNCTION  =============================
@@ -229,18 +239,18 @@ e2::Int_e ExDividendCash(
 e2::Int_e ExDividendShare(
     e2::Int_e, e2::Int_e); /* -----  end of function ExDividendShare  ----- */
 
-/* 
+/*
  * ===  FUNCTION  =============================
  *
  *         Name:  ExDividendSplit
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
- *  Description:  
+ *  Description:
  *
  * ============================================
  */
-e2::Int_e ExDividendSplit ( e2::Int_e , e2::Int_e);
+e2::Int_e ExDividendSplit(e2::Int_e, e2::Int_e);
 /* -----  end of function ExDividendSplit  ----- */
 
 /*
@@ -255,5 +265,6 @@ e2::Int_e ExDividendSplit ( e2::Int_e , e2::Int_e);
  * ============================================
  */
 void BrokerBook(e2::BookType); /* -----  end of function BrokerBook  ----- */
+
 }  // namespace e2l
 #endif /* ----- #ifndef BROKER_INC  ----- */

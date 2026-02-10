@@ -191,7 +191,7 @@ inline std::size_t variable_str_num = 1;
 #define ToBool(args, con)                                                \
     ({                                                                   \
         do {                                                             \
-            if (args->getType()->getTypeID() !=                          \
+            if (args->getType()->getTypeID() ==                          \
                 llvm::Type::TypeID::IntegerTyID) {                       \
                 retType* t = E2LBool(con.getGlobalContext());            \
                 auto cinstr =                                            \
@@ -222,13 +222,13 @@ inline std::size_t variable_str_num = 1;
 #ifdef E2L_DEBUG
 inline std::size_t _code_gen_number = 0;
 
-#define EnterCode(gen)                                                  \
-    ({                                                                  \
-        do {                                                            \
-            _code_gen_number++;                                         \
-            llog::debug(llog::format("-> %ld.", _code_gen_number), gen, \
-                        " (code line:", _codeLine, ")");                \
-        } while (0);                                                    \
+#define EnterCode(gen)                                                 \
+    ({                                                                 \
+        do {                                                           \
+            _code_gen_number++;                                        \
+            llog::warn(llog::format("-> %ld.", _code_gen_number), gen, \
+                       " (code line:", _codeLine, ")");                \
+        } while (0);                                                   \
     })
 
 #define ExitCode(gen)                                                   \

@@ -1,6 +1,5 @@
 D			[0-9]
-Z           [a-zA-Z]
-L			({Z})|[_]
+L			[a-zA-Z_]
 H			[a-fA-F0-9]
 E			[Ee][-]?{D}+
 FS			(f|F|l|L)
@@ -72,9 +71,10 @@ L?'(\\.|[^\\'])+'	    { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 {D}*"."{D}+({E})?{FS}?	{ return Parser::make_FCONSTANT(std::stod(yytext,0), loc);}
 {D}+"."{D}*({E})?{FS}?	{ return Parser::make_FCONSTANT(std::stod(yytext,0), loc);}
 
-{Z}({L}|{D})*		    { 
-                            return Parser::make_IDENTIFIER(yytext, loc);
-                        }
+{L}({L}|{D})*		{ 
+            return Parser::make_IDENTIFIER(yytext, loc);
+}
+
 L?\"(\\.|[^\\"])*\"	    { return Parser::make_STRING_LITERAL(yytext, loc);}
 
 "::"		{ return Parser::symbol_type( token::NAMESPACE_ATTR, loc);}

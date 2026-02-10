@@ -540,11 +540,11 @@ namespace_definition
 
 primary_lvalue
     : /*左边的变量*/
-      id_ns_name { $$ = $1; }
+      id_ns_gl_name { $$ = $1; }
     ;
 
 primary_rvalue 
-    : /* 变量名, 数字 */
+    : /* 变量名, 数字, 目前在这儿设置全局变量可修改，不过以后再优化一下右则变量是数字吧 */
       id_ns_gl_name { $$ = $1; } 
     | CONSTANT  
         {
@@ -582,8 +582,8 @@ id_func_call_name
 
 id_ns_gl_name
     : 
-      id_ns_name { $$ = $1; }
-    | global_union_variable { $$ = $1; } 
+      global_union_variable { $$ = $1; }
+    | id_ns_name { $$ = $1; }
     ;
 
 id_ns_name
