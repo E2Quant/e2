@@ -186,7 +186,14 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
         needMergeBlock = true;
     }
 
+#if __clang_major__ <= 14
     TheFunction->getBasicBlockList().push_back(elseBlock);
+
+#else
+    TheFunction->insert(TheFunction->end(), elseBlock);
+
+#endif
+
     context.popBlock();
 
     context.pushBlock(elseBlock, ScopeKind::_sk_flow);
@@ -218,7 +225,12 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
     context.popBlock();
 
     if (needMergeBlock) {
+#if __clang_major__ <= 14
         TheFunction->getBasicBlockList().push_back(mergeBlock);
+#else
+        TheFunction->insert(TheFunction->end(), mergeBlock);
+#endif
+
         context.setInsertPoint(mergeBlock);
     }
 
@@ -307,7 +319,12 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     llvm::BranchInst::Create(loopBB, jumpBB, firstCondValue,
                              context.currentBlock());
 
+#if __clang_major__ <= 14
     function->getBasicBlockList().push_back(condBB);
+#else
+    function->insert(function->end(), condBB);
+#endif
+
     context.popBlock();
     ///
 
@@ -324,7 +341,12 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     llvm::BranchInst::Create(loopBB, mergeBB, condValue,
                              context.currentBlock());
 
+#if __clang_major__ <= 14
     function->getBasicBlockList().push_back(loopBB);
+#else
+    function->insert(function->end(), loopBB);
+#endif
+
     context.popBlock();
     ///
 
@@ -337,13 +359,23 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     }
     llvm::BranchInst::Create(condBB, context.currentBlock());
 
+#if __clang_major__ <= 14
     function->getBasicBlockList().push_back(jumpBB);
+#else
+    function->insert(function->end(), jumpBB);
+#endif
+
     context.popBlock();
 
     /// jump break
     context.pushBlock(jumpBB, ScopeKind::_sk_flow);
     llvm::BranchInst::Create(mergeBB, context.currentBlock());
+
+#if __clang_major__ <= 14
     function->getBasicBlockList().push_back(mergeBB);
+#else
+    function->insert(function->end(), mergeBB);
+#endif
 
     context.popBlock();
 
@@ -399,8 +431,12 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
 #endif
     llvm::BranchInst::Create(loopBB, breakBB, firstCondValue,
                              context.currentBlock());
-
+#if __clang_major__ <= 14
     function->getBasicBlockList().push_back(condBB);
+#else
+    function->insert(function->end(), condBB);
+#endif
+
     context.popBlock();
     ////
 
@@ -420,7 +456,12 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
     llvm::BranchInst::Create(loopBB, mergeBB, condValue,
                              context.currentBlock());
 
+#if __clang_major__ <= 14
     function->getBasicBlockList().push_back(loopBB);
+#else
+    function->insert(function->end(), loopBB);
+#endif
+
     context.popBlock();
     ///
 
@@ -438,14 +479,25 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
 
     llvm::BranchInst::Create(condBB, context.currentBlock());
 
+#if __clang_major__ <= 14
     function->getBasicBlockList().push_back(breakBB);
+#else
+    function->insert(function->end(), breakBB);
+#endif
+
     context.popBlock();
 
     // break
     context.pushBlock(breakBB, ScopeKind::_sk_flow);
 
     llvm::BranchInst::Create(mergeBB, context.currentBlock());
+
+#if __clang_major__ <= 14
     function->getBasicBlockList().push_back(mergeBB);
+#else
+    function->insert(function->end(), mergeBB);
+#endif
+
     context.popBlock();
 
     context.setInsertPoint(mergeBB);

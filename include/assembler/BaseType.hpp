@@ -47,6 +47,7 @@
 #include <cstdint>
 #include <list>
 #include <map>
+#include <set>
 #include <string>
 
 #include "llvm/IR/Instruction.h"

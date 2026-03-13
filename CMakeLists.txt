@@ -78,6 +78,28 @@ add_compile_definitions(SEARCH_PATH="${CMAKE_INSTALL_PREFIX}/include/e2")
 #endif()
 
 
+
+## Flex/Bison configuration
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
+
+## llvm
+# cmake $LLVM_SRC_DIR -DCMAKE_BUILD_TYPE=Release \
+#                    -DLLVM_TARGETS_TO_BUILD="ARM;X86;AArch64"
+# macos brew install llvm@14
+# cmake  -DUSE_CCACHE=ON -DE2L_DEBUG=ON  -DLLVM_DIR=/opt/homebrew/Cellar/llvm@14/14.0.6/lib/cmake/llvm ../ 
+find_package(LLVM REQUIRED CONFIG COMPONENTS Passes)
+message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
+message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
+
+message(STATUS "Found LLVM Major Version: ${LLVM_VERSION_MAJOR}")
+
+add_definitions(-D__clang_major__=${LLVM_VERSION_MAJOR})
+
+#message(STATUS "CMAKE_CXX_COMPILER_ID: ${CMAKE_CXX_COMPILER_ID}")
+#message(STATUS "CMAKE_CXX_COMPILER_VERSION: ${CMAKE_CXX_COMPILER_VERSION}")
+
+
 option(USE_CLANG "build application with clang" OFF) # OFF is the default
 
 if(USE_CLANG)
@@ -86,7 +108,7 @@ if(USE_CLANG)
     # apt-get install -y libzzip-dev zlib1g-dev
     # cmake -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang ..
     #
-    set(CMAKE_C_COMPILER "/usr/bin/clang")
+    set(CMAKE_C_COMPILER "/usr/bin/clang-${LLVM_VERSION_MAJOR}")
     set(CMAKE_C_FLAGS "-Wall -std=c99 -ldl -lz -lncurses -rdynamic ")
     set(CMAKE_C_FLAGS_DEBUG "-g")
     set(CMAKE_C_FLAGS_MINSIZEREL "-Os -DNDEBUG")
@@ -94,7 +116,7 @@ if(USE_CLANG)
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "-O2 -g")
 
 
-    set(CMAKE_CXX_COMPILER "/usr/bin/clang++")
+    set(CMAKE_CXX_COMPILER "/usr/bin/clang++-${LLVM_VERSION_MAJOR}")
     set(CMAKE_CXX_FLAGS "-Wall -std=c++20")
     set(CMAKE_CXX_FLAGS_DEBUG "-gfull")
     set(CMAKE_CXX_FLAGS_MINSIZEREL "-Os -DNDEBUG")
@@ -110,20 +132,9 @@ if(USE_CLANG)
     # set(CMAKE_OBJDUMP "/usr/bin/llvm-objdump")                
     # set(CMAKE_RANLIB "/usr/bin/llvm-ranlib")                  
 
+
 endif(USE_CLANG) 
 
-## Flex/Bison configuration
-find_package(BISON REQUIRED)
-find_package(FLEX REQUIRED)
-
-## llvm
-# cmake $LLVM_SRC_DIR -DCMAKE_BUILD_TYPE=Release \
-#                    -DLLVM_TARGETS_TO_BUILD="ARM;X86;AArch64"
-# macos brew install llvm@14
-# cmake  -DUSE_CCACHE=ON -DE2L_DEBUG=ON  -DLLVM_DIR=/opt/homebrew/Cellar/llvm@14/14.0.6/lib/cmake/llvm ../ 
-find_package(LLVM REQUIRED CONFIG COMPONENTS Passes)
-message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 include(LLVMConfig)
 llvm_map_components_to_libnames(
     LLVM_LIBRARIES

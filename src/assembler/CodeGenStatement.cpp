@@ -278,8 +278,14 @@ llvm::Value* MethodCall::codeGen(CodeGenContext& context)
         call = llvm::CallInst::Create(func, "", context.currentBlock());
     }
     else {
-        call = llvm::CallInst::Create(func, llvm::makeArrayRef(args), "",
-                                      context.currentBlock());
+#if __clang_major__ <= 14
+        llvm::ArrayRef<llvm::Value*> Args = llvm::makeArrayRef(args);
+#else
+        llvm::ArrayRef<llvm::Value*> Args = llvm::ArrayRef(args);
+        // Fallback for older Clang versions or other compilers
+#endif
+
+        call = llvm::CallInst::Create(func, Args, "", context.currentBlock());
     }
 
 #ifdef E2L_DEBUG
@@ -328,9 +334,14 @@ void MethodCall::callNameSpaceInit(CodeGenContext& context,
                             err, 0);
         return;
     }
+#if __clang_major__ <= 14
+    llvm::ArrayRef<llvm::Value*> Args = llvm::makeArrayRef(args);
+#else
+    llvm::ArrayRef<llvm::Value*> Args = llvm::ArrayRef(args);
+    // Fallback for older Clang versions or other compilers
+#endif
 
-    llvm::CallInst::Create(func, llvm::makeArrayRef(args), "",
-                           context.currentBlock());
+    llvm::CallInst::Create(func, Args, "", context.currentBlock());
 
 } /* -----  end of function MethodCall::callNameSpaceInit  ----- */
 
@@ -709,8 +720,16 @@ llvm::Value* FunctionDeclaration::codeGen(CodeGenContext& context)
             argTypes.push_back(context.typeOf(it));
         }
     }
-    llvm::FunctionType* ftype = llvm::FunctionType::get(
-        context.typeOf(_id), llvm::makeArrayRef(argTypes), false);
+
+#if __clang_major__ <= 14
+    llvm::ArrayRef<llvm::Type*> Args = llvm::makeArrayRef(argTypes);
+    llvm::FunctionType* ftype =
+        llvm::FunctionType::get(context.typeOf(_id), Args, false);
+#else
+    llvm::FunctionType* ftype =
+        llvm::FunctionType::get(context.typeOf(_id), argTypes, false);
+    // Fallback for older Clang versions or other compilers
+#endif
 
     llvm::Function* func =
         llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage,
@@ -829,8 +848,19 @@ llvm::Value* ExternDeclaration::codeGen(CodeGenContext& context)
     for (auto it : *_arguments) {
         argTypes.push_back(context.typeOf(it));
     }
-    llvm::FunctionType* ftype = llvm::FunctionType::get(
-        context.typeOf(_id), makeArrayRef(argTypes), false);
+    // llvm::FunctionType* ftype = llvm::FunctionType::get(
+    //     context.typeOf(_id), makeArrayRef(argTypes), false);
+
+#if __clang_major__ <= 14
+    llvm::ArrayRef<llvm::Type*> Args = llvm::makeArrayRef(argTypes);
+    llvm::FunctionType* ftype =
+        llvm::FunctionType::get(context.typeOf(_id), Args, false);
+#else
+    llvm::FunctionType* ftype =
+        llvm::FunctionType::get(context.typeOf(_id), argTypes, false);
+    // Fallback for older Clang versions or other compilers
+#endif
+
     llvm::Function* function =
         llvm::Function::Create(ftype, llvm::GlobalValue::ExternalLinkage,
                                _id->name().c_str(), context.getModule());

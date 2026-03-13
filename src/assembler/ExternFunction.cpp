@@ -42,11 +42,11 @@
  */
 #include "assembler/ExternFunction.hpp"
 
-#include <llvm/IR/DebugLoc.h>
 #include <llvm/ADT/ArrayRef.h>
 #include <llvm/IR/BasicBlock.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Constants.h>
+#include <llvm/IR/DebugLoc.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Function.h>
 #include <llvm/IR/GlobalValue.h>
@@ -61,7 +61,6 @@
 #include <exception>
 #include <iostream>
 #include <vector>
-
 
 using namespace std;
 
@@ -154,7 +153,14 @@ void createEchoFunction(CodeGenContext& context, llvm::Function* printfFn)
     argPrint->setName("varpath");
     args.push_back(argPrint);
 
-    llvm::CallInst::Create(printfFn, makeArrayRef(args), "", bblock);
+#if __clang_major__ <= 14
+    llvm::ArrayRef<llvm::Value*> Args = llvm::makeArrayRef(args);
+#else
+    llvm::ArrayRef<llvm::Value*> Args = llvm::ArrayRef(args);
+    // Fallback for older Clang versions or other compilers
+#endif
+
+    llvm::CallInst::Create(printfFn, Args, "", bblock);
     llvm::ReturnInst::Create(context.getGlobalContext(), bblock);
 
     context.popBlock();

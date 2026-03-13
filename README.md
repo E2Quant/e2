@@ -12,7 +12,7 @@
 
 ## 关于 E2L 策略编程语言
 
-E2L 使用 C++ 开发的一种策略性语言，它基于 LLVM IR 基本架构, [ FLEX 词汇分析器生成器](https://westes.github.io/flex/manual/index.html#SEC_Contents) 及 [ GNU BISON (YACC) 通用的解析器生成器 ](https://www.gnu.org/software/bison/) 作为语法分析. 主要功能是价格的计算, 即数学的运算为主的一种简单性的编程语言
+E2L 使用 C++ 开发的一种策略性语言，它基于 LLVM IR( *目前测试兼容 llvm-14, llvm-18* ) 基本架构, [ FLEX 词汇分析器生成器](https://westes.github.io/flex/manual/index.html#SEC_Contents) 及 [ GNU BISON (YACC) 通用的解析器生成器 ](https://www.gnu.org/software/bison/) 作为语法分析. 主要功能是价格的计算, 即数学的运算为主的一种简单性的编程语言
 
 
 ## 如何安装

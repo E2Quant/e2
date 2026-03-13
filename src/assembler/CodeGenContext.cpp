@@ -1321,9 +1321,19 @@ void CodeGenContext::function_self_push(llvm::AllocaInst* self)
         if (self->getType() == nullptr) {
             llog::bug("gettype is nullptr");
         }
-        llvm::Value* nsPtr = new llvm::LoadInst(
-            self->getType()->getPointerElementType(), self, self->getName(),
-            false, storeinst_align, currentBlock());
+
+#if __clang_major__ <= 14
+        llvm::Type* ltype = self->getType()->getPointerElementType();
+        // Code that requires Clang version 10 or later
+#else
+        llvm::Type* ltype = self->getAllocatedType();
+
+        // Fallback for older Clang versions or other compilers
+#endif
+
+        llvm::Value* nsPtr =
+            new llvm::LoadInst(ltype, self, self->getName(), false,
+                               storeinst_align, currentBlock());
         _function_ns_arg.push_back(nsPtr);
     }
 

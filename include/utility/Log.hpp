@@ -124,7 +124,7 @@ void log_cout(const char* file, const char* functionName, long lineNumber,
 #define echo(...) log_cout(__FILE__, __FUNCTION__, __LINE__, KBLU, __VA_ARGS__);
 #define bug(...) log_cout(__FILE__, __FUNCTION__, __LINE__, KRED, __VA_ARGS__);
 #define info(...) log_cout(__FILE__, __FUNCTION__, __LINE__, KGRN, __VA_ARGS__);
-#define debug(...) \
+#define debugs(...) \
     log_cout(__FILE__, __FUNCTION__, __LINE__, KMAG, __VA_ARGS__);
 
 #define warn(...) log_cout(__FILE__, __FUNCTION__, __LINE__, KYEL, __VA_ARGS__);

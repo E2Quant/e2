@@ -252,7 +252,23 @@ llvm::Value* Identifier::codeGen(CodeGenContext& context)
         }
 
         if (nsalloc != nullptr) {
+#if __clang_major__ <= 14
             retType* ctype = nsalloc->getType()->getPointerElementType();
+#else
+            llvm::PointerType* ptine =
+                llvm::dyn_cast<llvm::PointerType>(nsalloc->getType());
+            retType* ctype = nullptr;
+            if (ptine->isStructTy()) {
+                llvm::StructType* sttype =
+                    llvm::dyn_cast<llvm::StructType>(ptine);
+
+                ctype = sttype->getStructElementType(0);
+            }
+            else {
+                ctype = nsalloc->getType();
+            }
+
+#endif
 
 #ifdef E2L_DEBUG
             ExitCode("Identifier");
@@ -452,22 +468,29 @@ llvm::Value* BinaryOperator::codeGen(CodeGenContext& context)
     /**
      * 如果是 bool 类型就转成 double 类型
      */
+#if __clang_major__ <= 14
+
+    llvm::Type* DoublePtrTy =
+        llvm::Type::getDoublePtrTy(context.getGlobalContext());
+#else
+
+    llvm::Type* DoublePtrTy =
+        llvm::PointerType::get(context.getGlobalContext(), 0);
+    // Fallback for older Clang versions or other compilers
+#endif
+
     if (lhs->getType()->getTypeID() == llvm::Type::TypeID::IntegerTyID) {
-        auto cinstr = llvm::CastInst::getCastOpcode(
-            lhs, true, llvm::Type::getDoublePtrTy(context.getGlobalContext()),
-            true);
-        lhs = llvm::CastInst::Create(
-            cinstr, lhs, llvm::Type::getDoublePtrTy(context.getGlobalContext()),
-            "castdb", context.currentBlock());
+        auto cinstr =
+            llvm::CastInst::getCastOpcode(lhs, true, DoublePtrTy, true);
+        lhs = llvm::CastInst::Create(cinstr, lhs, DoublePtrTy, "castdb",
+                                     context.currentBlock());
     }
 
     if (rhs->getType()->getTypeID() == llvm::Type::TypeID::IntegerTyID) {
-        auto cinstr = llvm::CastInst::getCastOpcode(
-            rhs, true, llvm::Type::getDoublePtrTy(context.getGlobalContext()),
-            true);
-        rhs = llvm::CastInst::Create(
-            cinstr, rhs, llvm::Type::getDoublePtrTy(context.getGlobalContext()),
-            "castdb", context.currentBlock());
+        auto cinstr =
+            llvm::CastInst::getCastOpcode(rhs, true, DoublePtrTy, true);
+        rhs = llvm::CastInst::Create(cinstr, rhs, DoublePtrTy, "castdb",
+                                     context.currentBlock());
     }
 
 #ifdef NUMBER_DECI
@@ -718,7 +741,15 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
         if (lval->getType()->getTypeID() == llvm::Type::TypeID::PointerTyID) {
             llvm::PointerType* ptine =
                 llvm::dyn_cast<llvm::PointerType>(lval->getType());
+
+#if __clang_major__ <= 14
             llvm::Type* vtype = ptine->getPointerElementType();
+#else
+            llvm::StructType* sttype = llvm::dyn_cast<llvm::StructType>(ptine);
+
+            llvm::Type* vtype = sttype->getStructElementType(0);
+// Fallback for older Clang versions or other compilers
+#endif
 
             llvm::IntegerType* inttype =
                 llvm::dyn_cast<llvm::IntegerType>(vtype);
