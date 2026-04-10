@@ -226,59 +226,57 @@ e2::Int_e week(e2::Int_e); /* -----  end of function week  ----- */
  */
 e2::Int_e year_week(e2::Int_e); /* -----  end of function year_week  ----- */
 
-
-/* 
+/*
  * ===  FUNCTION  =============================
  *
  *         Name:  hours
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
- *  Description:  
+ *  Description:
  *
  * ============================================
  */
-e2::Int_e hours ( e2::Int_e );		/* -----  end of function hours  ----- */
-/* 
+e2::Int_e hours(e2::Int_e); /* -----  end of function hours  ----- */
+/*
  * ===  FUNCTION  =============================
  *
  *         Name:  minutes
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
- *  Description:  
+ *  Description:
  *
  * ============================================
  */
-e2::Int_e minutes ( e2::Int_e );	/* -----  end of function minutes  ----- */
+e2::Int_e minutes(e2::Int_e); /* -----  end of function minutes  ----- */
 
-/* 
+/*
  * ===  FUNCTION  =============================
  *
  *         Name:  second
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
- *  Description:  
+ *  Description:
  *
  * ============================================
  */
-e2::Int_e second (e2::Int_e  );		/* -----  end of function second  ----- */
+e2::Int_e second(e2::Int_e); /* -----  end of function second  ----- */
 
-
-
-/* 
+/*
  * ===  FUNCTION  =============================
  *
  *         Name:  millisecond
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
- *  Description:  
+ *  Description:
  *
  * ============================================
  */
-e2::Int_e millisecond ( e2::Int_e );	/* -----  end of function millisecond  ----- */
+e2::Int_e millisecond(
+    e2::Int_e); /* -----  end of function millisecond  ----- */
 
 }  // namespace e2l
 #endif /* ----- #ifndef DATE_TIME_INC  ----- */

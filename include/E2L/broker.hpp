@@ -266,5 +266,30 @@ e2::Int_e ExDividendSplit(e2::Int_e, e2::Int_e);
  */
 void BrokerBook(e2::BookType); /* -----  end of function BrokerBook  ----- */
 
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  TotalCash
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  返回所有 账号的总余额
+ * ============================================
+ */
+e2::Int_e TotalCash(); /* -----  end of function TotalCash  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  TotalMargin
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  返回所有账号的总冻结金额
+ * ============================================
+ */
+e2::Int_e TotalMargin(); /* -----  end of function TotalMargin  ----- */
 }  // namespace e2l
 #endif /* ----- #ifndef BROKER_INC  ----- */
