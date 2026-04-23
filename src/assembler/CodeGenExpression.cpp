@@ -748,30 +748,34 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
             llvm::StructType* sttype = llvm::dyn_cast<llvm::StructType>(ptine);
 
             llvm::Type* vtype = sttype->getStructElementType(0);
-// Fallback for older Clang versions or other compilers
+            // Fallback for older Clang versions or other compilers
 #endif
 
-            llvm::IntegerType* inttype =
-                llvm::dyn_cast<llvm::IntegerType>(vtype);
+            bool is_int = vtype->isIntegerTy();
+            if (is_int) {
+                llvm::IntegerType* inttype =
+                    llvm::dyn_cast<llvm::IntegerType>(vtype);
+                unsigned bw = 1;
+                if (inttype->getBitWidth() == bw) {
+#ifdef E2L_DEBUG
+                    ExitCode("CompOperator");
+#endif
+                    return lval;
+                }
+            }
+        }
+        // if (_lhs->getType() != NodeType::_number) {
+        //     if (lval->getType()->getTypeID() ==
+        //         llvm::Type::TypeID::IntegerTyID) {
+        // #ifdef E2L_DEBUG
+        //         ExitCode("CompOperator");
+        // #endif
+        //         return lval;
+        //     }
+        // }
+        // arg != 0
+        _op = yy::Parser::token::OP_NE;
 
-            if (inttype->getBitWidth() == 1) {
-#ifdef E2L_DEBUG
-                ExitCode("CompOperator");
-#endif
-                return lval;
-            }
-        }
-        if (_lhs->getType() != NodeType::_number) {
-            if (lval->getType()->getTypeID() ==
-                llvm::Type::TypeID::IntegerTyID) {
-#ifdef E2L_DEBUG
-                ExitCode("CompOperator");
-#endif
-                return lval;
-            }
-        }
-        // arg >= 0
-        _op = yy::Parser::token::OP_GE;
         Int_e a = 0;
         _rhs = MALLOC(Number, a, _codeLine, _path.c_str());
         _rhs->union_name("rhs_def");

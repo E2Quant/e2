@@ -62,7 +62,7 @@ yy::Parser::symbol_type yylex(void* yyscanner,
 %token <float>  FCONSTANT
 
 %token <int> NAMESPACE_ATTR
-%token <int> OP_LE OP_GE OP_EQ OP_NE
+%token <int> OP_LE OP_GE OP_EQ OP_NE 
 %token <int> LOGICAL_AND LOGICAL_OR LOGICAL_NOT
 
 %token <int> ASSIGN_MUL ASSIGN_DIV ASSIGN_MOD ASSIGN_ADD

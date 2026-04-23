@@ -94,6 +94,9 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
 {
     llvm::Value* ret = nullptr;
     llvm::Value* comp = nullptr;
+#ifdef E2L_DEBUG
+    EnterCode("IFStatement");
+#endif
 
     if (_exp != nullptr) {
         if (_exp->getType() != NodeType::_comp) {
@@ -105,6 +108,11 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
     }
     if (_Comp == nullptr) {
         e2::llog::bug("condition is nullptr");
+
+#ifdef E2L_DEBUG
+        ExitCode("IFStatement");
+#endif
+
         context.DontRun();
 
         return nullptr;
@@ -124,17 +132,22 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
                           " path:", _path);
         }
 
+#ifdef E2L_DEBUG
+        ExitCode("IFStatement");
+#endif
+
         context.DontRun();
         return nullptr;
     }
-
-    // llog::bug(comp->getType()->getTypeID());
-    // llog::bug(llvm::Type::TypeID::IntegerTyID);
 
     ToBool(comp, context);
 
     if (_labledBlock == nullptr) {
         e2::llog::bug("labed block value is nullptr");
+#ifdef E2L_DEBUG
+        ExitCode("IFStatement");
+#endif
+        context.DontRun();
 
         return nullptr;
     }
@@ -191,7 +204,6 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
 
 #else
     TheFunction->insert(TheFunction->end(), elseBlock);
-
 #endif
 
     context.popBlock();
@@ -236,6 +248,9 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
 
     context.popBreak();
 
+#ifdef E2L_DEBUG
+    ExitCode("IFStatement");
+#endif
     return mergeBlock;
 
 } /* -----  end of function IFStatement::codeGen  ----- */
