@@ -371,6 +371,18 @@ e2::Int_e VersionId(); /* -----  end of function VersionId  ----- */
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  LastVerId
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e LastVerId(); /* -----  end of function LastVerId  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  LotAndShare
  *  ->  void *
  *  Parameters:
