@@ -52,12 +52,15 @@
 
 #include <cassert>
 #include <cstddef>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <ctime>
 #include <functional>
 #include <string>
+#include <system_error>
+#include <utility>
 #include <vector>
 
 #include "E2L/E2LType.hpp"
@@ -67,8 +70,13 @@
 #include "call_graph/E2CallGraph.hpp"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/Analysis/CGSCCPassManager.h"
 #include "llvm/Analysis/LoopAnalysisManager.h"
+#include "llvm/Bitcode/BitcodeReader.h"
+#include "llvm/Bitcode/BitcodeWriter.h"
+#include "llvm/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/IR/Argument.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
@@ -76,6 +84,10 @@
 #include "llvm/IR/Value.h"
 #include "llvm/IR/Verifier.h"
 #include "llvm/Passes/PassBuilder.h"
+#include "llvm/Support/Error.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/MemoryBufferRef.h"
 #include "llvm/Support/raw_ostream.h"
 #include "utility/pack.hpp"
 
@@ -205,28 +217,16 @@ bool CodeGenContext::generateCode(Block* root)
         return false;
     }
 
-    std::string cname = "FPrintCurrentPath";
-    ArgType sarg(1, E2LVoid(_llvmContext));
-    ExternBuild(E2LVoid(_llvmContext), sarg, (void*)PrintStr, cname);
-
-    std::string ver = "FVersion";
-    ArgType varg(0, E2LVoid(_llvmContext));
-    ExternBuild(E2LVoid(_llvmContext), varg, (void*)e2version, ver);
-
-    std::string gl = "FGlobalUnion";
-    ArgType garg(0, E2LVoid(_llvmContext));
-    ExternBuild(E2LVoid(_llvmContext), garg, (void*)GlobalUnion, gl);
-
+    ExternFun();
     std::vector<retType*> argTypes;
     argTypes.push_back(E2LType(_llvmContext));
     argTypes.push_back(E2LType(_llvmContext));
-    int random_val = std::rand();
+
     llvm::FunctionType* ftype =
         llvm::FunctionType::get(E2LType(_llvmContext), argTypes, false);
 
-    _mainFunction =
-        llvm::Function::Create(ftype, llvm::GlobalValue::InternalLinkage,
-                               "main" + std::to_string(random_val), _module);
+    _mainFunction = llvm::Function::Create(
+        ftype, llvm::GlobalValue::InternalLinkage, _main_func_name, _module);
 
     if (_mainFunction == nullptr) {
         e2::llog::bug("_mainFunction is nullptr");
@@ -234,13 +234,13 @@ bool CodeGenContext::generateCode(Block* root)
     }
 
     llvm::Function::arg_iterator args = _mainFunction->arg_begin();
-    llvm::Value* arg_0 = &*args++;
+    llvm::Argument* arg_0 = &*args++;
     arg_0->setName("argc");
-    llvm::Value* arg_1 = &*args++;
+    llvm::Argument* arg_1 = &*args++;
     arg_1->setName("argv");
 
     llvm::BasicBlock* bblock = llvm::BasicBlock::Create(
-        _llvmContext, "entry." + std::to_string(random_val), _mainFunction, 0);
+        _llvmContext, "entry." + _main_func_name, _mainFunction, 0);
 
 #ifdef E2L_DEBUG
     if (bblock->hasName()) {
@@ -255,8 +255,41 @@ bool CodeGenContext::generateCode(Block* root)
     root->codeGen(*this);
 
     if (currentBlock()->getTerminator() == nullptr) {
-        llvm::ReturnInst::Create(_llvmContext, 0, currentBlock());
+        llvm::Value* LastLoad = nullptr;
+
+        for (auto& I : *bblock) {
+            if (auto* LI = dyn_cast<llvm::LoadInst>(&I)) {
+                // 收集所有  LoadInst
+                if (LI->getType()->getTypeID() == llvm::Type::PointerTyID) {
+                    LastLoad = E2LPtrTInt(LI, _llvmContext, currentBlock());
+                }
+                else {
+                    LastLoad = LI;
+                }
+                // llog::echo("load");
+            }
+            else if (auto* SI = dyn_cast<llvm::StoreInst>(&I)) {
+                // llog::echo("SI");
+
+                new llvm::LoadInst(SI->getPointerOperandType(),
+                                   SI->getPointerOperand(), SI->getName(),
+                                   currentBlock());
+
+                //   收集所有 StoreInst
+            }
+
+            else if (auto* CI = dyn_cast<llvm::CallInst>(&I)) {
+                LastLoad = CI;
+                //                llog::echo("call");
+                // 收集所有 CallInst
+            }
+        }
+        if (LastLoad == nullptr) {
+            LastLoad = llvm::ConstantInt::get(E2LType(_llvmContext), 0);
+        }
+        llvm::ReturnInst::Create(_llvmContext, LastLoad, currentBlock());
     }
+
     popBlock();
 
 #ifdef E2L_DEBUG
@@ -265,8 +298,11 @@ bool CodeGenContext::generateCode(Block* root)
     if (_debug) {
         llvm::verifyFunction(*_mainFunction, &llvm::errs());
 
-        if (llvm::verifyModule(*_module, &llvm::errs())) {
-            e2::llog::bug("module is error:");
+        std::string errorString;
+        llvm::raw_string_ostream os(errorString);
+        auto err = llvm::verifyModule(*_module, &os);
+        if (err) {
+            e2::llog::bug("module is error:", os.str());
         }
         else {
             e2::llog::info("module is verify ok");
@@ -275,6 +311,83 @@ bool CodeGenContext::generateCode(Block* root)
     }
     return _CanRun;
 } /* -----  end of function CodeGenCotext::generateCode  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::SaveToBC
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::SaveToBC(const char* path)
+{
+    std::error_code EC;
+
+    llvm::raw_fd_ostream OS(path, EC, llvm::sys::fs::OF_None);
+    if (!EC) {
+        llvm::WriteBitcodeToFile(*_module, OS);
+        OS.flush();
+    }
+    else {
+        llog::echo("error bc");
+    }
+} /* -----  end of function CodeGenContext::SaveToBC  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::LoadFromBC
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::LoadFromBC(const char* path, const char* func_name)
+{
+    auto BufferOrErr = llvm::MemoryBuffer::getFileOrSTDIN(path);
+    if (!BufferOrErr) {
+        llog::bug("Failed to read file");
+        return;
+    }
+    // 解析 Bitcode
+    llvm::Expected<std::unique_ptr<llvm::Module>> ModuleOrErr =
+        llvm::parseBitcodeFile((*BufferOrErr)->getMemBufferRef(), _llvmContext);
+    if (!ModuleOrErr) {
+        llog::bug("Failed to parse bitcode: ",
+                  llvm::toString(ModuleOrErr.takeError()));
+
+        llvm::handleAllErrors(
+            ModuleOrErr.takeError(), [](const llvm::ErrorInfoBase& E) {
+                llvm::errs() << "Error: " << E.message() << "\n";
+            });
+
+        return;
+    }
+
+    llvm::EngineBuilder factory(std::move(*ModuleOrErr));
+    factory.setEngineKind(llvm::EngineKind::JIT);
+    _ee = factory.create();
+
+    for (auto efun : _ExternFunc) {
+        _ee->addGlobalMapping(efun.fun, efun.addr);
+    }
+
+    _ee->finalizeObject();
+
+    //_mainFunction = _ee->FindFunctionNamed(_main_func_name);
+    uint64_t funcAddress = _ee->getFunctionAddress(func_name);
+    if (funcAddress == 0) {
+        llog::bug("Failed to get function address, can't found func name, ");
+        return;
+    }
+    _function = (funPtr)funcAddress;
+} /* -----  end of function CodeGenContext::LoadFromBC  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -294,10 +407,12 @@ void CodeGenContext::runCode()
     /* #endif */
 
     std::string err = "";
-    _ee = llvm::EngineBuilder(std::unique_ptr<llvm::Module>(_module))
-              .setErrorStr(&err)
-              .setEngineKind(llvm::EngineKind::JIT)
-              .create();
+    if (_ee == nullptr) {
+        _ee = llvm::EngineBuilder(std::unique_ptr<llvm::Module>(_module))
+                  .setErrorStr(&err)
+                  .setEngineKind(llvm::EngineKind::JIT)
+                  .create();
+    }
     assert(_ee);
 
     for (auto efun : _ExternFunc) {
@@ -308,12 +423,39 @@ void CodeGenContext::runCode()
     }
     _ee->finalizeObject();
 
-    // std::vector<llvm::GenericValue> noargs(1);
-    //  llvm::GenericValue v = _ee->runFunction(_mainFunction, noargs);
-
-    _function = (funPtr)_ee->getPointerToFunction(_mainFunction);
+    if (_mainFunction != nullptr) {
+        _function = (funPtr)_ee->getPointerToFunction(_mainFunction);
+    }
 
 } /* -----  end of function CodeGenContext::runCode  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::ExternFun
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::ExternFun()
+{
+    llvm::Type* DoublePtrTy = E2LPtrType(_llvmContext);
+
+    std::string cname = "FPrintCurrentPath";
+    ArgType sarg(1, DoublePtrTy);
+    ExternBuild(E2LVoid(_llvmContext), sarg, (void*)PrintStr, cname);
+
+    std::string ver = "FVersion";
+    ArgType varg(0, E2LVoid(_llvmContext));
+    ExternBuild(E2LVoid(_llvmContext), varg, (void*)e2version, ver);
+
+    std::string gl = "FGlobalUnion";
+    ArgType garg(0, E2LVoid(_llvmContext));
+    ExternBuild(E2LVoid(_llvmContext), garg, (void*)GlobalUnion, gl);
+} /* -----  end of function CodeGenContext::ExternFun  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -346,10 +488,16 @@ Int_e CodeGenContext::runFunction(double arg1 = 0, double arg2 = 0)
 {
     Int_e _arg1 = (Int_e)VALNUMBER(arg1);
     Int_e _arg2 = (Int_e)VALNUMBER(arg2);
+    Int_e ret = -1;
 
-    Int_e ret = _function(_arg1, _arg2);
+    if (_function != nullptr) {
+        ret = _function(_arg1, _arg2);
 
-    _GenericRet.IntVal = ret;
+        _GenericRet.IntVal = ret;
+    }
+    else {
+        llog::bug("main function is nullptr");
+    }
 
     return ret;
 }
@@ -781,9 +929,13 @@ void CodeGenContext::ExternBuild(retType* ret, ArgType arg, void* fun,
     }
     llvm::Function* f = llvm::Function::Create(
         ft, llvm::Function::ExternalLinkage, llvm::Twine(fname), _module);
-    llvm::Function::arg_iterator i = f->arg_begin();
-    if (i != f->arg_end())
-        i->setName("val" + std::to_string(std::hash<std::string>{}(fname)));
+
+    if (arg.size() > 0) {
+        llvm::Function::arg_iterator i = f->arg_begin();
+        if (i != f->arg_end())
+            i->setName("val" + std::to_string(std::hash<std::string>{}(fname)));
+    }
+
     _ExternFunc.push_back({f, fun});
 
 } /* -----  end of function CodeGenContext::ExternBuild  ----- */
@@ -804,8 +956,35 @@ void CodeGenContext::ExternBuildInt(void* fun, size_t args, std::string& fname,
 {
     ArgType arg;
 
+    std::array<std::string, 5> diff_str{"FPrint", "echo", "log", "StoreId",
+                                        "Array"};
+    std::string::size_type isfound;
+    llvm::Type* DoublePtrTy = nullptr;
+    size_t ptr1 = 0, ptr2 = 0;
+    // 代码好难看，以后再优化吧
+    for (std::string key : diff_str) {
+        isfound = fname.find(key);
+        if (isfound != std::string::npos) {
+            DoublePtrTy = E2LPtrType(_llvmContext);
+            if (args < 3) {
+                ptr1 = ptr2 = args - 1;
+            }
+            else {
+                ptr1 = args - 3;
+                ptr2 = args - 1;
+            }
+
+            break;
+        }
+    }
+
     for (size_t m = 0; m < args; m++) {
-        arg.push_back(E2LType(_llvmContext));
+        if (DoublePtrTy != nullptr && (m == ptr1 || m == ptr2)) {
+            arg.push_back(DoublePtrTy);
+        }
+        else {
+            arg.push_back(E2LType(_llvmContext));
+        }
     }
 
     retType* ret = nullptr;
@@ -1285,15 +1464,17 @@ llvm::AllocaInst* CodeGenContext::function_self(std::string arg_name)
 {
     llvm::AllocaInst* alloca = nullptr;
     std::string name_space = getNameSpace();
-    llvm::Type* self_ty = getNSType(name_space);
-    if (self_ty == nullptr) {
-        llog::bug("self type is nullptr");
-        DontRun();
+    // llvm::Type* self_ty = getNSType(name_space);
+    // if (self_ty == nullptr) {
+    //     llog::bug("self type is nullptr");
+    //     DontRun();
 
-        return alloca;
-    }
+    //     return alloca;
+    // }
 
-    llvm::PointerType* self_ptr_ty = llvm::PointerType::getUnqual(self_ty);
+    // llvm::PointerType* self_ptr_ty = llvm::PointerType::getUnqual(self_ty);
+
+    llvm::PointerType* self_ptr_ty = llvm::PointerType::getUnqual(_llvmContext);
 
     alloca = new llvm::AllocaInst(self_ptr_ty, ALLOCAINST_SIZE,
                                   arg_name.c_str(), currentBlock());

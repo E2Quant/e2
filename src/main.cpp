@@ -136,9 +136,10 @@ void toDo(const char* f, const char* s, std::pair<std::string, Int_e>& b)
     context.ExternBuild(E2LType(context.getGlobalContext()), arg,
                         (std::int64_t*)last, name);
 
-    llvm::Type* charType = E2LStr(context.getGlobalContext());
+    llvm::Type* charType = E2LPtrType(context.getGlobalContext());
+
     llvm::Type* rType = E2LVoid(context.getGlobalContext());
-    ArgType carg(1, charType);
+    ArgType carg(1, E2LType(context.getGlobalContext()));
     context.ExternBuild(rType, carg, (void*)call, cname);
 
     ArgType targ;
@@ -157,6 +158,9 @@ void toDo(const char* f, const char* s, std::pair<std::string, Int_e>& b)
 
         context.setupAndRunPasses();
 
+        const char eapath[] = "./e2.bc";
+        context.SaveToBC(eapath);
+
         llog::echo("runFunction:", ret);
     }
     else {
@@ -164,6 +168,32 @@ void toDo(const char* f, const char* s, std::pair<std::string, Int_e>& b)
     }
 
 } /* -----  end of function toDo  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  lbc
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void lbc()
+{
+    Int_e a = 35;
+    Int_e ret = -1;
+    CodeGenContext context;
+    const char eapath[] = "./e2.bc";
+    const char fname[] = "emain";
+    context.LoadFromBC(eapath, fname);
+    ret = context.runFunction(a, a);
+
+    // context.setupAndRunPasses();
+
+    llog::echo("runFunction:", ret);
+} /* -----  end of function lbc  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -184,7 +214,8 @@ int main(int argc, char* argv[])
         f = argv[1];
     }
     else {
-        exit(0);
+        lbc();
+        return 0;
     }
     std::pair<std::string, Int_e> b;
     b = std::make_pair("sfd.ssfd.sfd", 1198);

@@ -143,6 +143,49 @@ inline std::size_t variable_str_num = 1;
         __rhs;                                                       \
     })
 
+#define E2LInterger(con)                          \
+    ({                                            \
+        llvm::IntegerType* __TPtr;                \
+        do {                                      \
+            __TPtr = llvm::Type::getInt64Ty(con); \
+        } while (0);                              \
+        __TPtr;                                   \
+    })
+
+#define E2LPtrTInt(source, con, block)                                      \
+    ({                                                                      \
+        llvm::CastInst* __Int_val;                                          \
+        do {                                                                \
+            llvm::IntegerType* __TInt = E2LInterger(con);                   \
+            __Int_val =                                                     \
+                llvm::CastInst::Create(llvm::Instruction::PtrToInt, source, \
+                                       __TInt, "ptr2int", block);           \
+        } while (0);                                                        \
+        __Int_val;                                                          \
+    })
+
+#if __clang_major__ <= 14
+#define E2LPtrType(con)                                 \
+    ({                                                  \
+        retType* __TPtr64;                              \
+        do {                                            \
+            __TPtr64 = llvm::Type::getDoublePtrTy(con); \
+        } while (0);                                    \
+        __TPtr64;                                       \
+    })
+
+#else
+#define E2LPtrType(con)                                \
+    ({                                                 \
+        retType* __TPtr64;                             \
+        do {                                           \
+            __TPtr64 = llvm::PointerType::get(con, 0); \
+        } while (0);                                   \
+        __TPtr64;                                      \
+    })
+
+#endif
+
 #define E2LType(con)                              \
     ({                                            \
         retType* __TPtr;                          \
@@ -168,6 +211,15 @@ inline std::size_t variable_str_num = 1;
             __VoidPtr = llvm::Type::getVoidTy(con); \
         } while (0);                                \
         __VoidPtr;                                  \
+    })
+
+#define E2LPtr8(con)                                      \
+    ({                                                    \
+        retType* __StrPtr;                                \
+        do {                                              \
+            __StrPtr = llvm::PointerType::getInt8Ty(con); \
+        } while (0);                                      \
+        __StrPtr;                                         \
     })
 
 #define E2LStr(con)                                    \

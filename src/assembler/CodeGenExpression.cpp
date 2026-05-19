@@ -151,8 +151,11 @@ llvm::Value* StrObj::codeGen(CodeGenContext& context)
     ExitCode("StrObj");
 #endif
     // 4. Return a cast to an i8*
-    return llvm::ConstantExpr::getBitCast(globalDeclaration,
-                                          charType->getPointerTo());
+
+    llvm::PointerType* ptrtype =
+        llvm::PointerType::get(context.getGlobalContext(), 0);
+
+    return llvm::ConstantExpr::getBitCast(globalDeclaration, ptrtype);
 
 } /* -----  end of function StrObj::codeGen  ----- */
 
@@ -468,16 +471,8 @@ llvm::Value* BinaryOperator::codeGen(CodeGenContext& context)
     /**
      * 如果是 bool 类型就转成 double 类型
      */
-#if __clang_major__ <= 14
 
-    llvm::Type* DoublePtrTy =
-        llvm::Type::getDoublePtrTy(context.getGlobalContext());
-#else
-
-    llvm::Type* DoublePtrTy =
-        llvm::PointerType::get(context.getGlobalContext(), 0);
-    // Fallback for older Clang versions or other compilers
-#endif
+    llvm::Type* DoublePtrTy = E2LPtrType(context.getGlobalContext());
 
     if (lhs->getType()->getTypeID() == llvm::Type::TypeID::IntegerTyID) {
         auto cinstr =
@@ -491,6 +486,15 @@ llvm::Value* BinaryOperator::codeGen(CodeGenContext& context)
             llvm::CastInst::getCastOpcode(rhs, true, DoublePtrTy, true);
         rhs = llvm::CastInst::Create(cinstr, rhs, DoublePtrTy, "castdb",
                                      context.currentBlock());
+    }
+
+    if (lhs->getType()->getTypeID() == llvm::Type::TypeID::PointerTyID) {
+        lhs =
+            E2LPtrTInt(lhs, context.getGlobalContext(), context.currentBlock());
+    }
+    if (rhs->getType()->getTypeID() == llvm::Type::TypeID::PointerTyID) {
+        rhs =
+            E2LPtrTInt(rhs, context.getGlobalContext(), context.currentBlock());
     }
 
 #ifdef NUMBER_DECI
@@ -540,6 +544,7 @@ llvm::Value* BinaryOperator::codeGen(CodeGenContext& context)
             return nullptr;
         }
     }
+
     llvm::BinaryOperator* bop = llvm::BinaryOperator::Create(
         instr, lhs, rhs, "mathtmp", context.currentBlock());
 
@@ -745,9 +750,17 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
 #if __clang_major__ <= 14
             llvm::Type* vtype = ptine->getPointerElementType();
 #else
-            llvm::StructType* sttype = llvm::dyn_cast<llvm::StructType>(ptine);
 
-            llvm::Type* vtype = sttype->getStructElementType(0);
+            llvm::Type* vtype = nullptr;
+            if (ptine->isStructTy()) {
+                llvm::StructType* sttype =
+                    llvm::dyn_cast<llvm::StructType>(ptine);
+                vtype = sttype->getStructElementType(0);
+            }
+            else {
+                vtype = lval->getType();
+            }
+
             // Fallback for older Clang versions or other compilers
 #endif
 
@@ -764,16 +777,7 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
                 }
             }
         }
-        // if (_lhs->getType() != NodeType::_number) {
-        //     if (lval->getType()->getTypeID() ==
-        //         llvm::Type::TypeID::IntegerTyID) {
-        // #ifdef E2L_DEBUG
-        //         ExitCode("CompOperator");
-        // #endif
-        //         return lval;
-        //     }
-        // }
-        // arg != 0
+
         _op = yy::Parser::token::OP_NE;
 
         Int_e a = 0;
@@ -839,6 +843,14 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
             return nullptr;
     }
 
+    if (lval->getType()->getTypeID() == llvm::Type::TypeID::PointerTyID) {
+        lval = E2LPtrTInt(lval, context.getGlobalContext(),
+                          context.currentBlock());
+    }
+    if (rval->getType()->getTypeID() == llvm::Type::TypeID::PointerTyID) {
+        rval = E2LPtrTInt(rval, context.getGlobalContext(),
+                          context.currentBlock());
+    }
     ret = llvm::CmpInst::Create(oinstr, predicate, lval, rval, "cmptmp",
                                 context.currentBlock());
 

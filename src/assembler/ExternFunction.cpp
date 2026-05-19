@@ -55,24 +55,24 @@
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Value.h>
 
-#include <cstdint>
-#include <cstdio>
 #include <cstring>
-#include <exception>
-#include <iostream>
 #include <vector>
+
+#include "assembler/BaseNode.hpp"
 
 using namespace std;
 
 llvm::Function* createPrintfFunction(CodeGenContext& context)
 {
+    llvm::Type* DoublePtrTy = E2LPtrType(context.getGlobalContext());
+
     std::vector<llvm::Type*> printf_arg_types;
-    printf_arg_types.push_back(
-        llvm::Type::getInt64Ty(context.getGlobalContext()));  // char*
+    printf_arg_types.push_back(DoublePtrTy);
+    //    printf_arg_types.push_back(E2LType(context.getGlobalContext()));  //
+    //    char*
 
     llvm::FunctionType* printf_type = llvm::FunctionType::get(
-        llvm::Type::getInt64Ty(context.getGlobalContext()), printf_arg_types,
-        true);
+        E2LType(context.getGlobalContext()), printf_arg_types, true);
 
     llvm::Function* func =
         llvm::Function::Create(printf_type, llvm::Function::ExternalLinkage,
@@ -85,20 +85,16 @@ llvm::Function* createPrintfFunction(CodeGenContext& context)
 void createEchoFunction(CodeGenContext& context, llvm::Function* printfFn)
 {
     std::vector<llvm::Type*> echo_arg_types;
-    echo_arg_types.push_back(
-        llvm::Type::getInt64Ty(context.getGlobalContext()));
-    echo_arg_types.push_back(
-        llvm::Type::getInt64Ty(context.getGlobalContext()));
 
-    echo_arg_types.push_back(
-        llvm::IntegerType::get(context.getGlobalContext(), 64));
+    llvm::Type* DoublePtrTy = E2LPtrType(context.getGlobalContext());
 
-    echo_arg_types.push_back(
-        llvm::IntegerType::get(context.getGlobalContext(), 64));
+    echo_arg_types.push_back(E2LType(context.getGlobalContext()));
+    echo_arg_types.push_back(DoublePtrTy);
+    echo_arg_types.push_back(E2LType(context.getGlobalContext()));
+    echo_arg_types.push_back(DoublePtrTy);
 
     llvm::FunctionType* echo_type = llvm::FunctionType::get(
-        llvm::Type::getVoidTy(context.getGlobalContext()), echo_arg_types,
-        false);
+        E2LVoid(context.getGlobalContext()), echo_arg_types, false);
 
     llvm::Function* func =
         llvm::Function::Create(echo_type, llvm::Function::InternalLinkage,
@@ -115,22 +111,20 @@ void createEchoFunction(CodeGenContext& context, llvm::Function* printfFn)
 
     llvm::GlobalVariable* var = new llvm::GlobalVariable(
         *context.getModule(),
-        llvm::ArrayType::get(
-            llvm::IntegerType::get(context.getGlobalContext(), 64),
-            strlen(constValue) + 1),
-        true, llvm::GlobalValue::PrivateLinkage, format_const, ".str");
+        llvm::ArrayType::get(E2LStr(context.getGlobalContext()),
+                             strlen(constValue) + 1),
+        true, llvm::GlobalValue::PrivateLinkage, format_const, "echo.fmt");
 
-    llvm::Constant* zero = llvm::Constant::getNullValue(
-        llvm::IntegerType::getInt64Ty(context.getGlobalContext()));
+    llvm::Constant* zero =
+        llvm::Constant::getNullValue(E2LType(context.getGlobalContext()));
 
     std::vector<llvm::Constant*> indices;
     indices.push_back(zero);
     indices.push_back(zero);
 
     llvm::Constant* var_ref = llvm::ConstantExpr::getGetElementPtr(
-        llvm::ArrayType::get(
-            llvm::IntegerType::get(context.getGlobalContext(), 64),
-            strlen(constValue) + 1),
+        llvm::ArrayType::get(E2LStr(context.getGlobalContext()),
+                             strlen(constValue) + 1),
         var, indices);
 
     std::vector<llvm::Value*> args;
@@ -138,7 +132,8 @@ void createEchoFunction(CodeGenContext& context, llvm::Function* printfFn)
 
     llvm::Function::arg_iterator argsValues = func->arg_begin();
     llvm::Value* argPrint = &*argsValues++;
-    argPrint->setName("codeLine");
+
+    argPrint->setName("value");
     args.push_back(argPrint);
 
     argPrint = &*argsValues++;
@@ -146,7 +141,7 @@ void createEchoFunction(CodeGenContext& context, llvm::Function* printfFn)
     args.push_back(argPrint);
 
     argPrint = &*argsValues++;
-    argPrint->setName("toPrint");
+    argPrint->setName("codeLine");
     args.push_back(argPrint);
 
     argPrint = &*argsValues++;

@@ -195,6 +195,7 @@ public:
         llvm::InitializeNativeTargetAsmPrinter();
 
         int random_val = std::rand();
+
         _module =
             new llvm::Module("e2l." + std::to_string(random_val), _llvmContext);
     }; /* constructor */
@@ -243,8 +244,12 @@ public:
     llvm::GenericValue Result();
     Int_e runFunction(double, double);
 
+    void SaveToBC(const char* path);
+    void LoadFromBC(const char* path, const char* func_name);
+
     void runCode();
 
+    void ExternFun();
     void currentBreak(llvm::BasicBlock*);
     llvm::BasicBlock* currentBreak();
     void popBreak();
@@ -380,12 +385,13 @@ private:
     std::list<llvm::BasicBlock*> _breakStack;
     bool _breakStat = false;
 
+    std::string _main_func_name = "main_e2q";
     std::string _current_func_name = "";
     llvm::Function* _mainFunction{nullptr};
     llvm::LLVMContext _llvmContext;
 
     llvm::ExecutionEngine* _ee{nullptr};
-    funPtr _function;
+    funPtr _function{nullptr};
 
     std::vector<ExternFunc_t> _ExternFunc;
 

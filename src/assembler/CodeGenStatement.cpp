@@ -60,6 +60,7 @@
 #include "generated/e2_bison.hpp"
 #include "llvm/ADT/APInt.h"
 #include "llvm/IR/Attributes.h"
+#include "llvm/IR/InstrTypes.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/Support/Alignment.h"
@@ -700,8 +701,8 @@ llvm::Value* FunctionDeclaration::codeGen(CodeGenContext& context)
 
     std::vector<llvm::Type*> argTypes;
     if (!name_space.empty()) {
-        llvm::Type* nstype = context.getNSType(name_space);
-        argTypes.push_back(llvm::PointerType::getUnqual(nstype));
+        argTypes.push_back(
+            llvm::PointerType::getUnqual(context.getGlobalContext()));
 
         if (_id->idType() == IDType::_ns_private) {
             context.addNSSelfFunc(func_name);
@@ -811,8 +812,24 @@ llvm::Value* FunctionDeclaration::codeGen(CodeGenContext& context)
         _Return = _ret->codeGen(context);
     }
 
-    llvm::ReturnInst::Create(context.getGlobalContext(), _Return,
-                             context.currentBlock());
+    if (_Return->getType()->getTypeID() == llvm::Type::TypeID::PointerTyID) {
+        llvm::CastInst* intpt = E2LPtrTInt(_Return, context.getGlobalContext(),
+                                           context.currentBlock());
+        // llvm::IntegerType* intptr = E2LInterger(context.getGlobalContext());
+
+        // llvm::CastInst* intpt =
+        //     llvm::CastInst::Create(llvm::Instruction::PtrToInt, _Return,
+        //     intptr,
+        //                            "ptr2int", context.currentBlock());
+
+        llvm::ReturnInst::Create(context.getGlobalContext(), intpt,
+                                 context.currentBlock());
+    }
+    else {
+        //  llog::echo(" int type: ", _codeLine);
+        llvm::ReturnInst::Create(context.getGlobalContext(), _Return,
+                                 context.currentBlock());
+    }
 
     if (!context.getNameSpace().empty()) {
         context.function_self_pop();
