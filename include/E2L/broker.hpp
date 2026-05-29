@@ -291,5 +291,18 @@ e2::Int_e TotalCash(); /* -----  end of function TotalCash  ----- */
  * ============================================
  */
 e2::Int_e TotalMargin(); /* -----  end of function TotalMargin  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LimitPriceGap
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e LimitPriceGap(); /* -----  end of function LimitPriceGap  ----- */
 }  // namespace e2l
 #endif /* ----- #ifndef BROKER_INC  ----- */

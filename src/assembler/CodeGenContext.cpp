@@ -270,7 +270,6 @@ bool CodeGenContext::generateCode(Block* root)
             }
             else if (auto* SI = dyn_cast<llvm::StoreInst>(&I)) {
                 // llog::echo("SI");
-
                 new llvm::LoadInst(SI->getPointerOperandType(),
                                    SI->getPointerOperand(), SI->getName(),
                                    currentBlock());

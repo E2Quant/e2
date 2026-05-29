@@ -44,18 +44,28 @@
 
 #ifndef E2LSP_INC
 #define E2LSP_INC
+#include <string>
+
+#include "nlohmann/json.hpp"
 namespace e2 {
+
+struct LSPMessage {
+    std::string jsonrpc;    // 固定为 "2.0"
+    int id;                 // 请求 ID（可选）
+    std::string method;     // 方法名
+    nlohmann::json params;  // 参数
+};
 
 /*
  * ================================
- *        Class:  E2Lsp
+ *        Class:  LSPTransport
  *  Description:
  * ================================
  */
-class E2Lsp {
+class LSPTransport {
 public:
     /* =============  LIFECYCLE     =================== */
-    E2Lsp(); /* constructor */
+    LSPTransport(); /* constructor */
 
     /* =============  ACCESSORS     =================== */
 
@@ -72,13 +82,13 @@ protected:
 private:
     /* =============  METHODS       =================== */
     void initialize();
-    void read_message();
+    LSPMessage read_message();
 
     void initialize_response();
     void complete_response();
     /* =============  DATA MEMBERS  =================== */
 
-}; /* -----  end of class E2Lsp  ----- */
+}; /* -----  end of class LSPTransport  ----- */
 
 }  // namespace e2
-#endif /* ----- #ifndef E2LSP_INC  ----- */
+#endif /* ----- #ifndef LSPTransport_INC  ----- */

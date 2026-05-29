@@ -15,6 +15,30 @@
 E2L 使用 C++ 开发的一种策略性语言，它基于 LLVM IR( *目前测试兼容 llvm-14, llvm-18* ) 基本架构, [ FLEX 词汇分析器生成器](https://westes.github.io/flex/manual/index.html#SEC_Contents) 及 [ GNU BISON (YACC) 通用的解析器生成器 ](https://www.gnu.org/software/bison/) 作为语法分析. 主要功能是价格的计算, 即数学的运算为主的一种简单性的编程语言
 
 
+## 拥有现代式代码结构 *namespace* (命名空间)
+
+```
+namespace myt{
+    this::a = 9;
+    func init(x) {
+        this::a = x;
+    }
+    func get(u){
+        return this::a;
+    }
+}
+
+func main() {
+    val = 2;
+
+    tret = myt<e>::get(val);
+    echo(tret);
+
+    return ret;
+}
+
+```
+
 ## 如何安装
 请参考 [安装](https://e2q-doc.readthedocs.io/Installation/)
 
@@ -218,7 +242,6 @@ func MainEvent(tick_size, thread_id) {
 ## 未来功能
 - 解释 LaTeX Math 
 - 完善数组指令
-- 类(Class Object)功能
 - 接入 GUP 运算
 
 

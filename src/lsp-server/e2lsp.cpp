@@ -41,6 +41,32 @@
  * =====================================================================================
  */
 #include "lsp-server/e2lsp.hpp"
+
+#include <iostream>
 namespace e2 {
 
-}
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LSPTransport::read_message
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+LSPMessage LSPTransport::read_message()
+{
+    LSPMessage msg;
+    return msg;
+    // std::string header;
+    // std::getline(std::cin, header);  // "Content-Length: X"
+    // int length = parseContentLength(header);
+    // std::cin.ignore(2);  // 忽略 \r\n
+
+    // std::string body(length, '\0');
+    // std::cin.read(&body[0], length);
+    // return nlohmann::json::parse(body);
+} /* -----  end of function LSPTransport::read_message  ----- */
+}  // namespace e2
