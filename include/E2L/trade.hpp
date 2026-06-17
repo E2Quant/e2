@@ -44,7 +44,6 @@
 
 #ifndef TRADE_INC
 #define TRADE_INC
-#include <string>
 
 #include "E2LType.hpp"
 #include "assembler/BaseType.hpp"
@@ -186,7 +185,8 @@ void OrderModify(); /* -----  end of function OrderModify  ----- */
  *  Returns open price of the currently selected order
  * ============================================
  */
-e2::Int_e OrderOpenPrice(e2::Int_e ticket,
+e2::Int_e OrderOpenPrice(
+    e2::Int_e ticket,
     e2::Bool); /* -----  end of function OrderOpenPrice  ----- */
 
 /*
@@ -200,7 +200,9 @@ e2::Int_e OrderOpenPrice(e2::Int_e ticket,
  *  Returns open time of the currently selected order
  * ============================================
  */
-void OrderOpenTime(); /* -----  end of function OrderOpenTime  ----- */
+e2::Int_e OrderOpenTime(
+    e2::Int_e ticket,
+    e2::OOTType); /* -----  end of function OrderOpenTime  ----- */
 
 /*
  * ===  FUNCTION  =============================

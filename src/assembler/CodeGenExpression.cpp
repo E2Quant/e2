@@ -422,6 +422,7 @@ llvm::Value* BinaryOperator::codeGen(CodeGenContext& context)
             break;
         case '/':
             instr = llvm::Instruction::SDiv;
+            context.OperatorDZ(_path, _codeLine);
             break;
         case '%':
             instr = llvm::Instruction::SRem;

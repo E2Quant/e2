@@ -394,6 +394,19 @@ e2::Int_e iTime(e2::Int_e id, e2::TimeFrames timeframe,
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  iOrderPrice
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  记录订单实时报价
+ * ============================================
+ */
+void iOrderPrice(e2::Int_e id, e2::Int_e price);
+/* -----  end of function iOrderPrice  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  ExdiDate
  *  ->  void *
  *  Parameters:
@@ -442,20 +455,19 @@ e2::Int_e ExdiCash(e2::Int_e id); /* -----  end of function ExdiCash  ----- */
  */
 e2::Int_e ExdiShare(e2::Int_e id); /* -----  end of function ExdiShare  ----- */
 
-
-/* 
+/*
  * ===  FUNCTION  =============================
  *
  *         Name:  ExdiSplit
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
- *  Description:  
+ *  Description:
  *
  * ============================================
  */
-e2::Int_e ExdiSplit ( e2::Int_e);
-		/* -----  end of function ExdiSplit  ----- */
+e2::Int_e ExdiSplit(e2::Int_e);
+/* -----  end of function ExdiSplit  ----- */
 /*
  * ===  FUNCTION  =============================
  *

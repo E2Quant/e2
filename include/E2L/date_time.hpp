@@ -278,5 +278,75 @@ e2::Int_e second(e2::Int_e); /* -----  end of function second  ----- */
 e2::Int_e millisecond(
     e2::Int_e); /* -----  end of function millisecond  ----- */
 
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ymd
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e ymd(e2::Int_e);
+/* -----  end of function ymd  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ymdh
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e ymdh(e2::Int_e);
+/* -----  end of function ymdh  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ymdhm
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e ymdhm(e2::Int_e);
+/* -----  end of function ymdhm  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ymdhms
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e ymdhms(e2::Int_e);
+/* -----  end of function ymdhms  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ymdw
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+e2::Int_e ymdw(e2::Int_e);
+/* -----  end of function ymdw  ----- */
+
 }  // namespace e2l
 #endif /* ----- #ifndef DATE_TIME_INC  ----- */

@@ -1092,6 +1092,19 @@ void CodeGenContext::AddGlobal()
     ADD_GV("UOrdType.Ot_Stop", OrdType::ot_stop);
     ADD_GV("UOrdType.Ot_Stop_limit", OrdType::ot_stop_limit);
 
+    ADD_GV("UOOTType.oo_year", OOTType::oo_year);
+    ADD_GV("UOOTType.oo_month", OOTType::oo_month);
+    ADD_GV("UOOTType.oo_week", OOTType::oo_week);
+    ADD_GV("UOOTType.oo_day", OOTType::oo_day);
+    ADD_GV("UOOTType.oo_hour", OOTType::oo_hour);
+    ADD_GV("UOOTType.oo_min", OOTType::oo_min);
+    ADD_GV("UOOTType.oo_second", OOTType::oo_second);
+    ADD_GV("UOOTType.oo_ymd", OOTType::oo_ymd);
+    ADD_GV("UOOTType.oo_ymdh", OOTType::oo_ymdh);
+    ADD_GV("UOOTType.oo_ymdhm", OOTType::oo_ymdhm);
+    ADD_GV("UOOTType.oo_ymdhms", OOTType::oo_ymdhms);
+    ADD_GV("UOOTType.oo_ymdw", OOTType::oo_ymdw);
+
     ADD_GV("UExecType.NewOrder", ExecType::NewOrder);
     ADD_GV("UExecType.Done_For_The_Day", ExecType::Done_for_the_day);
     ADD_GV("UExecType.Canceled", ExecType::Canceled);
@@ -1843,6 +1856,41 @@ const std::vector<ScriptError_t>& CodeGenContext::ScriptError()
 {
     return _script_error;
 } /* -----  end of function CodeGenContext::ScriptError  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::OperatorDZ
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void CodeGenContext::OperatorDZ(std::string path, std::size_t line)
+{
+    OperatorDivZero odz;
+    odz.path = path;
+    odz.line = line;
+    _operator_div_zero.push_back(odz);
+} /* -----  end of function CodeGenContext::OperatorDZ  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CodeGenContext::OperatorDZ
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+const std::vector<OperatorDivZero> CodeGenContext::OperatorDZ()
+{
+    return _operator_div_zero;
+} /* -----  end of function CodeGenContext::OperatorDZ  ----- */
 
 /*
  * ===  FUNCTION  =============================

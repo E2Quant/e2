@@ -130,6 +130,23 @@ enum __OrdType {
 
 typedef enum __OrdType OrdType;
 
+enum __OrdOpenTime {
+    oo_year = 0,
+    oo_month,
+    oo_week,
+    oo_day,
+    oo_hour,
+    oo_min,
+    oo_second,
+    oo_ymd,
+    oo_ymdh,
+    oo_ymdhm,
+    oo_ymdhms,
+    oo_ymdw
+}; /* ----------  end of enum __OrdOpenTime  ---------- */
+
+typedef enum __OrdOpenTime OOTType;
+
 /**
  * FIX Protocol FIX.4.4
  * ExecType <150> field

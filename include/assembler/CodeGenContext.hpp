@@ -89,6 +89,7 @@ enum ErrorNo {
 }; /* ----------  end of enum ErrorNo  ---------- */
 
 typedef enum ErrorNo ErrorNo;
+
 struct __ScriptError {
     NodeType nt;       // Identifier type
     std::string name;  // Identifier name
@@ -98,6 +99,13 @@ struct __ScriptError {
 }; /* ----------  end of struct __ScriptError  ---------- */
 
 typedef struct __ScriptError ScriptError_t;
+
+struct __OperatorDivZero {
+    std::string path;
+    std::size_t line;
+}; /* ----------  end of struct __OperatorDivZero  ---------- */
+
+typedef struct __OperatorDivZero OperatorDivZero;
 
 struct __CodeTreeLink {
     std::size_t line;
@@ -358,6 +366,9 @@ public:
     );
     const std::vector<ScriptError_t>& ScriptError();
 
+    void OperatorDZ(std::string path, std::size_t line);
+    const std::vector<OperatorDivZero> OperatorDZ();
+
     void addCodeTree(CodeTreeLink);
     void popCodeTree();
     void DontRun();
@@ -409,7 +420,7 @@ private:
     std::map<std::string, llvm::Type*> _NameSpaceTypeMap;
     //< List of attributes a class
     NameSpaceAttributes _NameSpaceAttributes;
-    // 保存转换后的表达式
+    // 保存转换后的表达式GlobalMainArguments
     // name_space -> variable: Assignment
     NameSpaceinitCode _ns_assign;
 
@@ -430,6 +441,12 @@ private:
      *
      */
     std::vector<ScriptError_t> _script_error;
+
+    /**
+     * debug show div zero
+     */
+
+    std::vector<OperatorDivZero> _operator_div_zero;
 
     bool _CanRun = true;
 
