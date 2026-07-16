@@ -146,7 +146,8 @@ void OrderDelete(); /* -----  end of function OrderDelete  ----- */
  *  Returns expiration date of the selected pending order
  * ============================================
  */
-void OrderExpiration(); /* -----  end of function OrderExpiration  ----- */
+e2::Int_e OrderExpiration(
+    e2::Int_e ticket); /* -----  end of function OrderExpiration  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -313,6 +314,20 @@ void OrderStopLoss(); /* -----  end of function OrderStopLoss  ----- */
  */
 e2::Int_e OrdersTotal(); /* -----  end of function OrdersTotal  ----- */
 
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  OrderSwap
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  Returns swap value of the currently selected order.
+ *  返回当前选择订单的交换价值。
+ *  Returns swap value of the currently selected order
+ * ============================================
+ */
+e2::Int_e OrderSwap(); /* -----  end of function OrderSwap  ----- */
 /*
  * ===  FUNCTION  =============================
  *

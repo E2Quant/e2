@@ -44,10 +44,23 @@
 
 #ifndef E2LSP_INC
 #define E2LSP_INC
+#include <map>
 #include <string>
 
 #include "nlohmann/json.hpp"
+using json = nlohmann::json;
 namespace e2 {
+
+std::string readLSPMessage();
+void sendLSPMessage(const std::string& jsonStr);
+
+json handleInitialize(const json& params);
+
+inline std::map<std::string, std::string> openDocuments;  // URI -> 内容
+
+void handleDidOpen(const json& params);
+
+json handleDefinition(const json& params);
 
 struct LSPMessage {
     std::string jsonrpc;    // 固定为 "2.0"

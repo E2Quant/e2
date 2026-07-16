@@ -235,6 +235,34 @@ void TradeTime(
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  PendingExpirationTime
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  set pending expiration time
+ * ============================================
+ */
+void PendingExpirationTime(
+    e2::Int_e second); /* -----  end of function PendingExpirationTime  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  SwapRate
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  all symbole use one rate
+ * ============================================
+ */
+void SwapRate(e2::Int_e rate);
+/* -----  end of function SwapRate  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  gmtime
  *  ->  void *
  *  Parameters:

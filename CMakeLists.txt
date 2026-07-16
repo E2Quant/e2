@@ -205,7 +205,7 @@ file(GLOB SOURCES
     src/utility/*.cpp
     src/ast/*.cpp
     src/call_graph/*.cpp
-
+    src/lsp-server/*.cpp
     src/main.cpp
     )
 

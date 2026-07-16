@@ -495,6 +495,22 @@ e2::Int_e CustomDataSize(
  */
 e2::Int_e CustomDataNumber(
     e2::Int_e, e2::Int_e); /* -----  end of function CustomDataNumber  ----- */
+
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  CustomDataPush
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+void CustomDataPush ( e2::Int_e, e2::Int_e,
+    e2::Int_e, e2::Int_e );
+		/* -----  end of function CustomDataPush  ----- */
 /*
  * ===  FUNCTION  =============================
  *
