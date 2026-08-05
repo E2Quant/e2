@@ -49,16 +49,13 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <fstream>
 #include <iostream>
 #include <string>
-#include <system_error>
 #include <utility>
 
 #include "assembler/BaseType.hpp"
 #include "assembler/CodeGenContext.hpp"
 #include "ast/ParserCtx.hpp"
-#include "lsp-server/e2lsp.hpp"
 
 /* #ifdef NUMBER_DECI */
 /* #undef NUMBER_DECI */
@@ -200,104 +197,30 @@ void lbc()
 
 /*
  * ===  FUNCTION  =============================
- *
- *         Name:  lsp
- *  ->  void *
- *  Parameters:
- *  - size_t  arg
- *  Description:
- *
- * ============================================
- */
-void lsp()
-{
-    std::cout << "Content-Type: application/vscode-jsonrpc; charset=utf-8\r\n";
-    std::cout.flush();  // 有些客户端需要这个头
-
-    while (true) {
-        std::string messageStr = readLSPMessage();
-        if (messageStr.empty()) {
-            std::ofstream outf("/tmp/lsp.log");
-            outf << "Clicked on qqqq empty!" << "\n";
-            outf.close();
-            break;
-        }
-        std::cerr << " e2log " << messageStr << std::endl;
-        auto message = json::parse(messageStr);
-
-        // 处理请求（有 id 字段）
-        if (message.contains("id")) {
-            json response = {{"jsonrpc", "2.0"}, {"id", message["id"]}};
-            std::ofstream outf("/tmp/lsp.log");
-            outf << "Clicked inininitt qqqq!" << "\n";
-            outf.close();
-            std::string method = message["method"];
-            if (method == "initialize") {
-                response["result"] = handleInitialize(message["params"]);
-            }
-            else if (method == "textDocument/didOpen") {
-                std::ofstream outf("/tmp/lsp.log");
-                outf << "Clicked on qqqq!" << "\n";
-                outf.close();
-            }
-            else if (method == "textDocument/definition") {
-                response["result"] = handleDefinition(message["params"]);
-            }
-            else {
-                // 对于不支持的请求，返回错误
-                response["error"] = {{"code", -32601},
-                                     {"message", "Method not found"}};
-            }
-
-            // 发送响应
-            sendLSPMessage(response.dump());
-        }
-        // 处理通知（无 id 字段，如 didOpen）
-        else if (message["method"] == "textDocument/didOpen") {
-            handleDidOpen(message["params"]);
-
-            std::ofstream outf("/tmp/lsp.log");
-            outf << "Clicked inininitt didopen!" << "\n";
-            outf.close();
-        }
-        else if (message["method"] == "initialized") {
-            std::ofstream outf("/tmp/lsp.log");
-            outf << "Clicked on qqqq init!" << messageStr << "\n";
-            outf.close();
-            // 客户端在 initialize 后发送 initialized 通知，通常无需特殊处理
-        }
-    }
-} /* -----  end of function lsp  ----- */
-
-/*
- * ===  FUNCTION  =============================
  *         Name:  main
  *  Description:
  * ============================================
  */
 int main(int argc, char* argv[])
 {
-    lsp();
-    // char* f = nullptr;
-    // char* s = nullptr;
+    char* f = nullptr;
+    char* s = nullptr;
 
-    // if (argc > 2) {
-    //     s = argv[2];
-    // }
+    if (argc > 2) {
+        s = argv[2];
+    }
 
-    // if (argc >= 2) {
-    //     f = argv[1];
-    // }
-    // else {
-    //     lbc();
-    //     return 0;
-    // }
-    // std::pair<std::string, Int_e> b;
-    // b = std::make_pair("sfd.ssfd.sfd", 1198);
+    if (argc >= 2) {
+        f = argv[1];
+    }
+    else {
+        lbc();
+        return 0;
+    }
+    std::pair<std::string, Int_e> b;
+    b = std::make_pair("sfd.ssfd.sfd", 1198);
 
-    // toDo(f, s, b);
-
-    // toDo(f, b);
+    toDo(f, s, b);
 
     return EXIT_SUCCESS;
 } /* ----------  end of function main  ---------- */

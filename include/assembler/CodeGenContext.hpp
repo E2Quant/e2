@@ -83,6 +83,10 @@ struct __ScriptList_t {
 
 typedef struct __ScriptList_t ScriptList_t;
 
+/**
+ *
+ * 运行的时候出的错误
+ */
 enum ErrorNo {
     _NotExist = 0,  // not exist
     _ArgSize,       // call func arg number is error

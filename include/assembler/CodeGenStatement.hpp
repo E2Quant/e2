@@ -406,7 +406,21 @@ public:
     /* =============  ACCESSORS     =================== */
     llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_function; }
-
+    std::string argsnip()
+    {
+        std::string fmt = "(";
+        if (_arguments != nullptr) {
+            for (auto it : *_arguments) {
+                if (fmt.length() == 1) {
+                    fmt += it->id()->name();
+                }
+                else {
+                    fmt += "," + it->id()->name();
+                }
+            }
+        }
+        return _id->name() + fmt + ");";
+    }
     /* =============  MUTATORS      =================== */
     /* =============  OPERATORS     =================== */
 

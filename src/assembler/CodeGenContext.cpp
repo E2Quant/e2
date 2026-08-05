@@ -877,7 +877,7 @@ llvm::Value* CodeGenContext::getCurrentReturnValue()
  */
 llvm::AllocaInst* CodeGenContext::findBlockId(const std::string name)
 {
-    ScopeKind current = ScopeKind::_sk_null;
+    ScopeKind current = ScopeKind::_sk_var;
     for (auto cb : _blockStack) {
         if (cb == nullptr) {
             continue;
@@ -885,7 +885,7 @@ llvm::AllocaInst* CodeGenContext::findBlockId(const std::string name)
         auto cb_local = cb->local();
         ScopeKind sk = cb->scope();
 
-        if (current == ScopeKind::_sk_null || sk == ScopeKind::_sk_fun) {
+        if (current == ScopeKind::_sk_var || sk == ScopeKind::_sk_fun) {
             current = sk;
         }
         if (current != sk) {

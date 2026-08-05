@@ -319,9 +319,6 @@ const std::string Identifier::name()
 {
     std::string value = real_name();
     std::string un = uname();
-#ifdef E2L_DEBUG
-    llog::echo("un:", un, ", real:", value);
-#endif
 
     if (_idtype == IDType::_global) {
         // UnionDeclaration 中
@@ -365,9 +362,7 @@ const std::string Identifier::real_name()
             }
         }
     }
-#ifdef E2L_DEBUG
-    llog::echo("un:", name_full, " type:", _idtype);
-#endif
+
     return name_full;
 } /* -----  end of function Identifier::real_name  ----- */
 

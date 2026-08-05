@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  ParserCtx.hpp
+ *       Filename:  LspLsif.hpp
  *
- *    Description:  ParserCtx
+ *    Description:  LspLsif
  *
  *        Version:  1.0
- *        Created:  2023年10月24日 16时30分19秒
+ *        Created:  2026/08/03 16时59分15秒
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -41,61 +41,89 @@
  *
  * =====================================================================================
  */
-#ifndef PARSERCTX_INC
-#define PARSERCTX_INC
-#include <libgen.h>
 
-#include <cstddef>
-#include <map>
+#ifndef LSP_LSIF_INC
+#define LSP_LSIF_INC
+#include <sqlite3.h>
+
+#include <cstring>
+#include <iostream>
 #include <string>
 #include <vector>
 
 #include "assembler/BaseType.hpp"
-#include "assembler/CodeGenStatement.hpp"
-#include "assembler/ControlFlow.hpp"
-#include "assembler/ExternFunction.hpp"
-namespace yy {
-class Parser;
-class location;
-
-}  // namespace yy
-
+#include "utility/Log.hpp"
 namespace e2 {
+
+/* Callback function */
+
+using call_back_query = int (*)(void*, int, char**, char**);
+
+inline auto call_fun = [](void* data, int argc, char** argv,
+                          char** colName) -> int {
+    auto* result = static_cast<std::vector<ElementInfo>*>(data);
+    ElementInfo _ei;
+    for (int i = 0; i < argc; i++) {
+        std::string col = std::string(colName[i]);
+        if (col == "e2lfile") {
+            _ei.code_path = (argv[i] ? std::string(argv[i]) : "");
+        }
+        if (col == "value") {
+            _ei.value = (argv[i] ? std::string(argv[i]) : "");
+        }
+        if (col == "begin_line") {
+            _ei.begin_line = (argv[i] ? atoi(argv[i]) : 0);
+        }
+        if (col == "begin_column") {
+            _ei.begin_column = (argv[i] ? atoi(argv[i]) : 0);
+        }
+        if (col == "end_line") {
+            _ei.end_line = (argv[i] ? atoi(argv[i]) : 0);
+        }
+        if (col == "end_column") {
+            _ei.end_column = (argv[i] ? atoi(argv[i]) : 0);
+        }
+        if (col == "code_line") {
+            _ei.code_line = (argv[i] ? atoi(argv[i]) : 0);
+        }
+        if (col == "ek") {
+            int ekd = (argv[i] ? atoi(argv[i]) : 0);
+            _ei.ek = (ElementKind)ekd;
+        }
+        if (col == "code") {
+            _ei.insertText = (argv[i] ? std::string(argv[i]) : "");
+        }
+    }
+    result->push_back(_ei);
+    return 0;
+};  // -----  end lambda  -----
 
 /*
  * ================================
- *        Class:  ParserCtx
+ *        Class:  LspLsif
  *  Description:
  * ================================
  */
-class ParserCtx {
+class LspLsif {
 public:
     /* =============  LIFECYCLE     =================== */
-    ParserCtx(); /* constructor */
-    ~ParserCtx();
+    LspLsif(); /* constructor */
+    ~LspLsif() { close(); }
     /* =============  ACCESSORS     =================== */
 
     /* =============  MUTATORS      =================== */
 
-    int toparse(const char* f);
-    void search_path(const char* f);
-
-    Block* RootBlock();
-    void RootBlock(Block* block);
-
-    const char* path();
-    const char* current_file();
-
-    int findPath(const char* f);
-
-    void clear_loc() { _error_location.clear(); };
-    void grammar_error(const yy::location&, std::size_t line, std::string msg);
-    const std::vector<LocationType> grammar_error();
-    void all_scan(bool b) { _all_scan = b; }
-
-    void element_data(ElementInfo, std::size_t line, ElementKind);
-    ElementInfoType element_data();
-    std::deque<LocationType> imports();
+    bool open(const std::string& filename);
+    bool clear(const std::string& e2l_file);
+    bool execute(const std::string& sql);
+    bool preparedInsert(ElementInfo);
+    bool query(const std::string& sql, call_back_query, void*);
+    bool queryWithPrepare(const std::string& sql);
+    bool beginTransaction();
+    bool commitTransaction();
+    bool rollbackTransaction();
+    bool batchInsert(const std::vector<ElementInfo>& records);
+    void close();
     /* =============  OPERATORS     =================== */
 
 protected:
@@ -105,39 +133,16 @@ protected:
 
 private:
     /* =============  METHODS       =================== */
-    // Handling the scanner.
-    void scan_begin();
-    void scan_end();
-    int HasImport();
+    void init();
+    void init_db();
 
-    void rootPath(const char* f);
-
-    int defPath(const char* f);
-
+    void system_keyword();
     /* =============  DATA MEMBERS  =================== */
-    void* lexer;
-    yy::location* loc;
-    yy::Parser* parser;
+    sqlite3* _db_connect;
 
-    Block* _RootBlock{nullptr};
-
-    char* _dir = nullptr;
-    char* _file_path = nullptr;
-    FILE* _file = nullptr;
-
-    bool _trace_scanning;
-
-    std::string _imp_path = "main";
-
-    std::string _search_path = "";
-
-    std::vector<LocationType> _error_location;
-
-    bool _all_scan = true;
-
-    //  e2l file path -> element_info list
-    ElementInfoType _element_map;
-}; /* -----  end of class ParserCtx  ----- */
+    const char* _lldir = ".e2lsp";
+    std::string _dbfile = ".e2lsp/e2lsp.db";
+}; /* -----  end of class LspLsif  ----- */
 
 }  // namespace e2
-#endif /* ----- #ifndef PARSERCTX_INC  ----- */
+#endif /* ----- #ifndef LSP_LSIF_INC  ----- */

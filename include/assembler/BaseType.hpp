@@ -121,12 +121,12 @@ enum __IDType {
 typedef enum __IDType IDType;
 
 enum __ScopeKind {
-    _sk_null,       // null sk
+    _sk_var,        // var sk
     _sk_fun,        // function declaration
     _sk_union,      // union declaration
     _sk_flow,       // control flow
     _sk_namespace,  // namespace
-    _sk_main,       // variable
+    _sk_main,       // main_func
 }; /* ----------  end of enum ScopeKind  ---------- */
 
 typedef enum __ScopeKind ScopeKind;
@@ -164,6 +164,62 @@ using NameSpaceTagCallMap = std::map<std::string, NameSpaceTagProperty>;
 using NameSpaceSelfFuncList = std::set<std::string>;
 
 inline std::map<std::string, Int_e> _GlobalVariables = {};
+
+struct __element_base {
+    /// Current line number.
+    int begin_line = 0;
+    /// Current column number.
+    int begin_column = 0;
+    int end_line = 0;
+    int end_column = 0;
+    std::size_t code_line = 0;
+    std::string code_path = "";
+}; /* ----------  end of struct __element_base  ---------- */
+
+typedef struct __element_base element_base;
+
+struct __location_info : public element_base {
+    std::string mod_name = "";
+    std::string msg = "";
+    std::string code_type = "";
+}; /* ----------  end of struct __location_info  ---------- */
+
+typedef struct __location_info LocationType;
+
+enum class __ElementKind {
+    // system keyword
+    _ek_keyword = 0,
+
+    // declaration
+    _ek_var,        // var sk
+    _ek_fun,        // function declaration
+    _ek_union,      // union declaration
+    _ek_namespace,  // namespace
+
+    // expression
+    // 在这儿支持跳转
+    _ek_call,       // method call
+    _ek_ns_fun,     // name space func
+    _ek_globle_un,  // globle var
+                    //
+
+}; /* ----------  end of enum __ElementKind  ---------- */
+
+typedef enum __ElementKind ElementKind;
+
+struct __element_info : public element_base {
+    ElementKind ek;
+
+    // 自动完成 snip
+    std::string insertText;
+    // 当前一个元素的字母
+    std::string value;
+}; /* ----------  end of struct __element_info  ---------- */
+
+typedef struct __element_info ElementInfo;
+
+//  e2l file path -> element_info list
+typedef std::map<std::string, std::vector<ElementInfo>> ElementInfoType;
 
 #define FIND_GV(arg)                                     \
     ({                                                   \

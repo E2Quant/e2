@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 project("e2")
 
 add_definitions('-g')
@@ -17,8 +17,6 @@ set(E2Lan_VERSION_FULL "${E2Lan_VERSION_MAJOR}.${E2Lan_VERSION_MINOR}.${E2Lan_VE
 
 # number deci for expression
 add_definitions(-DNUMBER_DECI=10000)
-
-
 
 option(LIB "build application to library !" OFF) # OFF is the default
 
@@ -77,6 +75,15 @@ add_compile_definitions(SEARCH_PATH="${CMAKE_INSTALL_PREFIX}/include/e2")
 #    message("macos sys")
 #endif()
 
+
+## sqlite3
+find_package(SQLite3 REQUIRED)
+
+if(SQLite3_FOUND)
+    message ("Looking SQLite3 found")
+else()
+    message (FATAL_ERROR "Cannot find SQLite3, apt-get install -y  sqlite3 libsqlite3-dev")
+endif()
 
 
 ## Flex/Bison configuration
@@ -206,7 +213,6 @@ file(GLOB SOURCES
     src/ast/*.cpp
     src/call_graph/*.cpp
     src/lsp-server/*.cpp
-    src/main.cpp
     )
 
 if(LIB)
@@ -214,7 +220,7 @@ if(LIB)
     add_library(${PROJECT_NAME}_static STATIC ${BISON_PARSER_OUTPUTS} ${FLEX_LEXER_OUTPUTS} ${SOURCES} )
 else()
     add_executable(${PROJECT_NAME} ${BISON_PARSER_OUTPUTS}
-        ${FLEX_LEXER_OUTPUTS} ${SOURCES}  )
+        ${FLEX_LEXER_OUTPUTS} ${SOURCES} src/main.cpp)
 endif()
 
 target_include_directories(${PROJECT_NAME}
@@ -226,8 +232,27 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE
     pthread
 
+    SQLite::SQLite3
     ${LLVM_LIBRARIES}
     )
+
+## e2 lsp 
+add_executable("e2lsp" ${BISON_PARSER_OUTPUTS}
+    ${FLEX_LEXER_OUTPUTS}   ${SOURCES}  src/e2l_language_server.cpp)
+
+target_include_directories("e2lsp"
+    PUBLIC 
+    ${PROJECT_SOURCE_DIR}/include
+    )
+
+target_link_libraries("e2lsp"
+    PRIVATE
+    pthread
+    SQLite::SQLite3
+
+    ${LLVM_LIBRARIES}
+    )
+
 
 if(LIB)
     INSTALL(TARGETS ${PROJECT_NAME} 
@@ -239,7 +264,7 @@ if(LIB)
     INSTALL (
         DIRECTORY ${CMAKE_SOURCE_DIR}/include/
         DESTINATION include/${PROJECT_NAME}
-        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp")
+        FILES_MATCHING PATTERN "*.h" PATTERN "*.hpp" PATTERN "*.json" )
 endif()
 
 

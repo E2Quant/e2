@@ -47,6 +47,7 @@
 #include <vector>
 
 #include "assembler/BaseNode.hpp"
+#include "assembler/BaseType.hpp"
 #include "assembler/CodeGenContext.hpp"
 
 namespace e2 {
@@ -97,34 +98,39 @@ void Block::push_back(Expression* exp)
     if (exp != nullptr) {
         if (exp->getType() == NodeType::_module) {
             ImportModule* im = static_cast<ImportModule*>(exp);
-            std::string mod = im->value();
+            std::string mod_name = im->value();
 
-            if (_imports.count(mod) > 0) {
-                llog::info("exit curent:", _current_mod, " mod:", mod);
+            if (_imports.count(mod_name) > 0) {
                 for (auto it = _imports.begin(); it != _imports.end(); ++it) {
-                    for (std::string key : it->second) {
-                        if (key == mod) {
-                            llog::info(
-                                "duplicate import mod in here:", it->first,
-                                " mod:", mod, " current mod:", _current_mod);
+                    for (auto key : it->second) {
+                        if (key.mod_name == mod_name) {
+                            llog::info("duplicate import mod in here:",
+                                       it->first, " mod:", mod_name,
+                                       " current mod:", _current_mod);
                             return;
                         }
                     }
                 }
-                llog::bug("import error:", _current_mod, " mod:", mod);
+                llog::bug("import error:", _current_mod, " mod:", mod_name);
             }
 
-            std::deque<std::string> emp;
-            _imports.insert({mod, emp});
+            std::deque<LocationType> emp;
+            _imports.insert({mod_name, emp});
+
+            LocationType loc_mod;
+            loc_mod.mod_name = mod_name;
+            loc_mod.code_line = im->line();
+            loc_mod.code_path = im->path();
 
             if (_imports.count(_current_mod) == 0) {
                 // init
-                std::deque<std::string> one;
-                one.push_back(mod);
+                std::deque<LocationType> one;
+
+                one.push_back(loc_mod);
                 _imports.insert({_current_mod, one});
             }
             else {
-                _imports[_current_mod].push_front(mod);
+                _imports[_current_mod].push_front(loc_mod);
             }
         }
         if (_ismod) {

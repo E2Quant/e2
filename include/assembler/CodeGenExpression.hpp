@@ -117,10 +117,6 @@ public:
     };
     Number(float value, bool t, size_t line, const char* path)
     {
-        if (path != nullptr) {
-            _path = std::string(path);
-        }
-        _codeLine = line;
 #ifdef NUMBER_DECI
         _value = (Int_e)(value * NUMBER_DECI);
 #else

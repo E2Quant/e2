@@ -12,6 +12,8 @@
 /* set the parser's class identifier */
 %define api.parser.class {Parser}
 
+%header
+
 /* it will generate a location class which can be used in your lexer */
 %locations
 
@@ -37,11 +39,11 @@
     #include <functional>
 
 
-#include "ast/ParserCtx.hpp"
+    #include "ast/ParserCtx.hpp"
     #include "utility/Log.hpp"
     #include "assembler/BaseNode.hpp"
     extern  int code_line;
-
+    extern int yy_column;
 /* define the sturctures using as types for non-terminals */
 
 /* end the structures for non-terminal types */
@@ -50,9 +52,10 @@
 %code
 {
 
-yy::Parser::symbol_type yylex(void* yyscanner,
-  yy::location& loc,
-                         class e2::ParserCtx& ctx);
+  yy::Parser::symbol_type yylex(void* yyscanner,
+                                yy::location& loc,
+                                class e2::ParserCtx& ctx
+                                );
 }
 
 // token
@@ -168,7 +171,7 @@ translation_unit
     ;
 
 import_module:        /* empty */ 
-             IMPORT IMPORT_LITERAL {$$ = MALLOC( e2::ImportModule,$2);}        
+             IMPORT IMPORT_LITERAL {$$ = MALLOC( e2::ImportModule,$2,code_line, ctx.path());}        
         ;
 
 block
@@ -198,6 +201,8 @@ variable_val
     : /* Statement 变量 = 赋值 或 运算  */
       primary_lvalue assignment expression {
             $$ = MALLOC( e2::VariableStatement,$1,$2, $3,code_line, ctx.path());
+             ElementInfo ei = $1->element();
+            ctx.element_data( ei, $1->line(), e2::ElementKind::_ek_var); 
             } 
     ;
 
@@ -421,14 +426,26 @@ function_parameter
 function_definition
     : FUNCTION  identifier_str function_parameter compound_statement 
         {
-            $$ = MALLOC(e2::FunctionDeclaration, $2, $3, $4, code_line, ctx.path());
+            std::size_t real_code_line = $2->line();
+            $$ = MALLOC(e2::FunctionDeclaration, $2, $3, $4, real_code_line, ctx.path());
+
+            ElementInfo ei = $2->element();
+            ei.insertText = $$->argsnip();
+            
+            ctx.element_data( ei, real_code_line, e2:: ElementKind::_ek_fun); 
         } 
     ;
 
 method_call
     : /* method call */
      id_func_call_name function_parameter {
-            $$ = MALLOC(e2::MethodCall, $1, $2, code_line, ctx.path());
+            std::size_t real_code_line = $1->line();
+
+            $$ = MALLOC(e2::MethodCall, $1, $2, real_code_line, ctx.path());
+
+            ElementInfo ei = $1->element();
+
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_call);
         }  
     ;
 
@@ -477,7 +494,12 @@ union_list
 union_definition
     : UNION identifier_str '{' union_list '}' 
         {  
+            std::size_t real_code_line = $2->line();
+
             $$ = MALLOC(e2::UnionDeclaration,$2,$4, code_line, ctx.path());
+
+            ElementInfo ei = $2->element();
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_union);
         } 
     ;
 
@@ -532,8 +554,14 @@ namespace_definition
     : /* namespace 定义 */
         NAMESPACE identifier_str '{' namespace_body '}' 
         {  
-            $$ = MALLOC(e2::NameSpace, $2, $4, code_line, ctx.path());
-           
+
+            std::size_t real_code_line = $2->line();
+
+            $$ = MALLOC(e2::NameSpace, $2, $4, real_code_line, ctx.path());
+
+            ElementInfo ei = $2->element();
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_namespace);
+
         } 
     ;
 
@@ -630,6 +658,14 @@ identifier_str
             $$ = MALLOC(e2::Identifier, $1, e2::IDType::_normal);
             $$->codeLine(code_line);
             $$->codePath(ctx.path());
+
+            ElementInfo einfo;
+            einfo.begin_line = loc.begin.line;
+            einfo.begin_column = loc.begin.column;
+            einfo.end_line = loc.end.line;
+            einfo.end_column = loc.end.column;
+
+            $$->element(einfo);            
         }
     ;
 %%
@@ -642,8 +678,7 @@ identifier_str
 
 void yy::Parser::error(const yy::location& l, const std::string& m)
 {
-    ctx.current_file();
-    std::cout<<"script error line: "<< (code_line - 1)<< ".  chars: "<< l<< ". msg: "<< m<< std::endl;
+    ctx.grammar_error(l, (code_line -1), m); 
 }
 
 

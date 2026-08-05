@@ -88,6 +88,7 @@
 
 #include <cstddef>
 #include <cstdio>
+#include <deque>
 #include <map>
 #include <queue>
 #include <set>
@@ -507,6 +508,20 @@ public:
             _name_space_tag = n.substr(1, n.length() - 4);
         }
     };
+
+    void element(ElementInfo einfo)
+    {
+        _einfo = std::move(einfo);
+        _einfo.code_line = _codeLine;
+        _einfo.code_path = _path;
+        _einfo.ek = ElementKind::_ek_var;
+    };
+    void element_sk(ElementKind ek) { _einfo.ek = ek; }
+    ElementInfo element()
+    {
+        _einfo.value = name();
+        return _einfo;
+    }
     /* =============  OPERATORS     =================== */
 
 protected:
@@ -523,6 +538,8 @@ private:
     NameSpaceStatus _nss = NameSpaceStatus::_n_null;
 
     std::string _name_space_tag = "";
+
+    ElementInfo _einfo;
 }; /* -----  end of class Identifier  ----- */
 typedef std::vector<Expression*> ExpressionList;
 
@@ -535,9 +552,14 @@ typedef std::vector<Expression*> ExpressionList;
 class ImportModule : public Expression {
 public:
     /* =============  LIFECYCLE     =================== */
-    ImportModule(std::string file)
+    ImportModule(std::string file, size_t line, const char* path)
     {
         _mod = file.substr(1, file.length() - 2);
+        if (path != nullptr) {
+            _path = std::string(path);
+        }
+        _codeLine = line;
+
     }; /* constructor */
 
     /* =============  ACCESSORS     =================== */
@@ -734,12 +756,13 @@ public:
             }
         }
     }
-
     bool importnull(std::string l) { return _imports.count(l) == 0; }
-    std::deque<std::string> get_import(std::string l)
+    std::deque<LocationType> get_import(std::string l)
     {
         if (importnull(l)) {
-            llog::bug("import :", l);
+            //            llog::bug("import :", l);
+            std::deque<LocationType> null_imp;
+            return null_imp;
         }
         return _imports.at(l);
     }
@@ -776,7 +799,7 @@ private:
     ExpressionList _exps;
 
     std::string _current_mod = "main";
-    std::map<std::string, std::deque<std::string>> _imports;
+    std::map<std::string, std::deque<LocationType>> _imports;
 
     std::string _name = "";
 

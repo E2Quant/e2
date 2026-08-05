@@ -11,14 +11,27 @@ IS			(u|U|l|L)*
     #include <iostream>
     #include <string>
 
-    #include<stdio.h>
+    #include <stdio.h>
     #include "e2_bison.hpp"
-   
+
+    int yy_column = 1;   
     int code_line=1;
 
 #define YY_DECL yy::Parser::symbol_type yylex(yyscan_t yyscanner, yy::location& loc, class e2::ParserCtx& ctx)
 
-#define YY_USER_ACTION loc.lines(yyleng);
+#define YY_USER_ACTION \
+    loc.begin.line = loc.end.line; \
+    loc.begin.column =loc.end.column; \
+    for(int i = 0; yytext[i] != '\0'; i++) { \
+        if(yytext[i] == '\n') { \
+            loc.end.line++; \
+            loc.end.column = 0; \
+        } else { \
+            loc.end.column++; \
+        } \
+    }
+
+//#define YY_USER_ACTION loc.lines(yyleng);
 //#define YY_USER_ACTION loc.first_line = loc.last_line = yylineno;
 
 #define yyterminate() return Parser::make_END(loc)
@@ -29,8 +42,9 @@ typedef yy::Parser::token_type token_type;
 
 %}
 
-%option reentrant noyywrap nounput  batch debug noinput
-/* %option debug verbose */
+
+%option reentrant noyywrap nounput  batch debug noinput yylineno 
+/* %option debug verbose bison-locations */
 
 
 %%
@@ -138,7 +152,11 @@ L?\"(\\.|[^\\"])*\"	    { return Parser::make_STRING_LITERAL(yytext, loc);}
 (<.*>::)      { return Parser::make_NSFUNC_CALL(yytext, loc);}
 
 [ \v\f\t]	    {  }
-[\n]      { code_line++; }
+[\n]      { 
+                code_line++;
+                yylineno++;
+                yy_column = 1; 
+            }
 
 .			{ /* ignore bad characters */ }
 

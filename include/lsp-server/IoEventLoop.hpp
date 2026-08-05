@@ -1,12 +1,12 @@
 /*
  * =====================================================================================
  *
- *       Filename:  ParserCtx.hpp
+ *       Filename:  IoEventLoop.hpp
  *
- *    Description:  ParserCtx
+ *    Description:  IoEventLoop
  *
  *        Version:  1.0
- *        Created:  2023年10月24日 16时30分19秒
+ *        Created:  2026/08/03 14时50分02秒
  *       Revision:  none
  *       Compiler:  gcc
  *
@@ -41,61 +41,96 @@
  *
  * =====================================================================================
  */
-#ifndef PARSERCTX_INC
-#define PARSERCTX_INC
-#include <libgen.h>
+
+#ifndef IOEVENTLOOP_INC
+#define IOEVENTLOOP_INC
+#include <fcntl.h>
+#include <poll.h>
+#include <unistd.h>
 
 #include <cstddef>
-#include <map>
-#include <string>
+#include <functional>
+#include <iostream>
 #include <vector>
 
-#include "assembler/BaseType.hpp"
-#include "assembler/CodeGenStatement.hpp"
-#include "assembler/ControlFlow.hpp"
-#include "assembler/ExternFunction.hpp"
-namespace yy {
-class Parser;
-class location;
-
-}  // namespace yy
-
+#include "utility/Log.hpp"
 namespace e2 {
+using EventCallback = std::function<void(int)>;
+
+// Sets a file descriptor to non-blocking mode
+static bool set_nonblocking(int fd)
+{
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags == -1) return false;
+    return fcntl(fd, F_SETFL, flags | O_NONBLOCK) == 0;
+}
 
 /*
  * ================================
- *        Class:  ParserCtx
+ *        Class:  IoEventLoop
  *  Description:
  * ================================
  */
-class ParserCtx {
+class IoEventLoop {
 public:
     /* =============  LIFECYCLE     =================== */
-    ParserCtx(); /* constructor */
-    ~ParserCtx();
+    IoEventLoop() {}; /* constructor */
+
     /* =============  ACCESSORS     =================== */
 
     /* =============  MUTATORS      =================== */
+    void add_read_fd(int fd, EventCallback callback)
+    {
+        if (!set_nonblocking(fd)) {
+            std::cerr << "Failed to set fd " << fd << " to non-blocking.\n";
+            return;
+        }
 
-    int toparse(const char* f);
-    void search_path(const char* f);
+        pollfd pfd{};
+        pfd.fd = fd;
+        pfd.events = POLLIN;  // Monitor for incoming data read availability
+        pfd.revents = 0;
 
-    Block* RootBlock();
-    void RootBlock(Block* block);
+        fds_.push_back(pfd);
+        callbacks_.push_back(callback);
+    }
 
-    const char* path();
-    const char* current_file();
+    // Runs the main event processing loop
+    void run()
+    {
+        running_ = true;
 
-    int findPath(const char* f);
+        while (running_) {
+            // Block indefinitely until at least one monitored event triggers
+            // (-1 timeout)
+            int num_events = poll(fds_.data(), fds_.size(), -1);
 
-    void clear_loc() { _error_location.clear(); };
-    void grammar_error(const yy::location&, std::size_t line, std::string msg);
-    const std::vector<LocationType> grammar_error();
-    void all_scan(bool b) { _all_scan = b; }
+            if (num_events < 0) {
+                if (errno == EINTR)
+                    continue;  // Restart if interrupted by a signal
+                llog::bug("poll() error occurred.");
+                break;
+            }
 
-    void element_data(ElementInfo, std::size_t line, ElementKind);
-    ElementInfoType element_data();
-    std::deque<LocationType> imports();
+            // Iterate backwards to safely handle removals or loop modifications
+            // during execution
+            for (size_backwards_t i = fds_.size(); i > 0; --i) {
+                size_t idx = i - 1;
+
+                // Check if the OS flagged a read or error event on this
+                // descriptor
+                if (fds_[idx].revents & (POLLIN | POLLERR | POLLHUP)) {
+                    // Dispatch the registered callback
+                    callbacks_[idx](fds_[idx].fd);
+
+                    // Clear out returned events for the next tick
+                    fds_[idx].revents = 0;
+                }
+            }
+        }
+    }
+
+    void stop() { running_ = false; }
     /* =============  OPERATORS     =================== */
 
 protected:
@@ -105,39 +140,13 @@ protected:
 
 private:
     /* =============  METHODS       =================== */
-    // Handling the scanner.
-    void scan_begin();
-    void scan_end();
-    int HasImport();
-
-    void rootPath(const char* f);
-
-    int defPath(const char* f);
 
     /* =============  DATA MEMBERS  =================== */
-    void* lexer;
-    yy::location* loc;
-    yy::Parser* parser;
-
-    Block* _RootBlock{nullptr};
-
-    char* _dir = nullptr;
-    char* _file_path = nullptr;
-    FILE* _file = nullptr;
-
-    bool _trace_scanning;
-
-    std::string _imp_path = "main";
-
-    std::string _search_path = "";
-
-    std::vector<LocationType> _error_location;
-
-    bool _all_scan = true;
-
-    //  e2l file path -> element_info list
-    ElementInfoType _element_map;
-}; /* -----  end of class ParserCtx  ----- */
+    using size_backwards_t = std::size_t;
+    std::vector<pollfd> fds_;
+    std::vector<EventCallback> callbacks_;
+    bool running_ = false;
+}; /* -----  end of class IoEventLoop  ----- */
 
 }  // namespace e2
-#endif /* ----- #ifndef PARSERCTX_INC  ----- */
+#endif /* ----- #ifndef IOEVENTLOOP_INC  ----- */

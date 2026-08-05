@@ -1,0 +1,113 @@
+{
+  "func": {
+    "prefix": "func",
+    "body": [
+      "#--------",
+      "# Name:function",
+      "#   Parameters:",
+      "# - arg1: xxx",
+      "# - arg2: xxx",
+      "# -> return ",
+      "# Description: ",
+      "#  ",
+      "#--------\t",
+      "func $1($2) {",
+      "\t$0",
+      "}",
+      "#----- func end"
+    ],
+    "description": "e2l's function"
+  },
+  "union": {
+    "prefix": "union",
+    "body": [
+      "#--------",
+      "# Name: union",
+      "# Description: ",
+      "#  ",
+      "#--------\t",
+      "union $1 {",
+      " arg=1;\t",
+      "}",
+      "#----- union end"
+    ],
+    "description": "e2l's union"
+  },
+  "import": {
+    "prefix": "import",
+    "body": [
+      "import <$0>"      
+    ],
+    "description": "e2l's import"
+  },
+  "if": {
+    "prefix": "if",
+    "body": [
+      "if () {",
+      "\t\t$0",
+      "}"
+    ],
+    "description": "e2l's if"
+  },
+  "ifelse": {
+    "prefix": "ifelse",
+    "body": [
+      "if () {",
+      "\t\t$0",
+      "}else{",
+      "}"
+    ],
+    "description": "e2l's if and else"
+  },
+  "for": {
+    "prefix": "for",
+    "body": [
+      "for (a=0;a<x;a++) {",
+      "\t\t$0",
+      "}"
+    ],
+    "description": "e2l's for"
+  },
+  "while": {
+    "prefix": "while",
+    "body": [
+      "while (a==1) {",
+      "\t\t$0",
+      "}"
+    ],
+    "description": "e2l's while"
+  },
+  "switch": {
+    "prefix": "switch",
+    "body": [
+      "switch (var) {",
+      "case a:",
+      "break;",
+      "default:",
+      "break;",
+      "}"
+    ],
+    "description": "e2l's switch"
+  },
+  "namespace": {
+    "prefix": "namespace",
+    "body": [
+      "#--------",
+      "# Name:namespace",
+      "# Description: ",
+      "#  ",
+      "#--------\t",
+      "namespace $1{",
+      "  this::a = 9;",
+      "  func init(x) {",
+      "    this::a = x;",
+      "  }",
+      "  func get(u){",
+      "    return this::a;",
+      "  }",
+      "}"
+    ],
+    "description": "e2l's namespace"
+  }
+}
+
