@@ -45,7 +45,7 @@
 #ifndef YY_YY_USERS_VYOUZHI_WORKSPACE_C_C_PLUG_ETOMC2LAN_E2_GENERATED_E2_BISON_HPP_INCLUDED
 # define YY_YY_USERS_VYOUZHI_WORKSPACE_C_C_PLUG_ETOMC2LAN_E2_GENERATED_E2_BISON_HPP_INCLUDED
 // "%code requires" blocks.
-#line 29 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
+#line 31 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_bison.y"
 
     /* you may need these header files 
      * add more header file if you need more
@@ -57,11 +57,11 @@
     #include <functional>
 
 
-#include "ast/ParserCtx.hpp"
+    #include "ast/ParserCtx.hpp"
     #include "utility/Log.hpp"
     #include "assembler/BaseNode.hpp"
     extern  int code_line;
-
+    extern int yy_column;
 /* define the sturctures using as types for non-terminals */
 
 /* end the structures for non-terminal types */

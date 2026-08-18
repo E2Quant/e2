@@ -223,8 +223,27 @@ typedef size_t yy_size_t;
 #define EOB_ACT_END_OF_FILE 1
 #define EOB_ACT_LAST_MATCH 2
     
-    #define YY_LESS_LINENO(n)
-    #define YY_LINENO_REWIND_TO(ptr)
+    /* Note: We specifically omit the test for yy_rule_can_match_eol because it requires
+     *       access to the local variable yy_act. Since yyless() is a macro, it would break
+     *       existing scanners that call yyless() from OUTSIDE yylex.
+     *       One obvious solution it to make yy_act a global. I tried that, and saw
+     *       a 5% performance hit in a non-yylineno scanner, because yy_act is
+     *       normally declared as a register variable-- so it is not worth it.
+     */
+    #define  YY_LESS_LINENO(n) \
+            do { \
+                yy_size_t yyl;\
+                for ( yyl = n; yyl < yyleng; ++yyl )\
+                    if ( yytext[yyl] == '\n' )\
+                        --yylineno;\
+            }while(0)
+    #define YY_LINENO_REWIND_TO(dst) \
+            do {\
+                const char *p;\
+                for ( p = yy_cp-1; p >= (dst); --p)\
+                    if ( *p == '\n' )\
+                        --yylineno;\
+            }while(0)
     
 /* Return all but the first "n" matched characters back to the input stream. */
 #define yyless(n) \
@@ -652,16 +671,24 @@ static const flex_int16_t yy_chk[428] =
       191,  191,  191,  191,  191,  191,  191
     } ;
 
+/* Table of booleans, true if rule could match eol. */
+static const flex_int32_t yy_rule_can_match_eol[79] =
+    {   0,
+0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0,     };
+
 static const flex_int16_t yy_rule_linenum[78] =
     {   0,
-       43,   44,   45,   46,   47,   48,   49,   51,   52,   53,
-       55,   56,   58,   59,   60,   62,   63,   64,   66,   67,
-       68,   69,   71,   72,   73,   75,   79,   81,   83,   84,
-       86,   87,   88,   89,   90,   91,   92,   93,   94,   95,
-       96,   98,   99,  100,  102,  103,  104,  105,  106,  107,
-      109,  110,  111,  112,  113,  114,  115,  116,  117,  118,
-      120,  121,  122,  124,  125,  126,  128,  129,  131,  132,
-      134,  135,  137,  139,  141,  142,  144
+       57,   58,   59,   60,   61,   62,   63,   65,   66,   67,
+       69,   70,   72,   73,   74,   76,   77,   78,   80,   81,
+       82,   83,   85,   86,   87,   89,   93,   95,   97,   98,
+      100,  101,  102,  103,  104,  105,  106,  107,  108,  109,
+      110,  112,  113,  114,  116,  117,  118,  119,  120,  121,
+      123,  124,  125,  126,  127,  128,  129,  130,  131,  132,
+      134,  135,  136,  138,  139,  140,  142,  143,  145,  146,
+      148,  149,  151,  153,  155,  156,  162
     } ;
 
 /* The intent behind this definition is that it'll catch
@@ -677,14 +704,27 @@ static const flex_int16_t yy_rule_linenum[78] =
     #include <iostream>
     #include <string>
 
-    #include<stdio.h>
+    #include <stdio.h>
     #include "e2_bison.hpp"
-   
+
+    int yy_column = 1;   
     int code_line=1;
 
 #define YY_DECL yy::Parser::symbol_type yylex(yyscan_t yyscanner, yy::location& loc, class e2::ParserCtx& ctx)
 
-#define YY_USER_ACTION loc.lines(yyleng);
+#define YY_USER_ACTION \
+    loc.begin.line = loc.end.line; \
+    loc.begin.column =loc.end.column; \
+    for(int i = 0; yytext[i] != '\0'; i++) { \
+        if(yytext[i] == '\n') { \
+            loc.end.line++; \
+            loc.end.column = 0; \
+        } else { \
+            loc.end.column++; \
+        } \
+    }
+
+//#define YY_USER_ACTION loc.lines(yyleng);
 //#define YY_USER_ACTION loc.first_line = loc.last_line = yylineno;
 
 #define yyterminate() return Parser::make_END(loc)
@@ -693,10 +733,10 @@ using namespace yy;
 typedef yy::Parser::token token;
 typedef yy::Parser::token_type token_type;
 
-#line 696 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_lex.cpp"
+#line 736 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_lex.cpp"
 #define YY_NO_INPUT 1
-/* %option debug verbose */
-#line 699 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_lex.cpp"
+/* %option debug verbose bison-locations */
+#line 739 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_lex.cpp"
 
 #define INITIAL 0
 
@@ -1021,15 +1061,15 @@ YY_DECL
 
 	{
 /* %% [7.0] user's declarations go here */
-#line 36 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 50 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 
 
 
-#line 40 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 54 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 	loc.step();
 
 
-#line 1032 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_lex.cpp"
+#line 1072 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_lex.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -1076,6 +1116,18 @@ yy_find_action:
 
 /* %% [11.0] code for yylineno update goes here */
 
+		if ( yy_act != YY_END_OF_BUFFER && yy_rule_can_match_eol[yy_act] )
+			{
+			yy_size_t yyl;
+			for ( yyl = 0; yyl < yyleng; ++yyl )
+				if ( yytext[yyl] == '\n' )
+					
+    do{ yylineno++;
+        yycolumn=0;
+    }while(0)
+;
+			}
+
 do_action:	/* This label is used only to access EOF actions. */
 
 /* %% [12.0] debug code goes here */
@@ -1107,133 +1159,133 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 43 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 57 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_EXTERN(loc);}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 44 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 58 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_NAMESPACE(loc);}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 45 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 59 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_UNION(loc);}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 46 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 60 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_FUNCTION(loc);}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 47 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 61 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_IMPORT(loc);}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 48 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 62 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_THIS(loc);}  
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 49 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 63 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_SELF(loc);}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 51 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 65 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return  Parser::make_SWITCH(loc);}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 52 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 66 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_CASE(loc);}	
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 53 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 67 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_DEFAULT(loc);}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 55 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 69 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_IF(loc);}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 56 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 70 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_ELSE(loc);}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 58 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 72 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_FOR(loc);}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 59 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 73 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_DO(loc);}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 60 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 74 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_WHILE(loc);}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 62 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 76 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_CONTINUE(loc);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 63 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 77 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_BREAK(loc);}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 64 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 78 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {return Parser::make_RETURN(loc);}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 66 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 80 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 67 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 81 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 68 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 82 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 22:
 /* rule 22 can match eol */
 YY_RULE_SETUP
-#line 69 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 83 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 71 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 85 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_CONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 72 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 86 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_FCONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 73 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 87 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_FCONSTANT(std::stod(yytext,0), loc);}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 75 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 89 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { 
             return Parser::make_IDENTIFIER(yytext, loc);
 }
@@ -1241,267 +1293,271 @@ YY_RULE_SETUP
 case 27:
 /* rule 27 can match eol */
 YY_RULE_SETUP
-#line 79 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 93 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_STRING_LITERAL(yytext, loc);}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 81 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 95 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::NAMESPACE_ATTR, loc);}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 83 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 97 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::UNARY_INC, loc);}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 84 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 98 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::UNARY_DEC, loc);}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 86 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 100 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_RIGHT, loc);}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 87 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 101 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_LEFT, loc);}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 88 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 102 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_ADD, loc);}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 89 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 103 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_SUB, loc);}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 90 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 104 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_MUL, loc);}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 91 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 105 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_DIV, loc);}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 92 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 106 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_MOD, loc);}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 93 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 107 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_AND, loc);}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 94 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 108 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_XOR, loc);}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 95 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 109 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_OR, loc);}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 96 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 110 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ASSIGN_EQ,loc);}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 98 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 112 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::LOGICAL_AND, loc);}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 99 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 113 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::LOGICAL_OR, loc);}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 100 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 114 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::LOGICAL_NOT,loc);}
 	YY_BREAK
 case 45:
 YY_RULE_SETUP
-#line 102 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 116 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::OP_LE, loc);}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 103 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 117 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::OP_GE, loc);}
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 104 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 118 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::OP_EQ, loc);}
 	YY_BREAK
 case 48:
 YY_RULE_SETUP
-#line 105 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 119 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::OP_NE, loc);}
 	YY_BREAK
 case 49:
 YY_RULE_SETUP
-#line 106 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 120 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('<'),loc);}
 	YY_BREAK
 case 50:
 YY_RULE_SETUP
-#line 107 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 121 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('>'),loc);}
 	YY_BREAK
 case 51:
 YY_RULE_SETUP
-#line 109 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 123 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ARITH_RIGHT, loc);}
 	YY_BREAK
 case 52:
 YY_RULE_SETUP
-#line 110 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 124 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token::ARITH_LEFT, loc);}
 	YY_BREAK
 case 53:
 YY_RULE_SETUP
-#line 111 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 125 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('&'),loc);}
 	YY_BREAK
 case 54:
 YY_RULE_SETUP
-#line 112 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 126 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('-'),loc);}
 	YY_BREAK
 case 55:
 YY_RULE_SETUP
-#line 113 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 127 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('+'),loc);}
 	YY_BREAK
 case 56:
 YY_RULE_SETUP
-#line 114 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 128 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('*'),loc);}
 	YY_BREAK
 case 57:
 YY_RULE_SETUP
-#line 115 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 129 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('/'),loc);}
 	YY_BREAK
 case 58:
 YY_RULE_SETUP
-#line 116 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 130 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('%'),loc);}
 	YY_BREAK
 case 59:
 YY_RULE_SETUP
-#line 117 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 131 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('^'),loc);}
 	YY_BREAK
 case 60:
 YY_RULE_SETUP
-#line 118 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 132 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('|'),loc);}
 	YY_BREAK
 case 61:
 YY_RULE_SETUP
-#line 120 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 134 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('?'),loc);}
 	YY_BREAK
 case 62:
 YY_RULE_SETUP
-#line 121 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 135 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('~'),loc);}
 	YY_BREAK
 case 63:
 YY_RULE_SETUP
-#line 122 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 136 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type(':'),loc);}
 	YY_BREAK
 case 64:
 YY_RULE_SETUP
-#line 124 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 138 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type(','),loc);}
 	YY_BREAK
 case 65:
 YY_RULE_SETUP
-#line 125 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 139 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('.'),loc);}
 	YY_BREAK
 case 66:
 YY_RULE_SETUP
-#line 126 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 140 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type(';'),loc);}
 	YY_BREAK
 case 67:
 YY_RULE_SETUP
-#line 128 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 142 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('('),loc);}
 	YY_BREAK
 case 68:
 YY_RULE_SETUP
-#line 129 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 143 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type(')'),loc);}
 	YY_BREAK
 case 69:
 YY_RULE_SETUP
-#line 131 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 145 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('{'),loc);}
 	YY_BREAK
 case 70:
 YY_RULE_SETUP
-#line 132 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 146 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::symbol_type( token_type('}'),loc);}
 	YY_BREAK
 case 71:
 /* rule 71 can match eol */
 YY_RULE_SETUP
-#line 134 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 148 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {  /* comments */ } 
 	YY_BREAK
 case 72:
 YY_RULE_SETUP
-#line 135 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 149 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { /* comments */ }
 	YY_BREAK
 case 73:
 YY_RULE_SETUP
-#line 137 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 151 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_IMPORT_LITERAL(yytext, loc);}
 	YY_BREAK
 case 74:
 YY_RULE_SETUP
-#line 139 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 153 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { return Parser::make_NSFUNC_CALL(yytext, loc);}
 	YY_BREAK
 case 75:
 YY_RULE_SETUP
-#line 141 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 155 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 {  }
 	YY_BREAK
 case 76:
 /* rule 76 can match eol */
 YY_RULE_SETUP
-#line 142 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
-{ code_line++; }
+#line 156 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+{ 
+                code_line++;
+                yylineno++;
+                yy_column = 1; 
+            }
 	YY_BREAK
 case 77:
 YY_RULE_SETUP
-#line 144 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 162 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 { /* ignore bad characters */ }
 	YY_BREAK
 case 78:
 YY_RULE_SETUP
-#line 146 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 164 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 ECHO;
 	YY_BREAK
-#line 1504 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_lex.cpp"
+#line 1560 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/generated/e2_lex.cpp"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -1950,6 +2006,12 @@ static int yy_get_next_buffer (yyscan_t yyscanner)
 	yyg->yy_hold_char = *++yyg->yy_c_buf_p;
 
 /* %% [19.0] update BOL and yylineno */
+	if ( c == '\n' )
+		
+    do{ yylineno++;
+        yycolumn=0;
+    }while(0)
+;
 
 	return c;
 }
@@ -2774,7 +2836,7 @@ void yyfree (void * ptr , yyscan_t yyscanner)
 
 /* %ok-for-header */
 
-#line 146 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
+#line 164 "/Users/vyouzhi/workspace/c_c_plug/Etomc2Lan/e2/src/grammar/e2_lex.l"
 
 
 

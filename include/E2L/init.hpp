@@ -140,6 +140,20 @@ void topic_tick(
  * ============================================
  */
 void topic_log(const char* topic); /* -----  end of function topic_log  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  topic_process_status
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void topic_process_status(const char* topic);
+/* -----  end of function topic_process_status  ----- */
 /*
  * ===  FUNCTION  =============================
  *
