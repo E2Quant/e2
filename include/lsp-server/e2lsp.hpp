@@ -45,7 +45,6 @@
 #ifndef E2LSP_INC
 #define E2LSP_INC
 #include <cstddef>
-#include <map>
 #include <string>
 #include <thread>
 #include <vector>
@@ -53,23 +52,27 @@
 #include "ast/ParserCtx.hpp"
 #include "lsp-server/Diagnostic/PublishDiagnosticsParams.hpp"
 #include "lsp-server/LspThreadPool.hpp"
-#include "lsp-server/RequestStruct.hpp"
 #include "lsp-server/ResponseStruct.hpp"
+#include "lsp-server/dbcache/dbevent.hpp"
 #include "lsp-server/textDocument/CompletionList.hpp"
 #include "lsp-server/textDocument/DefinitionParams.hpp"
 #include "lsp-server/util.hpp"
 namespace e2 {
 
-std::string readLSPMessage();
-void sendLSPMessage(const std::string& e2_jsonStr);
+struct __ContentChangesType {
+    std::string source;
+    std::string search_key;
+    std::size_t search_pos_start;
 
-e2_json handleInitialize(const e2_json& params);
+    void clean()
+    {
+        source = "";
+        search_key = "";
+        search_pos_start = 0;
+    }
+}; /* ----------  end of struct __ContentChangesType  ---------- */
 
-inline std::map<std::string, std::string> openDocuments;  // URI -> 内容
-
-void handleDidOpen(const e2_json& params);
-
-e2_json handleDefinition(const e2_json& params);
+typedef struct __ContentChangesType ContentChangesType;
 
 /*
  * ================================
@@ -121,7 +124,7 @@ public:
     /* =============  ACCESSORS     =================== */
     void ListTextDocument();
     TextDocumentItem DidOpen(RequestMessage);
-    std::string DidChange(RequestMessage);
+    bool DidChange(RequestMessage, std::string&);
     void WillSave();
     void WillSaveWaitUntil();
     void DidSave();
@@ -160,12 +163,16 @@ private:
 class LanguageFeatures {
 public:
     /* =============  LIFECYCLE     =================== */
-    LanguageFeatures() {}; /* constructor */
+    LanguageFeatures(std::string uri)
+    {
+        _current_uri = uri;
+        dbevent.set_current_uri(uri);
+    }; /* constructor */
 
     /* =============  ACCESSORS     =================== */
 
     /* =============  MUTATORS      =================== */
-    CompletionList Completion(std::string search_key, Position);
+    CompletionList Completion(const ContentChangesType& search_key, Position);
     void inlineCompletion();
 
     PublishDiagnosticsParams PublishDiagnostics(TextDocumentItem,
@@ -181,9 +188,18 @@ protected:
 
 private:
     /* =============  METHODS       =================== */
-
+    void ns_list(CompletionList&, std::vector<ElementInfo>&, Position pos,
+                 bool self_or_call);
+    void union_list(CompletionList&, std::vector<ElementInfo>&, Position pos,
+                    bool self_or_call);
+    void mod_list(CompletionList&, std::vector<ElementInfo>&, Position pos);
     /* =============  DATA MEMBERS  =================== */
+    std::string _current_uri = "";
+    std::string file_path = "file://";
 
+    std::string key_import = "import";
+
+    DBEvent dbevent;
 }; /* -----  end of class LanguageFeatures  ----- */
 
 /*
@@ -260,9 +276,7 @@ public:
     /* =============  LIFECYCLE     =================== */
     LSPTransport(IOStream& ios) : _stream(ios)
     {
-        std::size_t cores = std::thread::hardware_concurrency();
-        _pool.run(cores > 0 ? cores : 2);
-
+        init_data();
     }; /* constructor */
 
     ~LSPTransport() {}
@@ -284,7 +298,10 @@ protected:
 private:
     /* =============  METHODS       =================== */
 
+    void init_data();
     std::string trim(const std::string& str);
+    int split(const std::string& str, const std::string& split_str,
+              ContentChangesType&);
     RequestMessage read_message(FILE*);
 
     bool route(RequestMessage);
@@ -295,7 +312,10 @@ private:
     void diagnostics(TextDocumentItem&, RequestMessage);
 
     void location(DefinitionParams, int id);
+
     /* =============  DATA MEMBERS  =================== */
+
+    e2::ParserCtx ctx;
 
     const char* response_fmt = "Content-Length: %d\r\n\r\n%s";
 
@@ -304,9 +324,12 @@ private:
     IOStream& _stream;
 
     const std::string WHITESPACE = " \n\r\t\f\v";
-    std::string _change_text;
+
+    ContentChangesType _change_text;
 
     LspThreadPool _pool;
+
+    DBEvent _dbevent;
 
 }; /* -----  end of class LSPTransport  ----- */
 

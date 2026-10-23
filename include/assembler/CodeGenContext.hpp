@@ -64,6 +64,11 @@
 #include "llvm/IR/PassManager.h"
 #include "llvm/IR/Value.h"
 
+extern "C" {
+void PrintStr(const char* toPrint);
+void e2version();
+void GlobalUnion();
+}
 namespace e2 {
 
 using MapLocals = std::map<std::string, llvm::AllocaInst*>;
@@ -300,6 +305,7 @@ public:
     void ScriptList(NodeType nt, std::string name, size_t argc);
 
     void OutGlobalVar(const std::string&, Int_e);
+    void AddGlobal();
 
     // ------ namespace
     /*! Associate a LLVM type with a name space name. */
@@ -390,7 +396,6 @@ private:
 
     void InitGlobalVar();
     void ExternGlobalVar(const std::string&, Int_e);
-    void AddGlobal();
 
     /* =============  DATA MEMBERS  =================== */
 

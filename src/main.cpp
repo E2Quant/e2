@@ -117,7 +117,8 @@ void toDo(const char* f, const char* s, std::pair<std::string, Int_e>& b)
     e2::ParserCtx ctx;
 
     if (s != nullptr) {
-        ctx.search_path(s);
+        std::string paths = std::string(s);
+        ctx.project(paths);
     }
 
     int ret = ctx.toparse(f);
@@ -130,7 +131,7 @@ void toDo(const char* f, const char* s, std::pair<std::string, Int_e>& b)
     std::string cname = "call";
     Int_e a = 19;
     CodeGenContext context;
-    context.toDebug();
+    //  context.toDebug();
     createCoreFunctions(context);
     ArgType arg(1, E2LType(context.getGlobalContext()));
     context.ExternBuild(E2LType(context.getGlobalContext()), arg,

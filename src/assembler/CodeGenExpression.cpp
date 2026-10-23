@@ -711,9 +711,8 @@ llvm::Value* CompOperator::codeGen(CodeGenContext& context)
 
     if (lval == nullptr) {
         if (_lhs->id() == nullptr) {
-            llog::bug("rval or lval is nullptr, lhs is null:", " rhs:",
-                      _rhs->id()->name(), " . line:", _codeLine,
-                      " file:", _path);
+            llog::bug("rval or lval is nullptr, lhs is null:", " . line:",
+                      _codeLine, " file:", _path);
         }
         else if (_rhs != nullptr) {
             if (_rhs->id() != nullptr) {

@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.28)
+
 project("e2")
 
 add_definitions('-g')
@@ -9,7 +10,7 @@ add_definitions('-Wno-div-by-zero')
 
 # Set project version
 set(E2Lan_VERSION_MAJOR "1")
-set(E2Lan_VERSION_MINOR "0")
+set(E2Lan_VERSION_MINOR "4")
 set(E2Lan_VERSION_PATCH "0")
 set(E2Lan_VERSION_EXTRA "")
 set(E2Lan_VERSION "${E2Lan_VERSION_MAJOR}.${E2Lan_VERSION_MINOR}")
@@ -39,7 +40,7 @@ endif()
 configure_file(
     ${PROJECT_SOURCE_DIR}/include/utility/version.h.in
     ${PROJECT_SOURCE_DIR}/include/utility/version.h
-
+    @ONLY
     )
 
 option(USE_CCACHE "" OFF)                                                                                    
@@ -213,11 +214,22 @@ file(GLOB SOURCES
     src/ast/*.cpp
     src/call_graph/*.cpp
     src/lsp-server/*.cpp
+    src/lsp-server/dbcache/*.cpp
     )
 
 if(LIB)
     add_library(${PROJECT_NAME} SHARED ${BISON_PARSER_OUTPUTS} ${FLEX_LEXER_OUTPUTS} ${SOURCES} )
     add_library(${PROJECT_NAME}_static STATIC ${BISON_PARSER_OUTPUTS} ${FLEX_LEXER_OUTPUTS} ${SOURCES} )
+
+    set_target_properties(${PROJECT_NAME} PROPERTIES
+        VERSION   ${E2Lan_VERSION_MAJOR}.${E2Lan_VERSION_MINOR}      # 1.2.3 → Mach-O CURRENT_VERSION
+        SOVERSION ${E2Lan_VERSION_MAJOR}          # 1 → Mach-O COMPATIBILITY_VERSION
+
+        # macos
+        MACOSX_RPATH ON
+        INSTALL_NAME_DIR "@rpath"
+        )
+
 else()
     add_executable(${PROJECT_NAME} ${BISON_PARSER_OUTPUTS}
         ${FLEX_LEXER_OUTPUTS} ${SOURCES} src/main.cpp)
@@ -255,11 +267,21 @@ target_link_libraries("e2lsp"
 
 
 if(LIB)
-    INSTALL(TARGETS ${PROJECT_NAME} 
-        LIBRARY DESTINATION lib)
+    install(TARGETS ${PROJECT_NAME}
+        EXPORT ${PROJECT_NAME}Targets
+        RUNTIME  DESTINATION ${CMAKE_INSTALL_BINDIR}    # 可执行文件
+        LIBRARY  DESTINATION ${CMAKE_INSTALL_LIBDIR}    # 共享库（含 dylib）
+        ARCHIVE  DESTINATION ${CMAKE_INSTALL_LIBDIR}    # 静态库
+        FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR}   # macOS framework（按需）
+        BUNDLE   DESTINATION .                          # macOS bundle（按需）
+        PUBLIC_HEADER DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+        )
 
-    INSTALL(TARGETS ${PROJECT_NAME}_static 
-        LIBRARY DESTINATION lib)
+    # INSTALL(TARGETS ${PROJECT_NAME} 
+    #     LIBRARY DESTINATION lib)
+
+    # INSTALL(TARGETS ${PROJECT_NAME}_static 
+    #     LIBRARY DESTINATION lib)
 
     INSTALL (
         DIRECTORY ${CMAKE_SOURCE_DIR}/include/

@@ -148,7 +148,7 @@
 /* The driver is passed by reference to the parser and to the scanner. This
  * provides a simple but effective pure interface, not relying on global
  * variables. */
-%lex-param {void *scanner} {yy::location& {$$ = MALLOC(e2::Block, "union_list", code_line, ctx.path() ); $$->push_back($1);} loc} { class e2::ParserCtx& ctx }
+%lex-param {void *scanner} {yy::location& {$$ = MALLOC(e2::Block, "union_list", code_line, ctx.current_file() ); $$->push_back($1);} loc} { class e2::ParserCtx& ctx }
 %parse-param {void *scanner} {yy::location& loc} { class e2::ParserCtx& ctx }
 
 
@@ -160,18 +160,22 @@ translation_unit
     : /* 入口  blreturn Parser::make_NSFUNC_CALL(yytext, loc);ock 1, 变量，函数调用,2,   function_definition: 函数定义， 3. union 声明   */
       block     { ctx.RootBlock()->push_back($1);}
     | import_module { if($1!=nullptr) ctx.RootBlock()->push_back($1); } 
-    | namespace_definition { ctx.RootBlock()->push_back($1);}
+    | namespace_definition { 
+                ctx.RootBlock()->push_back($1);
+        }
     | function_definition  { ctx.RootBlock()->push_back($1);} 
     | union_definition     { ctx.RootBlock()->push_back($1);} 
     | translation_unit block  { ctx.RootBlock()->push_back($2);} 
-    | translation_unit namespace_definition { ctx.RootBlock()->push_back($2);}
+    | translation_unit namespace_definition {               
+            ctx.RootBlock()->push_back($2);
+            }
     | translation_unit function_definition  { ctx.RootBlock()->push_back($2);} 
     | translation_unit union_definition     { ctx.RootBlock()->push_back($2);} 
     | translation_unit import_module { if($2!=nullptr)ctx.RootBlock()->push_back($2); } 
     ;
 
 import_module:        /* empty */ 
-             IMPORT IMPORT_LITERAL {$$ = MALLOC( e2::ImportModule,$2,code_line, ctx.path());}        
+             IMPORT IMPORT_LITERAL {$$ = MALLOC( e2::ImportModule,$2,code_line, ctx.current_file());}        
         ;
 
 block
@@ -187,7 +191,7 @@ block
 unary_val
     : /*一无运算*/
       primary_lvalue unary {
-        $$ = MALLOC(e2::UnaryOperator,$1,$2,code_line, ctx.path()); 
+        $$ = MALLOC(e2::UnaryOperator,$1,$2,code_line, ctx.current_file()); 
          }
     ;
 
@@ -200,10 +204,19 @@ unary
 variable_val
     : /* Statement 变量 = 赋值 或 运算  */
       primary_lvalue assignment expression {
-            $$ = MALLOC( e2::VariableStatement,$1,$2, $3,code_line, ctx.path());
-             ElementInfo ei = $1->element();
-            ctx.element_data( ei, $1->line(), e2::ElementKind::_ek_var); 
-            } 
+            $$ = MALLOC( e2::VariableStatement,$1,$2, $3,code_line, ctx.current_file());
+            
+            NodeType nt = ctx.current_block_type(); 
+            ElementInfo ei = $1->element();
+
+            if(nt == NodeType::_null ){
+                ctx.element_data( ei, $1->line(), e2::ElementKind::_ek_var);
+            }             
+
+            if(nt == NodeType::_union){
+                ctx.element_data( ei, $1->line(), e2::ElementKind::_ek_globle_un);
+            }
+        } 
     ;
 
 expression
@@ -214,7 +227,7 @@ expression
 additive_expression
     : multiplicative_expression {$$=$1;}
     | additive_expression add_arithmetic multiplicative_expression {
-            $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.path());
+            $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.current_file());
             }
     ;
 
@@ -229,7 +242,7 @@ add_arithmetic
 multiplicative_expression
     : shift_expression {$$=$1;} 
     | multiplicative_expression mul_arithmetic shift_expression {
-            $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.path());
+            $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.current_file());
          }
 
 ;
@@ -244,7 +257,7 @@ mul_arithmetic
 shift_expression
     : conditional {$$ = $1;   }
     | shift_expression shift_arithmetic conditional {
-        $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.path());        
+        $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.current_file());        
         } 
     ;
 
@@ -262,10 +275,10 @@ conditional
     : /* expression 判断的条件 */
       expression_rvalue  {$$ = $1; }
     | expression_rvalue comparison expression_rvalue {
-            $$ = MALLOC(e2::CompOperator,$1,$2,$3, code_line, ctx.path() ); 
+            $$ = MALLOC(e2::CompOperator,$1,$2,$3, code_line, ctx.current_file() ); 
          }    
     | expression_rvalue logical expression_rvalue {
-            $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.path()); 
+            $$ = MALLOC(e2::BinaryOperator,$1,$2,$3, code_line, ctx.current_file()); 
          }            
     | method_call {$$=$1;} 
     ;
@@ -317,8 +330,8 @@ compound_statement
 
 compound_block
      :/* blocks */ 
-      block                     {$$ = MALLOC(e2::Block, "decl_vari", code_line, ctx.path() );$$->push_back($1);}  
-    | statement                 {$$ = MALLOC(e2::Block, "decl_statement", code_line, ctx.path() ); $$->push_back($1);}
+      block                     {$$ = MALLOC(e2::Block, "decl_vari", code_line, ctx.current_file() );$$->push_back($1);}  
+    | statement                 {$$ = MALLOC(e2::Block, "decl_statement", code_line, ctx.current_file() ); $$->push_back($1);}
     | compound_block block      {$$ = $1; $1->push_back($2);}
     | compound_block statement  {$$ = $1; $1->push_back($2);}
     ;	
@@ -333,24 +346,24 @@ statement
 labled_if
     : compound_statement 
         {
-            $$ = MALLOC(e2::LabledBlock, "labled_if", code_line, ctx.path()); 
+            $$ = MALLOC(e2::LabledBlock, "labled_if", code_line, ctx.current_file()); 
             $$->push($1, e2::Selection::_then);
 
 }
     | compound_statement ELSE compound_statement 
         {  
 
-$$ = MALLOC(e2::LabledBlock,"labled_if", code_line, ctx.path()); 
+            $$ = MALLOC(e2::LabledBlock,"labled_if", code_line, ctx.current_file()); 
             $$->push($1, e2::Selection::_then);
 
-$$->push($3, e2::Selection::_else);
+            $$->push($3, e2::Selection::_else);
         }
     ;
 
 labeled_switch
     : CASE primary_rvalue ':' compound_block
         {
-            $$ = MALLOC(e2::LabledBlock, "labeled_switch", code_line, ctx.path());
+            $$ = MALLOC(e2::LabledBlock, "labeled_switch", code_line, ctx.current_file());
             $$->push($2,$4, e2::Selection::_case) ;
         } 
     | labeled_switch CASE primary_rvalue ':' compound_block
@@ -369,7 +382,7 @@ labeled_switch
 selection_statement
     : IF '(' conditional ')'  labled_if 
         {
-            $$ = MALLOC(e2::IFStatement, $3,$5, code_line, ctx.path());
+            $$ = MALLOC(e2::IFStatement, $3,$5, code_line, ctx.current_file());
         }
 
     | SWITCH '(' conditional ')' '{' labeled_switch '}'
@@ -405,9 +418,9 @@ iteration_statement
 jump_statement
     :  
       CONTINUE ';'           {$$ = nullptr;}
-    | BREAK ';'             {$$ = MALLOC(e2::BreakStatement, code_line, ctx.path()) ;}
-    | RETURN ';' {$$ = MALLOC(e2::ReturnStatement, code_line, ctx.path());} 
-    | RETURN primary_rvalue ';' {$$ = MALLOC(e2::ReturnStatement,$2, code_line, ctx.path());}
+    | BREAK ';'             {$$ = MALLOC(e2::BreakStatement, code_line, ctx.current_file()) ;}
+    | RETURN ';' {$$ = MALLOC(e2::ReturnStatement, code_line, ctx.current_file());} 
+    | RETURN primary_rvalue ';' {$$ = MALLOC(e2::ReturnStatement,$2, code_line, ctx.current_file());}
     ;
 
 
@@ -425,14 +438,16 @@ function_parameter
 
 function_definition
     : FUNCTION  identifier_str function_parameter compound_statement 
-        {
+        { 
             std::size_t real_code_line = $2->line();
-            $$ = MALLOC(e2::FunctionDeclaration, $2, $3, $4, real_code_line, ctx.path());
-
-            ElementInfo ei = $2->element();
-            ei.insertText = $$->argsnip();
-            
-            ctx.element_data( ei, real_code_line, e2:: ElementKind::_ek_fun); 
+            $$ = MALLOC(e2::FunctionDeclaration, $2, $3, $4, real_code_line, ctx.current_file());
+           
+            NodeType nt = ctx.current_block_type(); 
+            if(nt == NodeType::_null ){
+                ElementInfo ei = $2->element();
+                ei.insertText = $$->argsnip();            
+                ctx.element_data( ei, real_code_line, e2:: ElementKind::_ek_fun); 
+            }
         } 
     ;
 
@@ -441,19 +456,38 @@ method_call
      id_func_call_name function_parameter {
             std::size_t real_code_line = $1->line();
 
-            $$ = MALLOC(e2::MethodCall, $1, $2, real_code_line, ctx.path());
+            $$ = MALLOC(e2::MethodCall, $1, $2, real_code_line, ctx.current_file());
 
             ElementInfo ei = $1->element();
+            std::pair<std::string, std::vector<ElementInfo>> arg_list = $$->argToStr();
+            ei.insertText = arg_list.first; 
 
-            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_call);
+            std::string tag = $1->Tag();
+            e2::ElementKind ek = e2::ElementKind::_ek_call;
+
+            if (tag.size() > 0){
+                ek = e2::ElementKind::_ek_ns_call;
+            }
+
+            if($1->idType()== e2::IDType::_ns_private){
+                ek = e2::ElementKind::_ek_ns_this_call;
+            }
+
+            ctx.element_data( ei, real_code_line, ek);
+
+            for(auto it : arg_list.second){
+                it.from_ns = arg_list.first;
+                ctx.element_update(it, real_code_line, e2:: ElementKind::_ek_call_arg);
+            }
         }  
     ;
 
 extern_call
     : EXTERN IDENTIFIER  identifier_str '(' identifier_str primary_rvalue ')' { 
-        e2::ExpressionList *el = MALLOC(e2::ExpressionList); 
-         el->push_back($6); 
-         $$ = MALLOC(e2::ExternDeclaration,$3,el);}
+            e2::ExpressionList *el = MALLOC(e2::ExpressionList); 
+            el->push_back($6); 
+            $$ = MALLOC(e2::ExternDeclaration,$3,el);
+        }
     ;
 
 union_statement
@@ -468,7 +502,7 @@ union_statement
 union_list
     : union_statement               
         {
-            $$ = MALLOC(e2::Block, "union_list", code_line, ctx.path() ); 
+            $$ = MALLOC(e2::Block, "union_list", code_line, ctx.current_file() ); 
             $$->push_back($1);
         }
     | union_list union_statement    
@@ -480,7 +514,7 @@ union_list
     | union_definition              
         {
             $1->idType(e2::IDType::_global);
-            $$ = MALLOC(e2::Block, "union_def", code_line, ctx.path() ); 
+            $$ = MALLOC(e2::Block, "union_def", code_line, ctx.current_file() ); 
             $$->push_back($1); 
         }
     | union_list union_definition   
@@ -496,10 +530,14 @@ union_definition
         {  
             std::size_t real_code_line = $2->line();
 
-            $$ = MALLOC(e2::UnionDeclaration,$2,$4, code_line, ctx.path());
+            $$ = MALLOC(e2::UnionDeclaration,$2, $4, code_line, ctx.current_file());
 
+            $2->id()->end_element(loc.end.line,loc.end.column);
             ElementInfo ei = $2->element();
+            
             ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_union);
+
+             ctx.current_block_type(NodeType::_null);
         } 
     ;
 
@@ -519,21 +557,29 @@ namespace_body
     :  /*body*/ 
         namespace_member   
         {
-            $$ = MALLOC(e2::Block, "namespace_member", code_line, ctx.path() ); 
+            $$ = MALLOC(e2::Block, "namespace_member", code_line, ctx.current_file() ); 
             $$->push_back($1);
+
+            ElementInfo ei = $1->id()->element();           
+            ctx.element_data( ei, $1->id()->line(), e2::ElementKind::_ek_ns_var);
         }
     | SELF function_definition
         {
+            llog::echo("self fun def");
             $2->idType(e2::IDType::_ns_private); 
-            $$ = MALLOC(e2::Block, "namespace_func", code_line, ctx.path());
+            $$ = MALLOC(e2::Block, "namespace_func", code_line, ctx.current_file());
             $$->push_back($2);
         }
     | function_definition
         {
             $1->idType(e2::IDType::_ns_public); 
 
-            $$ = MALLOC(e2::Block, "namespace_func", code_line, ctx.path());
+            $$ = MALLOC(e2::Block, "namespace_func", code_line, ctx.current_file());
             $$->push_back($1);
+
+            ElementInfo ei = $1->id()->element();
+            std::size_t real_code_line = $1->line();
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_ns_fun);
         } 
     | namespace_body namespace_member {$$=$1; $1->push_back($2);}
     | namespace_body SELF function_definition 
@@ -546,7 +592,14 @@ namespace_body
         {
             $$=$1; 
             $2->idType(e2::IDType::_ns_public);  
+            $2->id()->end_element(loc.end.line,loc.end.column);
             $1->push_back($2);
+
+            ElementInfo ei = $2->id()->element();
+            ei.insertText =  $2->argsnip();
+            std::size_t real_code_line = $2->line();
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_ns_fun);
+            
         }
     ;
 
@@ -557,11 +610,14 @@ namespace_definition
 
             std::size_t real_code_line = $2->line();
 
-            $$ = MALLOC(e2::NameSpace, $2, $4, real_code_line, ctx.path());
+            $$ = MALLOC(e2::NameSpace, $2, $4, real_code_line, ctx.current_file());
 
+            $2->end_element(loc.end.line,loc.end.column);
             ElementInfo ei = $2->element();
-            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_namespace);
 
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_namespace);
+       
+            ctx.current_block_type(NodeType::_null);  
         } 
     ;
 
@@ -573,26 +629,34 @@ primary_lvalue
 
 primary_rvalue 
     : /* 变量名, 数字, 目前在这儿设置全局变量可修改，不过以后再优化一下右则变量是数字吧 */
-      id_ns_gl_name { $$ = $1; } 
+      id_ns_gl_name { 
+            $$ = $1; 
+            std::size_t real_code_line = $1->line();
+            ElementInfo ei = $1->element();
+
+            if($1->idType() != e2::IDType::_global){              
+                ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_var);
+            } 
+        } 
     | CONSTANT  
         {
-            $$ = MALLOC(e2::Number,$1, code_line, ctx.path());
+            $$ = MALLOC(e2::Number,$1, code_line, ctx.current_file());
         }
     | '-' CONSTANT  
         {
-            $$ = MALLOC(e2::Number,$2, true, code_line, ctx.path()); 
+            $$ = MALLOC(e2::Number,$2, true, code_line, ctx.current_file()); 
         }
     | FCONSTANT  
         {
-            $$ = MALLOC(e2::Number,$1, code_line, ctx.path());
+            $$ = MALLOC(e2::Number,$1, code_line, ctx.current_file());
         }
     | '-' FCONSTANT  
         {
-            $$ = MALLOC(e2::Number,$2, true, code_line, ctx.path());
+            $$ = MALLOC(e2::Number,$2, true, code_line, ctx.current_file());
         }    
     | STRING_LITERAL 
         {
-            $$ = MALLOC(e2::StrObj, $1, code_line, ctx.path()); 
+            $$ = MALLOC(e2::StrObj, $1, code_line, ctx.current_file()); 
         }
     ;
 
@@ -605,6 +669,16 @@ id_func_call_name
             $3->push_back($1);
             $3->NameSpaceTag($2);
             $3->idType(IDType::_ns_methodcall); 
+            $3->id()->element_ns();
+
+            std::size_t real_code_line = $1->line();
+            ElementInfo ei = $1->id()->element();            
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_namespace);
+
+            ei.value = $3->Tag();            
+            ei.begin_column += ei.end_column+1;
+            ei.end_column += ei.value.length();
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_ns_tag);
         }
     ;
 
@@ -628,7 +702,18 @@ global_union_variable
             $$->push_back($3);
             $$->idType(e2::IDType::_global);
             $$->codeLine(code_line);
-            $$->codePath(ctx.path());
+            $$->codePath(ctx.current_file());
+
+
+            std::size_t real_code_line = $1->line();
+            ElementInfo ei = $1->element();
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_union);
+            
+            real_code_line = $3->line();
+            ei = $3->element();
+            ei.from_ns = $1->id()->name();
+           
+            ctx.element_data( ei, real_code_line, e2::ElementKind::_ek_globle_un);
         }
     |  global_union_variable '.' identifier_str
         {
@@ -636,7 +721,7 @@ global_union_variable
             $1->push_back($3);
             $1->idType(e2::IDType::_global);
             $1->codeLine(code_line);
-            $1->codePath(ctx.path());
+            $1->codePath(ctx.current_file());
         }
     ;
 
@@ -655,9 +740,13 @@ identifier_str
     : /* 最基本的字符串 */
       IDENTIFIER  
         {
+
+            
             $$ = MALLOC(e2::Identifier, $1, e2::IDType::_normal);
             $$->codeLine(code_line);
-            $$->codePath(ctx.path());
+            $$->codePath(ctx.current_file());
+
+            //llog::echo("name:",$$->id()->name());
 
             ElementInfo einfo;
             einfo.begin_line = loc.begin.line;

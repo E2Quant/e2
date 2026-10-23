@@ -84,7 +84,8 @@ enum __NodeType {
     _string,      // 17
     _module,      // 18
 
-    _break  // 19
+    _break,  // 19
+    _null    // 20 emtpy
 }; /* ----------  end of enum Nodetype  ---------- */
 
 typedef enum __NodeType NodeType;
@@ -173,7 +174,7 @@ struct __element_base {
     int end_line = 0;
     int end_column = 0;
     std::size_t code_line = 0;
-    std::string code_path = "";
+    std::string code_uri = "";
 }; /* ----------  end of struct __element_base  ---------- */
 
 typedef struct __element_base element_base;
@@ -191,18 +192,25 @@ enum class __ElementKind {
     _ek_keyword = 0,
 
     // declaration
-    _ek_var,        // var sk
-    _ek_fun,        // function declaration
-    _ek_union,      // union declaration
-    _ek_namespace,  // namespace
+    _ek_var,        // 1. var sk
+    _ek_fun,        // 2. function declaration
+    _ek_union,      // 3. union declaration
+    _ek_namespace,  // 4. namespace
 
     // expression
     // 在这儿支持跳转
-    _ek_call,       // method call
-    _ek_ns_fun,     // name space func
-    _ek_globle_un,  // globle var
-                    //
+    _ek_call,       // 5. method call
+    _ek_globle_un,  // 6. globle var
+    //
+    _ek_ns_var,        // 7. name space var
+    _ek_ns_fun,        // 8. name space func
+    _ek_ns_call,       // 9. name space call  func
+    _ek_ns_this_call,  // 10. name space this call func
+    _ek_ns_tag,        // 11 name space tag
 
+    _ek_call_arg,  // 12 method call parameter
+
+    _ek_mode_path,  // 13 mode path
 }; /* ----------  end of enum __ElementKind  ---------- */
 
 typedef enum __ElementKind ElementKind;
@@ -214,6 +222,12 @@ struct __element_info : public element_base {
     std::string insertText;
     // 当前一个元素的字母
     std::string value;
+    // namespace base
+    std::string from_ns;
+    // ns tag
+    std::string tag;
+    // for keywork import use
+    std::string code_dir;
 }; /* ----------  end of struct __element_info  ---------- */
 
 typedef struct __element_info ElementInfo;

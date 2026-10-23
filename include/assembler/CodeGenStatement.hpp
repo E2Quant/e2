@@ -53,6 +53,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "BaseType.hpp"
@@ -142,7 +143,24 @@ public:
     virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_methodcall; }
     const std::string name() { return _id->name(); };
+    std::pair<std::string, std::vector<ElementInfo>> argToStr()
+    {
+        std::vector<ElementInfo> eil;
+        std::string arg_str = _id->id_name() + "(";
+        if (_arguments == nullptr) {
+            return {arg_str + ");", eil};
+        }
 
+        for (auto arg : *_arguments) {
+            if (arg->id() == nullptr) {
+                continue;
+            }
+            arg_str += arg->id()->name();
+            eil.push_back(arg->id()->element());
+        }
+
+        return {arg_str + ");", eil};
+    }
     /* =============  MUTATORS      =================== */
     /* =============  OPERATORS     =================== */
 

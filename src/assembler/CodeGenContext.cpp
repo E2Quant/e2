@@ -149,6 +149,7 @@ void GlobalUnion()
     char* str;
     char delim[] = ".";
     long val = 0;
+
     for (auto it = _GlobalVariables.begin(); it != _GlobalVariables.end();
          ++it) {
         val = it->second / NUMBER_DECI;
@@ -254,7 +255,19 @@ bool CodeGenContext::generateCode(Block* root)
     pushBlock(bblock, ScopeKind::_sk_main);
     root->codeGen(*this);
 
+#if __clang_major__ >= 23
+
+    if (!currentBlock()->hasTerminator()) {
+        // llvm::errs() << "=== bad block: " << currentBlock()->getName() << "in
+        // "
+        //              << currentBlock()->getParent()->getName() << "===\n ";
+        // currentBlock()->getParent()->print(llvm::errs(), nullptr);
+        //    std::abort();
+
+#else
     if (currentBlock()->getTerminator() == nullptr) {
+        //        currentBlock()->print(llvm::errs());
+#endif
         llvm::Value* LastLoad = nullptr;
 
         for (auto& I : *bblock) {
@@ -278,9 +291,12 @@ bool CodeGenContext::generateCode(Block* root)
             }
 
             else if (auto* CI = dyn_cast<llvm::CallInst>(&I)) {
-                LastLoad = CI;
-                //                llog::echo("call");
-                // 收集所有 CallInst
+                if (!CI->getType()->isVoidTy()) {
+                    LastLoad = CI;
+                }
+
+                // llog::echo("call");
+                //  收集所有 CallInst
             }
         }
         if (LastLoad == nullptr) {

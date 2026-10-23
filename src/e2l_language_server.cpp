@@ -46,90 +46,24 @@
 #include <unistd.h>
 
 #include <cstddef>
+#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <deque>
-#include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <string>
 #include <vector>
 
 #include "assembler/BaseType.hpp"
+#include "assembler/CodeGenContext.hpp"
 #include "ast/ParserCtx.hpp"
-#include "lsp-server/IoEventLoop.hpp"
-#include "lsp-server/LspLsif.hpp"
+#include "lsp-server/dbcache/LspLsif.hpp"
+#include "lsp-server/dbcache/dbevent.hpp"
 #include "lsp-server/e2lsp.hpp"
+#include "utility/Log.hpp"
 using namespace e2;
-/*
- * ===  FUNCTION  =============================
- *
- *         Name:  lsp
- *  ->  void *
- *  Parameters:
- *  - size_t  arg
- *  Description:
- *
- * ============================================
- */
-void lsp()
-{
-    std::cout << "Content-Type: application/vscode-jsonrpc; charset=utf-8\r\n";
-    std::cout.flush();  // 有些客户SWITCH端需要这个头
-
-    while (true) {
-        std::string messageStr = readLSPMessage();
-        if (messageStr.empty()) {
-            std::ofstream outf("/tmp/lsp.log");
-            outf << "Clicked on qqqq empty!" << "\n";
-            outf.close();
-            break;
-        }
-        std::cerr << " e2log " << messageStr << std::endl;
-        auto message = e2_json::parse(messageStr);
-
-        // 处理请求（有 id 字段）
-        if (message.contains("id")) {
-            e2_json response = {{"jsonrpc", "2.0"}, {"id", message["id"]}};
-            std::ofstream outf("/tmp/lsp.log");
-            outf << "Clicked inininitt qqqq!" << "\n";
-            outf.close();
-            std::string method = message["method"];
-            if (method == "initialize") {
-                response["result"] = handleInitialize(message["params"]);
-            }
-            else if (method == "textDocument/didOpen") {
-                std::ofstream outf("/tmp/lsp.log");
-                outf << "Clicked on qqqq!" << "\n";
-                outf.close();
-            }
-            else if (method == "textDocument/definition") {
-                response["result"] = handleDefinition(message["params"]);
-            }
-            else {
-                // 对于不支持的请求，返回错误
-                response["error"] = {{"code", -32601},
-                                     {"message", "Method not found"}};
-            }
-
-            // 发送响应
-            sendLSPMessage(response.dump());
-        }
-        // 处理通知（无 id 字段，如 didOpen）
-        else if (message["method"] == "textDocument/didOpen") {
-            handleDidOpen(message["params"]);
-
-            std::ofstream outf("/tmp/lsp.log");
-            outf << "Clicked inininitt didopen!" << "\n";
-            outf.close();
-        }
-        else if (message["method"] == "initialized") {
-            std::ofstream outf("/tmp/lsp.log");
-            outf << "Clicked on qqqq init!" << messageStr << "\n";
-            outf.close();
-            // 客户端在 initialize 后发送 initialized 通知，通常无需特殊处理
-        }
-    }
-} /* -----  end of function lsp  ----- */
+namespace fs = std::filesystem;
 
 /*
  * ===  FUNCTION  =============================
@@ -156,151 +90,6 @@ void lspt()
 /*
  * ===  FUNCTION  =============================
  *
- *         Name:  mPoll
- *  ->  void *
- *  Parameters:
- *  - size_t  arg
- *  Description:
- *
- * ============================================
- */
-void mPoll()
-{
-    const int BUFFER_SIZE = 256;
-    const int TIMEOUT_MS = 10000;  // 3秒超时
-
-    // 1. 创建管道
-    int pipefd[2];
-    if (pipe(pipefd) == -1) {
-        perror("pipe");
-        exit(EXIT_FAILURE);
-    }
-
-    // 2. 初始化 pollfd 数组——监控两个文件描述符
-    struct pollfd fds[2];
-
-    // 第一个元素：标准输入
-    fds[0].fd = STDIN_FILENO;
-    fds[0].events = POLLIN;
-    fds[0].revents = 0;
-
-    // 第二个元素：管道读端
-    fds[1].fd = pipefd[0];
-    fds[1].events = POLLIN;
-    fds[1].revents = 0;
-
-    std::cout << "监控标准输入和管道读端，超时 " << TIMEOUT_MS << " 毫秒..."
-              << std::endl;
-    std::cout << "在另一个终端运行: echo \"hello\" >> /proc/" << getpid()
-              << "/fd/" << pipefd[1] << std::endl;
-
-    // 3. 调用 poll()——相比 select()，poll() 无需重建 fd 集合，内核只覆盖
-    // revents 字段 [1](@ref)[2](@ref)
-    int ret = poll(fds, 2, TIMEOUT_MS);
-
-    // 4. 处理返回值
-    if (ret == -1) {
-        std::cerr << "poll 错误: " << strerror(errno) << std::endl;
-        close(pipefd[0]);
-        close(pipefd[1]);
-        exit(EXIT_FAILURE);
-    }
-    else if (ret == 0) {
-        std::cout << "超时！" << TIMEOUT_MS << " 毫秒内无数据" << std::endl;
-    }
-    else {
-        std::cout << ret << " 个文件描述符就绪" << std::endl;
-
-        // 5. 遍历数组，检查每个 fd 的 revents
-        for (int i = 0; i < 2; ++i) {
-            if (fds[i].revents & POLLIN) {
-                char buffer[BUFFER_SIZE];
-                std::size_t bytes_read =
-                    read(fds[i].fd, buffer, BUFFER_SIZE - 1);
-                if (bytes_read > 0) {
-                    buffer[bytes_read] = '\0';
-                    std::cout << "从 fd=" << fds[i].fd << " 读取: " << buffer
-                              << std::endl;
-                }
-            }
-            // 检查错误或挂起事件
-            if (fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) {
-                std::cout << "fd=" << fds[i].fd << " 发生错误或连接关闭"
-                          << std::endl;
-            }
-        }
-    }
-
-    // 6. 清理资源
-    close(pipefd[0]);
-    close(pipefd[1]);
-
-} /* -----  end of function mPoll  ----- */
-
-/*
- * ===  FUNCTION  =============================
- *
- *         Name:  mPollLoop
- *  ->  void *
- *  Parameters:
- *  - size_t  arg
- *  Description:
- *
- * ============================================
- */
-void mPollLoop()
-{
-    IoEventLoop loop;
-    loop.add_read_fd(STDIN_FILENO, [&](int fd) {
-        char buffer[1024];
-        ssize_t bytes_read = read(fd, buffer, sizeof(buffer) - 1);
-
-        if (bytes_read > 0) {
-            buffer[bytes_read] = '\0';
-            std::cout << "Read Event Triggered! Data received: " << buffer;
-
-            // Check for exit condition
-            if (std::string(buffer).find("exit") != std::string::npos) {
-                std::cout << "Exit command detected. Stopping loop...\n";
-                loop.stop();
-            }
-        }
-        else if (bytes_read == 0) {
-            std::cout << "EOF detected on stdin.\n";
-            loop.stop();
-        }
-    });
-
-    loop.run();
-
-} /* -----  end of function mPollLoop  ----- */
-
-/*
- * ===  FUNCTION  =============================
- *
- *         Name:  testjson
- *  ->  void *
- *  Parameters:
- *  - size_t  arg
- *  Description:
- *
- * ============================================
- */
-void testjson()
-{
-    LifecycleMsg life;
-    // lif.Initialize();
-
-    e2_json response = {{"jsonrpc", "2.0"}, {"id", 1}};
-
-    response["result"] = life.Initialize();
-    std::cout << response.dump(4) << std::endl;
-
-} /* -----  end of function testjson  ----- */
-
-/*
- * ===  FUNCTION  =============================
- *
  *         Name:  yyltoken
  *  ->  void *
  *  Parameters:
@@ -309,9 +98,22 @@ void testjson()
  *
  * ============================================
  */
-void yyltoken(const char* fps)
+ElementInfoType yyltoken(const char* fps, std::string project)
 {
+    llog::echo("yyl pro:", project);
     ParserCtx ctx;
+    if (project.length() > 0) {
+        ctx.project(project);
+    }
+
+    auto fun = [&ctx](const std::string& value) {
+        ctx.project(value);
+    };  // -----  end lambda  -----
+    LspLsif ll;
+    ll.load_lib_json(fun);
+
+    ctx.e2lsp();
+
     ctx.all_scan(false);
     int ret = ctx.toparse(fps);
     if (ret < 0) {
@@ -326,73 +128,119 @@ void yyltoken(const char* fps)
         }
     }
 
-    // // 查询（回调函数方式）
-    // static int callback(void* data, int argc, char** argv, char** colName)
-    // {
-    //     for (int i = 0; i < argc; i++) {
-    //         std::cout << colName[i] << " = " << (argv[i] ? argv[i] : "NULL")
-    //                   << std::endl;
-    //     }
-    //     std::cout << "--------" << std::endl;
-    //     return 0;
-    // }
-    //
-
     std::deque<LocationType> mods = ctx.imports();
 
     for (auto mod : mods) {
+        llog::echo("----");
         llog::info("mod name:", mod.mod_name, " code line:", mod.code_line,
-                   " path:", mod.code_path);
-        ret = ctx.findPath(mod.mod_name.c_str());
+                   " path:", mod.code_uri);
+        ret = ctx.ProjPath(mod.mod_name.c_str());
         if (ret == -1) {
             llog::bug("not found file:", mod.mod_name);
         }
     }
-
     ElementInfoType eit = ctx.element_data();
-    LspLsif ll;
+    return eit;
 
-    for (auto value : eit) {
-        ll.clear(value.first);
-        ll.batchInsert(value.second);
+} /* -----  end of function yyltoken  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  list_all_files
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+int list_all_files(const char* path_str)
+{
+    fs::path code_dir(path_str);
+    std::error_code ec;
+
+    // 1. 检查路径是否存在
+    if (!fs::exists(code_dir, ec)) {
+        if (ec) {
+            std::cerr << "检查路径出错: " << ec.message() << '\n';
+        }
+        else {
+            std::cerr << "路径不存在: " << path_str << '\n';
+        }
+        return -2;
     }
 
-    std::vector<ElementInfo> ei;
-    auto fun = [](void* data, int argc, char** argv, char** colName) -> int {
-        auto* result = static_cast<std::vector<ElementInfo>*>(data);
-        ElementInfo _ei;
-        for (int i = 0; i < argc; i++) {
-            // std::cout << colName[i] << " = " << (argv[i] ? argv[i] : "NULL")
-            //           << std::endl;
-            std::string col = std::string(colName[i]);
-            if (col == "e2lfile") {
-                _ei.code_path = (argv[i] ? std::string(argv[i]) : "");
-            }
-            if (col == "value") {
-                _ei.value = (argv[i] ? std::string(argv[i]) : "");
-            }
-            if (col == "code") {
-                _ei.insertText = (argv[i] ? std::string(argv[i]) : "");
+    // 2. 检查是否为目录
+    if (fs::is_directory(code_dir, ec)) {
+        ElementInfoType eit;
+        DBEvent dbevent(code_dir);
+        //        std::string file_path = "";
+        std::filesystem::path now_path;
+        try {
+            for (const auto& entry :
+                 fs::recursive_directory_iterator(code_dir)) {
+                std::string ext = entry.path().extension().string();
+                // file_path = entry.path().string();
+
+                if (ext == ".e2" || ext == ".e2l") {
+                    eit = yyltoken(entry.path().c_str(), code_dir.string());
+
+                    dbevent.save_element(eit);
+                }
             }
         }
-        result->push_back(_ei);
-
-        //        std::cout << "--------" << std::endl;
+        catch (const fs::filesystem_error& e) {
+            std::cerr << "遍历失败: " << e.what() << '\n';
+        }
         return 0;
-    };  // -----  end lambda  -----
-    std::string imports = "imp";
-    std::string sql = llog::format(
-        "select e2lfile, value,code from e2lsp where value like \"%s%%\" ",
-        imports.c_str());
-    std::cout << sql << std::endl;
-
-    ll.query(sql, fun, &ei);
-
-    for (auto k : ei) {
-        std::cout << "code :" << k.code_path << " value:" << k.value
-                  << std::endl;
     }
-} /* -----  end of function yyltoken  ----- */
+    else {
+        std::cerr << ec.message() << std::endl;
+        return -1;
+    }
+} /* -----  end of function list_all_files  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  index_event
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void index_event(const char* code_path)
+{
+    int ret = list_all_files(code_path);
+    if (ret == -1) {
+        ElementInfoType eit = yyltoken(code_path, "");
+        DBEvent dbevent;
+        dbevent.save_element(eit);
+    }
+} /* -----  end of function index_event  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  e2l_json
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void e2l_json(const char* e2_json_path)
+{
+    CodeGenContext cgct;
+    cgct.AddGlobal();
+
+    LspLsif lsio;
+    lsio.system_keyword(e2_json_path);
+
+} /* -----  end of function e2l_json  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -402,17 +250,103 @@ void yyltoken(const char* fps)
  */
 int main(int argc, char* argv[])
 {
-    if (argc > 1) {
-        yyltoken(argv[1]);
-        // mPoll();
-        // mPollLoop();
+    int h;
+    bool bl = false;
+    bool create_index = false;
+    bool i = false;
+    char* f = nullptr;
+    char* d = nullptr;
+    char* e = nullptr;
+
+    std::string help =
+        "%s -h \n \
+Usage: \n \
+-h help \n \
+--- code manager \n \
+    -b bison/lex code \n \
+    -c create code index \n \
+    -d project or lib dirs \n \
+    -e e2l json system keyword, \n \
+        def:/usr/local/include/e2/lsp-server/e2l.json \n \
+    -f code file \n \
+--- lsp server \n \
+    -i io lsp server \n \
+    -n network lsp server \n \
+-v show e2lsp version \n \
+";
+
+    while ((h = getopt(argc, argv, "hnibcvd:f:e:")) != -1) {
+        switch (h) {
+            case 'h': {
+                printf(help.c_str(), argv[0]);
+
+                exit(-1);
+            }
+            case 'n':
+                printf("network lsp server\n");
+                break;
+            case 'i':
+                i = true;
+                break;
+            case 'b':
+                bl = true;
+                break;
+            case 'c':
+                create_index = true;
+                break;
+            case 'v':
+                printf("version:0.0.1\n");
+                break;
+            case 'd':
+                d = optarg;
+                break;
+            case 'f':
+                f = optarg;
+                break;
+            case 'e':
+                e = optarg;
+                break;
+            case '?':
+            default:
+                printf("%s -h\n", argv[0]);
+                exit(-1);
+        }
     }
-    else {
+
+    if (argc < 2) {
+        printf(help.c_str(), argv[0]);
+
+        exit(-1);
+    }
+
+    if (e != nullptr) {
+        e2l_json(e);
+        return EXIT_SUCCESS;
+    }
+
+    if (i) {
         lspt();
+        return EXIT_SUCCESS;
     }
 
-    //    testjson();
+    if (bl && f != nullptr) {
+        std::string ypath = "";
+        if (d != nullptr) {
+            ypath = std::string(d);
+        }
 
-    // lsp();
+        yyltoken(f, ypath);
+        return EXIT_SUCCESS;
+    }
+
+    if (create_index) {
+        if (f != nullptr) {
+            index_event(f);
+        }
+        else if (d != nullptr) {
+            index_event(d);
+        }
+    }
+
     return EXIT_SUCCESS;
 } /* ----------  end of function main  ---------- */

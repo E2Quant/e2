@@ -45,7 +45,6 @@
 #ifndef BASENODE_INC
 #define BASENODE_INC
 
-#include <llvm/ADT/APInt.h>
 #include <llvm/ADT/StringRef.h>
 #include <llvm/ADT/Twine.h>
 #include <llvm/Bitstream/BitstreamReader.h>
@@ -513,13 +512,27 @@ public:
     {
         _einfo = std::move(einfo);
         _einfo.code_line = _codeLine;
-        _einfo.code_path = _path;
+        _einfo.code_uri = _path;
         _einfo.ek = ElementKind::_ek_var;
     };
+    /**
+     * function union namespance 最后的结尾数据
+     */
+    void end_element(std::size_t end_line, std::size_t end_column)
+    {
+        _einfo.end_line = end_line;
+        _einfo.end_column = end_column;
+    }
+
+    void element_ns()
+    {
+        _einfo.from_ns = _name.back();
+        _einfo.tag = _name_space_tag;
+    }
     void element_sk(ElementKind ek) { _einfo.ek = ek; }
     ElementInfo element()
     {
-        _einfo.value = name();
+        _einfo.value = id_name();
         return _einfo;
     }
     /* =============  OPERATORS     =================== */
@@ -706,19 +719,7 @@ public:
         _codeLine = line;
 
     }; /* constructor */
-    ~Block()
-    {
-        for (auto s : _statements) {
-            RELEASE(s);
-        }
-
-        _statements.clear();
-
-        for (auto e : _exps) {
-            RELEASE(e);
-        }
-        _exps.clear();
-    };
+    ~Block() { clean(); };
     /* =============  ACCESSORS     =================== */
     virtual llvm::Value* codeGen(CodeGenContext& context);
     NodeType getType() { return NodeType::_block; }
@@ -727,6 +728,7 @@ public:
         if (_statements.size() < index) {
             llog::bug("statement index:", index);
         }
+
         return _statements.at(index)->getType();
     }
     std::string getIdName(size_t index)
@@ -783,7 +785,25 @@ public:
 
     size_t size() { return _statements.size(); }
     const std::string& name() { return _name; }
+    void clean()
+    {
+        for (auto s : _statements) {
+            RELEASE(s);
+        }
 
+        _statements.clear();
+
+        for (auto e : _exps) {
+            RELEASE(e);
+        }
+        _exps.clear();
+
+        _imports.clear();
+        _name = "";
+
+        _ismod = false;
+        _mod_next = 0;
+    }
     /* =============  OPERATORS     =================== */
 
 protected:

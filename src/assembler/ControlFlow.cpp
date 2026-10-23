@@ -53,6 +53,9 @@
 
 #include <cstddef>
 
+#include "llvm/IR/Instruction.h"
+#include "llvm/Support/raw_ostream.h"
+
 namespace e2 {
 #define BBLock(bname, fun)                                                 \
     ({                                                                     \
@@ -164,8 +167,19 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
     bool brk = false;
     context.currentBreak(mergeBlock);
 
+#if __clang_major__ >= 23
+
+    // UncondBrInst	Instruction::UncondBr	无条件跳转（原来 br label %x）
+    // CondBrInst	Instruction::CondBr	条件跳转（原来 br i1 %c, label
+    // %t, label %f）
+    //
+    llvm::CondBrInst::Create(comp, thenBlock, elseBlock,
+                             context.currentBlock());
+#else
     llvm::BranchInst::Create(thenBlock, elseBlock, comp,
                              context.currentBlock());
+
+#endif
 
     bool needMergeBlock = false;
     Selection se = _labledBlock->selection(0);
@@ -189,13 +203,34 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
 
         brk = context.isBreakPoint();
         if (brk && breakBB != nullptr) {
+#if __clang_major__ >= 23
+            llvm::UncondBrInst::Create(breakBB, context.currentBlock());
+#else
             llvm::BranchInst::Create(breakBB, context.currentBlock());
+#endif
             context.setBreakPoint(false);
         }
     }
+#if __clang_major__ >= 23
 
+    if (!context.currentBlock()->hasTerminator()) {
+        // llvm::errs() << "=== bad block: " <<
+        // context.currentBlock()->getName()
+        //              << " in " <<
+        //              context.currentBlock()->getParent()->getName()
+        //              << " ===\n";
+        // context.currentBlock()->getParent()->print(llvm::errs(), nullptr);
+        // std::abort();
+        // }
+#else
     if (context.currentBlock()->getTerminator() == nullptr) {
+#endif
+
+#if __clang_major__ >= 23
+        llvm::UncondBrInst::Create(mergeBlock, context.currentBlock());
+#else
         llvm::BranchInst::Create(mergeBlock, context.currentBlock());
+#endif
         needMergeBlock = true;
     }
 
@@ -223,15 +258,37 @@ llvm::Value* IFStatement::codeGen(CodeGenContext& context)
                 }
                 brk = context.isBreakPoint();
                 if (brk && breakBB != nullptr) {
+#if __clang_major__ >= 23
+                    llvm::UncondBrInst::Create(breakBB, context.currentBlock());
+#else
                     llvm::BranchInst::Create(breakBB, context.currentBlock());
+#endif
                     context.setBreakPoint(false);
                 }
             }
         }
     }
+#if __clang_major__ >= 23
 
+    if (!context.currentBlock()->hasTerminator()) {
+        // llvm::errs() << "=== bad block: " <<
+        // context.currentBlock()->getName()
+        //              << " in " <<
+        //              context.currentBlock()->getParent()->getName()
+        //              << " ===\n";
+        // context.currentBlock()->getParent()->print(llvm::errs(), nullptr);
+        // std::abort();
+        // }
+#else
     if (context.currentBlock()->getTerminator() == nullptr) {
+#endif
+
+#if __clang_major__ >= 23
+        llvm::UncondBrInst::Create(mergeBlock, context.currentBlock());
+#else
         llvm::BranchInst::Create(mergeBlock, context.currentBlock());
+#endif
+
         needMergeBlock = true;
     }
     context.popBlock();
@@ -318,8 +375,11 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     llvm::BasicBlock* loopBB = BBLock("loop", nullptr);
     llvm::BasicBlock* jumpBB = BBLock("jump", nullptr);
     llvm::BasicBlock* mergeBB = BBLock("merge", nullptr);
-
+#if __clang_major__ >= 23
+    llvm::UncondBrInst::Create(firstCondBlock, context.currentBlock());
+#else
     llvm::BranchInst::Create(firstCondBlock, context.currentBlock());
+#endif
 
     /// enter while first cond
     context.pushBlock(firstCondBlock, ScopeKind::_sk_flow);
@@ -330,9 +390,13 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     }
 
     ToBool(firstCondValue, context);
-
+#if __clang_major__ >= 23
+    llvm::CondBrInst::Create(firstCondValue, loopBB, jumpBB,
+                             context.currentBlock());
+#else
     llvm::BranchInst::Create(loopBB, jumpBB, firstCondValue,
                              context.currentBlock());
+#endif
 
 #if __clang_major__ <= 14
     function->getBasicBlockList().push_back(condBB);
@@ -353,8 +417,13 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
     }
     ToBool(condValue, context);
 
+#if __clang_major__ >= 23
+    llvm::CondBrInst::Create(condValue, loopBB, mergeBB,
+                             context.currentBlock());
+#else
     llvm::BranchInst::Create(loopBB, mergeBB, condValue,
                              context.currentBlock());
+#endif
 
 #if __clang_major__ <= 14
     function->getBasicBlockList().push_back(loopBB);
@@ -372,7 +441,11 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
         e2::llog::bug("Code gen for loop value in while loop failed.");
         return nullptr;
     }
+#if __clang_major__ >= 23
+    llvm::UncondBrInst::Create(condBB, context.currentBlock());
+#else
     llvm::BranchInst::Create(condBB, context.currentBlock());
+#endif
 
 #if __clang_major__ <= 14
     function->getBasicBlockList().push_back(jumpBB);
@@ -384,7 +457,11 @@ llvm::Value* IterStatement::IterWhile(CodeGenContext& context)
 
     /// jump break
     context.pushBlock(jumpBB, ScopeKind::_sk_flow);
+#if __clang_major__ >= 23
+    llvm::UncondBrInst::Create(mergeBB, context.currentBlock());
+#else
     llvm::BranchInst::Create(mergeBB, context.currentBlock());
+#endif
 
 #if __clang_major__ <= 14
     function->getBasicBlockList().push_back(mergeBB);
@@ -430,8 +507,11 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
     llvm::BasicBlock* breakBB = BBLock("break", nullptr);
     llvm::BasicBlock* mergeBB = BBLock("merge", nullptr);
 
+#if __clang_major__ >= 23
+    llvm::UncondBrInst::Create(firstCondBlock, context.currentBlock());
+#else
     llvm::BranchInst::Create(firstCondBlock, context.currentBlock());
-
+#endif
     ///// enter
     context.pushBlock(firstCondBlock, ScopeKind::_sk_flow);
     llvm::Value* firstCondValue = _condition->codeGen(context);
@@ -444,8 +524,13 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
 #ifdef E2L_DEBUG
     e2::llog::info("firstCondValue is ok -------------");
 #endif
+#if __clang_major__ >= 23
+    llvm::CondBrInst::Create(firstCondValue, loopBB, breakBB,
+                             context.currentBlock());
+#else
     llvm::BranchInst::Create(loopBB, breakBB, firstCondValue,
                              context.currentBlock());
+#endif
 #if __clang_major__ <= 14
     function->getBasicBlockList().push_back(condBB);
 #else
@@ -468,9 +553,14 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
 #ifdef E2L_DEBUG
     e2::llog::info("agent CondValue is ok -------------");
 #endif
+
+#if __clang_major__ >= 23
+    llvm::CondBrInst::Create(condValue, loopBB, mergeBB,
+                             context.currentBlock());
+#else
     llvm::BranchInst::Create(loopBB, mergeBB, condValue,
                              context.currentBlock());
-
+#endif
 #if __clang_major__ <= 14
     function->getBasicBlockList().push_back(loopBB);
 #else
@@ -492,7 +582,11 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
         _range->codeGen(context);
     }
 
+#if __clang_major__ >= 23
+    llvm::UncondBrInst::Create(condBB, context.currentBlock());
+#else
     llvm::BranchInst::Create(condBB, context.currentBlock());
+#endif
 
 #if __clang_major__ <= 14
     function->getBasicBlockList().push_back(breakBB);
@@ -504,9 +598,11 @@ llvm::Value* IterStatement::IterFor(CodeGenContext& context)
 
     // break
     context.pushBlock(breakBB, ScopeKind::_sk_flow);
-
+#if __clang_major__ >= 23
+    llvm::UncondBrInst::Create(mergeBB, context.currentBlock());
+#else
     llvm::BranchInst::Create(mergeBB, context.currentBlock());
-
+#endif
 #if __clang_major__ <= 14
     function->getBasicBlockList().push_back(mergeBB);
 #else

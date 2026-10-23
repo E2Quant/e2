@@ -52,10 +52,11 @@
 #include <cstdlib>
 #include <cstring>
 #include <deque>
-#include <iostream>
+#include <filesystem>
 #include <string>
 #include <vector>
 
+#include "E2L/E2LType.hpp"
 #include "assembler/BaseType.hpp"
 #include "generated/e2_bison.hpp"
 #include "generated/e2_lex.hpp"
@@ -65,21 +66,67 @@ namespace e2 {
 
 ParserCtx::ParserCtx()
 {
+    try {
+        std::string root_path = std::filesystem::current_path().string() + "/";
+        _project_dir.push_back(root_path);
+    }
+    catch (const std::filesystem::filesystem_error& e) {
+        llog::bug("project dir get error:", e.what());
+    }
 #ifdef SEARCH_PATH
-    search_path(SEARCH_PATH);
+    std::string spath = std::string(SEARCH_PATH);
+    _project_dir.push_back(spath);
 #endif
+
+    _file_path[0] = '.';
+
     _RootBlock = MALLOC(Block, "inter", code_line, _file_path);
 }
 
 ParserCtx::~ParserCtx()
 {
     RELEASE(_RootBlock);
-    if (_dir != nullptr) {
-        free(_dir);
-        _dir = nullptr;
+    if (_root_filepath != NULL) {
+        free(_root_filepath);
+        _root_filepath = NULL;
     }
 }
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  Parser::scan_begin
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void ParserCtx::scan_begin()
+{
+    loc = new yy::location();
+    parser = new yy::Parser(lexer, *loc, *this);
 
+#ifdef E2L_DEBUG
+    parser->set_debug_level(false);
+    _trace_scanning = false;
+#else
+    _trace_scanning = false;
+#endif
+    yyset_debug(_trace_scanning, lexer);
+
+    if (_file_path[0] == '\0' || _file_path[0] == '-')
+        yyset_in(stdin, lexer);
+    else {
+        _file = fopen(_file_path, "r");
+        if (_file == nullptr) {
+            e2::llog::bug("cannot open ", std::string(_file_path), ": ",
+                          strerror(errno));
+            exit(EXIT_FAILURE);
+        }
+        yyset_in(_file, lexer);
+    }
+} /* -----  end of function Parser::scan_begin  ----- */
 /*
  * ===  FUNCTION  =============================
  *
@@ -101,11 +148,37 @@ void ParserCtx::scan_end()
         fclose(_file);
     }
 
-    if (_file_path != nullptr) {
-        free(_file_path);
-        _file_path = nullptr;
-    }
+    _file_path[0] = '\0';
 } /* -----  end of function ParserCtx::scan_end  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ParserCtx::reset
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void ParserCtx::reset()
+{
+    if (_root_filepath != NULL) {
+        free(_root_filepath);
+        _root_filepath = NULL;
+    }
+
+    if (_RootBlock != nullptr) {
+        _RootBlock->clean();
+    }
+    _cbt = NodeType::_null;
+    _current_proj_idx = -1;
+    _imp_path = "main";
+
+    _element_map.clear();
+
+} /* -----  end of function ParserCtx::reset  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -115,7 +188,7 @@ void ParserCtx::scan_end()
  *  Parameters:
  *  - size_t  arg
  *  Description:
- *
+ *  f 有可能是完整路径，有可能是 URI
  * ============================================
  */
 int ParserCtx::toparse(const char* f)
@@ -124,15 +197,30 @@ int ParserCtx::toparse(const char* f)
     code_line = 1;
     variable_str_num = 1;
 
-    if (_dir == nullptr) {
-        rootPath(f);
+#ifdef E2L_DEBUG
+    if (_root_filepath != NULL) {
+        llog::info(llog::format("root: %s", _root_filepath));
     }
     else {
-        ret = findPath(f);
-        if (ret != 0) {
-            return ret;
-        }
+        llog::info(llog::format("root initing"));
     }
+#endif
+    ret = ProjPath(f);
+
+#ifdef E2L_DEBUG
+    llog::info(llog::format("file:%s ret:%d", _file_path, ret));
+#endif
+    if (ret != 0) {
+        llog::bug(llog::format("not found import file:%s from root path:%s",
+                               _file_path, _root_filepath));
+        return ret;
+    }
+
+    if (_root_filepath != NULL) {
+        free(_root_filepath);
+        _root_filepath = NULL;
+    }
+    _root_filepath = strdup(f);
 
     yylex_init(&lexer);
 
@@ -156,7 +244,7 @@ int ParserCtx::toparse(const char* f)
 /*
  * ===  FUNCTION  =============================
  *
- *         Name:  ParserCtx::rootPath
+ *         Name:  ParserCtx::ProjPath
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
@@ -164,25 +252,66 @@ int ParserCtx::toparse(const char* f)
  *
  * ============================================
  */
-void ParserCtx::rootPath(const char* f)
+int ParserCtx::ProjPath(const char* f)
 {
-    char* _dirc = nullptr;
-    char* dir = nullptr;
-    size_t dlen = snprintf(NULL, 0, "%s", f) + 1;
-    _file_path = (char*)malloc(dlen);
-    snprintf(_file_path, dlen, "%s", f);
-
-    _dirc = strdup(f);
-    if (_dirc != nullptr) {
-        dir = dirname(_dirc);
-        dlen = snprintf(NULL, 0, "%s", dir) + 1;
-        _dir = (char*)malloc(dlen);
-        snprintf(_dir, dlen, "%s", dir);
-
-        free(_dirc);
-        _dirc = nullptr;
+    int ret = 0;
+    char fmt[] = "%s/%s";
+    size_t len = 0;
+    _current_proj_idx = -1;
+    if (f == NULL) {
+        return -1;
     }
-} /* -----  end of function ParserCtx::rootPath  ----- */
+
+    ret = access(f, R_OK);
+    if (ret == 0) {
+        RESETFILE();
+        len = snprintf(NULL, 0, "%s", f) + 1;
+        if (len > FILE_SIZE) {
+            len = FILE_SIZE;
+        }
+        snprintf(_file_path, len, "%s", f);
+
+        return ret;
+    }
+
+    for (std::string code_dir : _project_dir) {
+        if (code_dir.length() == 0) {
+            llog::info("search path is empty");
+            return -1;
+        }
+        _current_proj_idx++;
+
+        RESETFILE();
+
+        len = snprintf(NULL, 0, fmt, code_dir.c_str(), f) + 1;
+        if (len > FILE_SIZE) {
+            len = FILE_SIZE;
+        }
+        snprintf(_file_path, len, fmt, code_dir.c_str(), f);
+
+        ret = access(_file_path, R_OK);
+
+        // #ifdef E2L_DEBUG
+        //         if (ret != 0) {
+        //             llog::bug(_file_path);
+        //         }
+        //         // else {
+        //         //     llog::info(_file_path);
+        //         // }
+        // #endif
+
+        if (ret == 0) {
+            break;
+        }
+    }
+
+    if (ret != 0) {
+        _current_proj_idx = -1;
+        ret = findPath(f);
+    }
+
+    return ret;
+} /* -----  end of function ParserCtx::ProjPath  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -192,65 +321,33 @@ void ParserCtx::rootPath(const char* f)
  *  Parameters:
  *  - size_t  arg
  *  Description:
- *
+ *  转成全路径的 path
  * ============================================
  */
 int ParserCtx::findPath(const char* f)
 {
-    char fmt[] = "%s/%s";
-    size_t len = 0;
     int ef = -1;
 
-    ef = defPath(f);
-    if (ef == 0) {
-        // 正常的 file
-        return ef;
+    std::string dir_name = root_dirname(_root_filepath);
+
+    ef = loopPath(f, dir_name);
+    if (ef != 0) {
+        for (auto pdir : _project_dir) {
+            dir_name = pdir + "/" + root_dirname(_root_filepath);
+            ef = loopPath(f, dir_name);
+            if (ef == 0) {
+                break;
+            }
+        }
     }
-    // if (*_dir == '.') {
-    //     return -1;
-    // }
-    char* dir = strdup(_dir);
-    size_t dir_is_len = 0;
-    do {
-        if (_file_path != nullptr) {
-            free(_file_path);
-            _file_path = nullptr;
-        }
-        len = snprintf(NULL, 0, fmt, dir, f) + 1;
 
-        _file_path = (char*)malloc(len);
-        snprintf(_file_path, len, fmt, dir, f);
-
-#ifdef E2L_DEBUG
-        llog::info(_file_path);
-#endif
-
-        ef = access(_file_path, R_OK);
-        if (ef == 0) {
-            break;
-        }
-
-        if (*dir == '.') {
-            break;
-        }
-        dir = dirname(dir);
-        dir_is_len = strnlen(dir, len);
-        if (dir_is_len < 2) {
-            break;
-        }
-
-    } while (1);
-    if (dir != nullptr) {
-        free(dir);
-        dir = nullptr;
-    }
     return ef;
 } /* -----  end of function ParserCtx::findPath  ----- */
 
 /*
  * ===  FUNCTION  =============================
  *
- *         Name:  ParserCtx::resetPath
+ *         Name:  ParserCtx::loopPath
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
@@ -258,36 +355,46 @@ int ParserCtx::findPath(const char* f)
  *
  * ============================================
  */
-int ParserCtx::defPath(const char* f)
+int ParserCtx::loopPath(const char* f, std::string& dir_name)
 {
-    int ret = 0;
     char fmt[] = "%s/%s";
     size_t len = 0;
-    if (_search_path.length() == 0) {
-        llog::info("search path is empty");
-        return -1;
-    }
-    len = snprintf(NULL, 0, fmt, _search_path.c_str(), f) + 1;
+    int ef = -1;
 
-    _file_path = (char*)malloc(len);
-    snprintf(_file_path, len, fmt, _search_path.c_str(), f);
+    size_t dir_is_len = 0;
+    do {
+        RESETFILE();
 
-    ret = access(_file_path, R_OK);
+        len = snprintf(NULL, 0, fmt, dir_name.c_str(), f) + 1;
 
-#ifdef E2L_DEBUG
-    if (ret != 0) {
-        llog::bug(_file_path);
-    }
-    else {
-        llog::info(_file_path);
-    }
-#endif
-    return ret;
-} /* -----  end of function ParserCtx::resetPath  ----- */
+        snprintf(_file_path, len, fmt, dir_name.c_str(), f);
+
+        // #ifdef E2L_DEBUG
+        //         llog::info(_file_path);
+        // #endif
+
+        ef = access(_file_path, R_OK);
+        if (ef == 0) {
+            _project_dir.push_back(dir_name);
+            return ef;
+        }
+
+        dir_name = root_dirname(dir_name.c_str());
+
+        dir_is_len = strnlen(dir_name.c_str(), len);
+        if (dir_is_len < 2) {
+            return ef;
+        }
+
+    } while (1);
+
+    return ef;
+} /* -----  end of function ParserCtx::loopPath  ----- */
+
 /*
  * ===  FUNCTION  =============================
  *
- *         Name:  ParserCtx::search_path
+ *         Name:  ParserCtx::project
  *  ->  void *
  *  Parameters:
  *  - size_t  arg
@@ -295,10 +402,85 @@ int ParserCtx::defPath(const char* f)
  *
  * ============================================
  */
-void ParserCtx::search_path(const char* f)
+void ParserCtx::project(const std::string src_path)
 {
-    _search_path = std::string(f);
-} /* -----  end of function ParserCtx::search_path  ----- */
+    if (src_path.length() == 0) return;
+    std::string proj = src_path;
+    std::size_t len = proj.length();
+    if (proj.substr(len - 1, len) == "/") {
+        proj = proj.substr(0, len - 1);
+    }
+    LongPath(proj, true);
+
+    // llog::info(proj);
+    _project_dir.push_back(proj);
+
+} /* -----  end of function ParserCtx::project  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ParserCtx::root_dirname
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  取上一级目录
+ * ============================================
+ */
+std::string ParserCtx::root_dirname(const char* p)
+{
+    if (p == NULL) {
+        return std::filesystem::path(_project_dir.at(0)).parent_path().string();
+    }
+    return std::filesystem::path(p).parent_path().string();
+} /* -----  end of function ParserCtx::root_dirname  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ParserCtx::LongPath
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+int ParserCtx::LongPath(std::string& src_path, bool complete)
+{
+    int ret = 0;
+    std::filesystem::path now_path = std::filesystem::current_path();
+    if (src_path.substr(0, 2) == "..") {
+        ret = 1;
+        do {
+            src_path = src_path.substr(3, src_path.length());
+            now_path = now_path.parent_path();
+
+        } while (src_path.substr(0, 2) == ".." && src_path.length() > 3);
+
+        if (complete) {
+            src_path = now_path.string() + "/" + src_path;
+        }
+    }
+    else if (src_path.substr(0, 1) == ".") {
+        if (src_path.length() <= 2) {
+            src_path = now_path.string();
+        }
+        else {
+            src_path = src_path.substr(2, src_path.length());
+
+            if (complete) {
+                src_path = now_path.string() + "/" + src_path;
+            }
+        }
+    }
+    else if (src_path.substr(0, 1) != "/") {
+        src_path = _project_dir.at(0) + src_path;
+    }
+    else {
+        ret = -1;
+    }
+    return ret;
+} /* -----  end of function ParserCtx::LongPath  ----- */
 /*
  * ===  FUNCTION  =============================
  *
@@ -328,24 +510,7 @@ void ParserCtx::RootBlock(Block* block) { _RootBlock = block; }
 const char* ParserCtx::current_file()
 {
     return _file_path;
-    //    printf("file:%s\n", _file_path);
 } /* -----  end of function ParserCtx::current_file  ----- */
-
-/*
- * ===  FUNCTION  =============================
- *
- *         Name:  ParserCtx::path
- *  ->  void *
- *  Parameters:
- *  - size_t  arg
- *  Description:
- *
- * ============================================
- */
-const char* ParserCtx::path()
-{
-    return _file_path;
-} /* -----  end of function ParserCtx::path  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -369,7 +534,7 @@ void ParserCtx::grammar_error(const yy::location& locs, std::size_t line,
     e2d.end_line = locs.end.line;
     e2d.end_column = locs.end.column;
     e2d.code_line = line;
-    e2d.code_path = efile;
+    e2d.code_uri = efile;
     e2d.msg = msg;
 
     _error_location.push_back(e2d);
@@ -391,42 +556,6 @@ const std::vector<LocationType> ParserCtx::grammar_error()
 {
     return _error_location;
 } /* -----  end of function ParserCtx::grammar_error  ----- */
-/*
- * ===  FUNCTION  =============================
- *
- *         Name:  Parser::scan_begin
- *  ->  void *
- *  Parameters:
- *  - size_t  arg
- *  Description:
- *
- * ============================================
- */
-void ParserCtx::scan_begin()
-{
-    loc = new yy::location();
-    parser = new yy::Parser(lexer, *loc, *this);
-
-#ifdef E2L_DEBUG
-    parser->set_debug_level(false);
-    _trace_scanning = false;
-#else
-    _trace_scanning = false;
-#endif
-    yyset_debug(_trace_scanning, lexer);
-
-    if (_file_path == nullptr || std::string(_file_path) == "-")
-        yyset_in(stdin, lexer);
-    else {
-        _file = fopen(_file_path, "r");
-        if (_file == nullptr) {
-            e2::llog::bug("cannot open ", std::string(_file_path), ": ",
-                          strerror(errno));
-            exit(EXIT_FAILURE);
-        }
-        yyset_in(_file, lexer);
-    }
-} /* -----  end of function Parser::scan_begin  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -455,7 +584,6 @@ int ParserCtx::HasImport()
         _RootBlock->update(_imp_path);
         ret = toparse(_imp_path.c_str());
         if (ret == -1) {
-            llog::bug("not found mod file:", _imp_path);
             // 下一步再做 lsp 变量错误的分析
             continue;
         }
@@ -494,9 +622,30 @@ std::deque<LocationType> ParserCtx::imports()
  */
 void ParserCtx::element_data(ElementInfo ei, std::size_t line, ElementKind ek)
 {
+    if (_e2lsp == false) {
+        return;
+    }
+    ei.ek = ek;
     std::string efile = llog::format("%s", _file_path);
 
-    ei.ek = ek;
+    LongPath(efile, true);
+
+    std::size_t len = 0;
+    std::string pdir = "";
+    for (auto code_dir : _project_dir) {
+        len = code_dir.length();
+        if (efile.length() < len) {
+            continue;
+        }
+        pdir = efile.substr(0, len);
+        if (pdir == code_dir) {
+            efile = efile.substr(len, efile.length());
+            ei.code_dir = code_dir;
+            break;
+        }
+    }
+
+    ei.code_uri = efile;
 
     if (_element_map.count(efile) == 0) {
         std::vector<ElementInfo> ei_list;
@@ -507,6 +656,37 @@ void ParserCtx::element_data(ElementInfo ei, std::size_t line, ElementKind ek)
         _element_map.at(efile).push_back(ei);
     }
 } /* -----  end of function ParserCtx::element_data  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  ParserCtx::element_update
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  主要是更新 method_call 的参数与  primary_rvalue 的 ek 值
+ * ============================================
+ */
+void ParserCtx::element_update(ElementInfo ei, std::size_t line, ElementKind ek)
+{
+    if (_e2lsp == false) {
+        return;
+    }
+    std::string efile = llog::format("%s", _file_path);
+
+    if (_element_map.count(efile) == 0) {
+        return;
+    }
+    std::size_t idx = 0;
+    for (auto it : _element_map.at(efile)) {
+        if (it.value == ei.value && it.code_line == ei.code_line) {
+            _element_map.at(efile).at(idx).ek = ek;
+            _element_map.at(efile).at(idx).from_ns = ei.from_ns;
+        }
+        idx++;
+    }
+} /* -----  end of function ParserCtx::element_update  ----- */
 
 /*
  * ===  FUNCTION  =============================

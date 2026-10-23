@@ -130,7 +130,7 @@ struct CompletionItemApplyKinds {
      *
      * @since 3.18.0
      */
-    ApplyKind commitCharacters;
+    ApplyKind commitCharacters = ApplyKind::Merge;
 
     /**
      * Specifies whether the `data` field on a completion will replace or
@@ -157,6 +157,8 @@ struct CompletionItemApplyKinds {
      * @since 3.18.0
      */
     ApplyKind data;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(CompletionItemApplyKinds, commitCharacters);
+
 }; /* ----------  end of struct CompletionItemApplyKinds  ---------- */
 
 typedef struct CompletionItemApplyKinds CompletionItemApplyKinds;
@@ -191,6 +193,8 @@ struct TextEdit {
      * empty string.
      */
     std::string newText;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(TextEdit, range, newText);
+
 }; /* ----------  end of struct TextEdit  ---------- */
 
 typedef struct TextEdit TextEdit;
@@ -379,7 +383,7 @@ struct CompletionItem {
      */
     LSPAnyObject data;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(CompletionItem, label, data, sortText, kind,
-                                   insertText);
+                                   insertText, textEdit, documentation);
 }; /* ----------  end of struct CompletionItem  ---------- */
 
 typedef struct CompletionItem CompletionItem;

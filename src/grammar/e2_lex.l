@@ -54,8 +54,8 @@ typedef yy::Parser::token_type token_type;
 %}
 
 "extern"        {return Parser::make_EXTERN(loc);}
-"namespace"		{return Parser::make_NAMESPACE(loc);}
-"union"			{return Parser::make_UNION(loc);}
+"namespace"		{ctx.current_block_type(NodeType::_namespace);  return Parser::make_NAMESPACE(loc);}
+"union"			{ctx.current_block_type(NodeType::_union);  return Parser::make_UNION(loc);}
 "func"			{return Parser::make_FUNCTION(loc);}
 "import"		{return Parser::make_IMPORT(loc);}
 "this"          {return Parser::make_THIS(loc);}  

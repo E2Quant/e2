@@ -44,6 +44,7 @@
 
 #ifndef LOG_INC
 #define LOG_INC
+#include <ctime>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -89,7 +90,7 @@ void log_cout(const char* file, const char* functionName, long lineNumber,
               std::string color, Args&&... args)
 {
     std::time_t t = std::time(nullptr);
-
+    
 #ifdef DEBUG
     std::cout << KCYN
               << std::put_time(std::localtime(&t), "%Y-%m-%d %H:%M:%S %Z")

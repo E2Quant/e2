@@ -40,18 +40,22 @@
  * EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  * =====================================================================================
  */
-#include "lsp-server/LspLsif.hpp"
+#include "lsp-server/dbcache/LspLsif.hpp"
 
 #include <sys/stat.h>
 #include <unistd.h>
 
 #include <chrono>
+#include <cstddef>
+#include <cstdio>
+#include <fstream>
 #include <iostream>
 #include <string>
 #include <vector>
 
 #include "assembler/BaseType.hpp"
 #include "lsp-server/util.hpp"
+#include "utility/Log.hpp"
 namespace e2 {
 
 /*
@@ -85,7 +89,7 @@ void LspLsif::init()
 {
     struct stat info;
     int init_db_table = -1;
-    ;
+
     if (stat(_lldir, &info) != 0) {
         mkdir(_lldir, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
     }
@@ -117,15 +121,22 @@ void LspLsif::init()
 void LspLsif::init_db()
 {
     std::string sql =
-        "CREATE TABLE e2lsp(e2lfile, value, begin_line, begin_column, "
-        "end_line, end_column,code_line, ek, code, now);";
+        "CREATE TABLE e2lsp(code_uri, code_dir, value, begin_line, "
+        "end_line, "
+        "begin_column,  end_column, code_line, ek, code,from_ns,tag, now);";
     execute(sql);
-    sql = "CREATE INDEX idx_file ON e2lsp (e2lfile);";
+    sql = "CREATE INDEX idx_file ON e2lsp (code_uri);";
     execute(sql);
     sql = "CREATE INDEX idx_value ON e2lsp (value);";
     execute(sql);
 
-    system_keyword();
+    std::string lib = llog::format("%s/lib.json", _lldir);
+    int ret = access(lib.c_str(), R_OK);
+    if (ret != 0) {
+        e2_json j = e2_json::array({"/usr/local/include/e2"});
+        std::ofstream(lib) << j;
+    }
+
 } /* -----  end of function LspLsif::init_db  ----- */
 
 /*
@@ -139,47 +150,183 @@ void LspLsif::init_db()
  *
  * ============================================
  */
-void LspLsif::system_keyword()
+void LspLsif::system_keyword(const char* e2l_json_file)
 {
-    const char* e2l_json_file = "/usr/local/include/e2/e2l.json";
+    std::string enter = "\n";
+
+    std::FILE* f = NULL;
+    const char* def_e2l_json_file = "/usr/local/include/e2/lsp-server/e2l.json";
     std::vector<std::string> keywords = {
         "extern", "namespace", "union", "func",     "import", "this",
         "self",   "switch",    "case",  "default",  "if",     "else",
         "for",    "do",        "while", "continue", "break",  "return"};
     ElementInfo ei;
     ei.ek = ElementKind::_ek_keyword;
-    int is_file = access(e2l_json_file, R_OK);
-    if (is_file != 0) {
-        return;
-    }
-    std::FILE* f = std::fopen(e2l_json_file, "r");
-    if (f == NULL) {
-        llog::bug("file not exist!");
-        return;
-    }
-    try {
-        std::string enter = "\n";
+    if (e2l_json_file != NULL) {
+        int is_file = access(e2l_json_file, R_OK);
+        llog::echo("is_file:", is_file);
+        printf("ptha:%s\n", e2l_json_file);
+        if (is_file != 0) {
+            return;
+        }
+
+        f = std::fopen(e2l_json_file, "r");
         e2_json jdata = e2_json::parse(f);
-        for (auto key : keywords) {
+
+        for (const auto& [key, value] : jdata.items()) {
             ei.value = key;
             ei.insertText = "";
-            if (jdata.count(key)) {
-                if (jdata[key].count("body")) {
-                    for (auto it : jdata[key]["body"]) {
-                        ei.insertText += it;
-                        ei.insertText += enter;
-                    }
-                }
+
+            std::size_t body_size = jdata[key].count("body");
+            if (body_size == 0) {
+                continue;
+            }
+            body_size = jdata[key]["body"].size();
+            for (auto it : jdata[key]["body"]) {
+                ei.insertText += it;
+                ei.insertText += enter;
             }
 
             preparedInsert(ei);
         }
     }
-    catch (std::exception& e) {
-        std::cerr << e.what() << std::endl;
+    else {
+        int is_file = access(def_e2l_json_file, R_OK);
+        if (is_file != 0) {
+            return;
+        }
+
+        f = std::fopen(def_e2l_json_file, "r");
+        if (f == NULL) {
+            llog::bug("file not exist!");
+            return;
+        }
+        try {
+            e2_json jdata = e2_json::parse(f);
+            for (auto key : keywords) {
+                ei.value = key;
+                ei.insertText = "";
+
+                if (jdata.count(key)) {
+                    std::size_t body_size = jdata[key].count("body");
+                    if (body_size == 0) {
+                        continue;
+                    }
+                    body_size = jdata[key]["body"].size();
+                    for (auto it : jdata[key]["body"]) {
+                        ei.insertText += it;
+                        ei.insertText += enter;
+                    }
+                }
+
+                preparedInsert(ei);
+            }
+        }
+        catch (std::exception& e) {
+            std::cerr << e.what() << std::endl;
+        }
+        GlobalUnionToE2lsp();
     }
 
 } /* -----  end of function LspLsif::system_keyword  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LspLsif::GlobalUnionToE2lsp
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *  以后再优化吧
+ * ============================================
+ */
+void LspLsif::GlobalUnionToE2lsp()
+{
+    char* tokens = NULL;
+    char* var_tokens = NULL;
+    char* pre = NULL;
+    char* str;
+    char delim[] = ".";
+    // long val = 0;
+    ElementInfo ei;
+
+    for (auto it = _GlobalVariables.begin(); it != _GlobalVariables.end();
+         ++it) {
+        // val = it->second / NUMBER_DECI;
+        str = strdup(it->first.c_str());
+
+        if (str != NULL) {
+            tokens = strtok(str, delim);
+            if (pre == NULL) {
+                pre = strdup(tokens);
+                ei.value = llog::format("%s", tokens);
+                ei.insertText = "";
+                // 3
+                ei.ek = ElementKind::_ek_union;
+
+                preparedInsert(ei);
+
+                // printf("union %s {\n", tokens);
+            }
+            if (strcmp(tokens, pre) != 0) {
+                free(pre);
+                pre = NULL;
+                ei.value = llog::format("%s", tokens);
+                ei.insertText = "";
+                // 3
+                ei.ek = ElementKind::_ek_union;
+
+                preparedInsert(ei);
+
+                // printf("}\n");
+                // printf("union %s {\n", tokens);
+                pre = strdup(tokens);
+            }
+
+            while ((var_tokens = strtok(NULL, delim))) {
+                ei.value = llog::format("%s", var_tokens);
+                ei.from_ns = llog::format("%s", tokens);
+                // 6
+                ei.ek = ElementKind::_ek_globle_un;
+                preparedInsert(ei);
+
+                // printf("%s .  %s = %ld;\n", tokens, var_tokens, val);
+            }
+            free(str);
+        }
+    }
+    if (pre != NULL) {
+        free(pre);
+        pre = NULL;
+    }
+} /* -----  end of function LspLsif::GlobalUnionToE2lsp  ----- */
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LspLsif::load_lib_json
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void LspLsif::load_lib_json(JsonCallback jcb)
+{
+    int ef = access(_lib_json_file, R_OK);
+    if (ef != 0) {
+        return;
+    }
+    std::ifstream fjson(_lib_json_file);
+    e2_json data = e2_json::parse(fjson);
+    std::string value = "";
+    for (auto it : data) {
+        value = it.get<std::string>();
+        jcb(value);
+    }
+} /* -----  end of function LspLsif::load_lib_json  ----- */
+
 /*
  * ===  FUNCTION  =============================
  *
@@ -215,7 +362,7 @@ bool LspLsif::open(const std::string& filename)
  */
 bool LspLsif::clear(const std::string& e2l_file)
 {
-    std::string sql = llog::format("DELETE FROM e2lsp WHERE e2lfile =\"%s\"; ",
+    std::string sql = llog::format("DELETE FROM e2lsp WHERE code_uri =\"%s\"; ",
                                    e2l_file.c_str());
 
     return execute(sql);
@@ -237,7 +384,7 @@ bool LspLsif::execute(const std::string& sql)
     char* errMsg = nullptr;
     int rc = sqlite3_exec(_db_connect, sql.c_str(), nullptr, nullptr, &errMsg);
     if (rc != SQLITE_OK) {
-        llog::bug("SQL 错误: ", errMsg);
+        llog::bug("SQL 错误: ", errMsg, " sql:", sql);
         sqlite3_free(errMsg);
         return false;
     }
@@ -259,12 +406,14 @@ bool LspLsif::preparedInsert(ElementInfo ei)
 {
     sqlite3_stmt* stmt;
     const char* sql =
-        "INSERT INTO e2lsp(e2lfile, value, begin_line, begin_column, end_line, "
-        "end_column,code_line, ek,code, now) VALUES (?, ?,?,?,?,?,?,?,?,?)";
+        "INSERT INTO e2lsp(code_uri,code_dir, value, begin_line, "
+        "end_line,begin_column,  "
+        "end_column,code_line, ek,code,from_ns,tag, now) VALUES (?, "
+        "?,?,?,?,?,?,?,?,?,?,?,?)";
 
     int rc = sqlite3_prepare_v2(_db_connect, sql, -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
-        llog::bug("预处理失败: ", sqlite3_errmsg(_db_connect));
+        llog::bug("预处理失败: ", sqlite3_errmsg(_db_connect), " sql:", sql);
         return false;
     }
     auto now = std::chrono::system_clock::now();
@@ -272,17 +421,21 @@ bool LspLsif::preparedInsert(ElementInfo ei)
         std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch())
             .count();
     // 绑定参数
-    sqlite3_bind_text(stmt, 1, ei.code_path.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_text(stmt, 2, ei.value.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 1, ei.code_uri.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, ei.code_dir.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, ei.value.c_str(), -1, SQLITE_STATIC);
 
-    sqlite3_bind_int(stmt, 3, ei.begin_line);
-    sqlite3_bind_int(stmt, 4, ei.begin_column);
+    sqlite3_bind_int(stmt, 4, ei.begin_line);
     sqlite3_bind_int(stmt, 5, ei.end_line);
-    sqlite3_bind_int(stmt, 6, ei.end_column);
-    sqlite3_bind_int(stmt, 7, ei.code_line);
-    sqlite3_bind_int(stmt, 8, int(ei.ek));
-    sqlite3_bind_text(stmt, 9, ei.insertText.c_str(), -1, SQLITE_STATIC);
-    sqlite3_bind_int(stmt, 10, seconds);
+    sqlite3_bind_int(stmt, 6, ei.begin_column);
+    sqlite3_bind_int(stmt, 7, ei.end_column);
+    sqlite3_bind_int(stmt, 8, ei.code_line);
+    sqlite3_bind_int(stmt, 9, int(ei.ek));
+    sqlite3_bind_text(stmt, 10, ei.insertText.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 11, ei.from_ns.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 12, ei.tag.c_str(), -1, SQLITE_STATIC);
+
+    sqlite3_bind_int(stmt, 13, seconds);
     // 执行
     rc = sqlite3_step(stmt);
 
@@ -292,6 +445,64 @@ bool LspLsif::preparedInsert(ElementInfo ei)
     return rc == SQLITE_DONE;
 
 } /* -----  end of function LspLsif::preparedInsert  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LspLsif::update
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+bool LspLsif::update(ElementInfo ei)
+{
+    int rc = 0;
+    if (ei.ek == ElementKind::_ek_namespace ||
+        ei.ek == ElementKind::_ek_union) {
+        sqlite3_stmt* ustmt = nullptr;
+
+        const char* usql =
+            "UPDATE e2lsp SET from_ns = ? WHERE code_uri=? and  begin_line >= "
+            "? and end_line <=? and ek in (?,?,?);";
+        rc = sqlite3_prepare_v2(_db_connect, usql, -1, &ustmt, nullptr);
+        if (rc != SQLITE_OK) {
+            llog::bug("预处理失败: ", sqlite3_errmsg(_db_connect));
+            return false;
+        }
+        sqlite3_bind_text(ustmt, 1, ei.value.c_str(), -1, SQLITE_STATIC);
+        sqlite3_bind_text(ustmt, 2, ei.code_uri.c_str(), -1, SQLITE_STATIC);
+
+        sqlite3_bind_int(ustmt, 3, ei.begin_line);
+        sqlite3_bind_int(ustmt, 4, ei.end_line);
+
+        if (ei.ek == ElementKind::_ek_namespace) {
+            sqlite3_bind_int(ustmt, 5, int(ElementKind::_ek_ns_var));
+            sqlite3_bind_int(ustmt, 6, int(ElementKind::_ek_ns_fun));
+            sqlite3_bind_int(ustmt, 7, int(ElementKind::_ek_ns_this_call));
+        }
+        else {
+            sqlite3_bind_int(ustmt, 5, int(ElementKind::_ek_var));
+            sqlite3_bind_int(ustmt, 6, int(ElementKind::_ek_globle_un));
+            sqlite3_bind_int(ustmt, 7, int(ElementKind::_ek_var));
+        }
+
+        // 执行
+
+        if (sqlite3_step(ustmt) != SQLITE_DONE) {
+            const char* original_sql = sqlite3_expanded_sql(ustmt);
+            llog::bug("原始 SQL: ", original_sql);
+
+            llog::bug("执行更新失败: ", sqlite3_errmsg(_db_connect));
+        }
+
+        // 清理
+        sqlite3_finalize(ustmt);
+    }
+    return true;
+} /* -----  end of function LspLsif::update  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -310,7 +521,7 @@ bool LspLsif::query(const std::string& sql, call_back_query callback,
     char* errMsg = nullptr;
     int rc = sqlite3_exec(_db_connect, sql.c_str(), callback, data, &errMsg);
     if (rc != SQLITE_OK) {
-        llog::bug("查询错误: ", errMsg);
+        llog::bug("查询错误: ", errMsg, " sql:", sql);
         sqlite3_free(errMsg);
         return false;
     }
@@ -423,8 +634,36 @@ bool LspLsif::batchInsert(const std::vector<ElementInfo>& records)
     }
 
     commitTransaction();
+
     return true;
 } /* -----  end of function LspLsif::batchInsert  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LspLsif::batchUpdate
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+bool LspLsif::batchUpdate(const std::vector<ElementInfo>& records)
+{
+    beginTransaction();
+
+    for (const auto& record : records) {
+        if (!update(record)) {
+            rollbackTransaction();
+            return false;
+        }
+    }
+
+    commitTransaction();
+
+    return true;
+} /* -----  end of function LspLsif::batchUpdate  ----- */
 
 /*
  * ===  FUNCTION  =============================

@@ -120,7 +120,7 @@ void Block::push_back(Expression* exp)
             LocationType loc_mod;
             loc_mod.mod_name = mod_name;
             loc_mod.code_line = im->line();
-            loc_mod.code_path = im->path();
+            loc_mod.code_uri = im->path();
 
             if (_imports.count(_current_mod) == 0) {
                 // init

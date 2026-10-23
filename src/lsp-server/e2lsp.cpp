@@ -46,101 +46,23 @@
 
 #include <cstddef>
 #include <cstdio>
-#include <future>
-#include <iostream>
-#include <ostream>
 #include <string>
-#include <thread>
 #include <vector>
 
-#include "assembler/BaseNode.hpp"
 #include "assembler/BaseType.hpp"
 #include "ast/ParserCtx.hpp"
 #include "lsp-server/Diagnostic/PublishDiagnosticsParams.hpp"
 #include "lsp-server/IoEventLoop.hpp"
-#include "lsp-server/LspLsif.hpp"
 #include "lsp-server/RequestStruct.hpp"
 #include "lsp-server/ResponseStruct.hpp"
+#include "lsp-server/dbcache/LspLsif.hpp"
+#include "lsp-server/dbcache/dbevent.hpp"
 #include "lsp-server/textDocument/CompletionList.hpp"
 #include "lsp-server/textDocument/DefinitionParams.hpp"
 #include "lsp-server/textDocument/inlineCompletion.hpp"
 #include "lsp-server/util.hpp"
 #include "utility/Log.hpp"
 namespace e2 {
-
-// 从 stdin 读取一条完整的 LSP 消息
-std::string readLSPMessage()
-{
-    std::string header;
-    // 读取直到遇到两个连续的换行符（即空行）
-    while (std::getline(std::cin, header) && !header.empty()) {
-        std::cout << "header:" << header << std::endl;
-        // 解析 Content-Length
-        if (header.find("Content-Length:") == 0) {
-            size_t contentLength = std::stoi(header.substr(16));
-            // 读取两个换行符（\r\n\r\n 中的第二部分）
-            std::cin.get();  // 读取一个字符，通常是 '\r' 或 '\n'
-            std::cin.get();  // 再读取一个字符
-                             // 根据长度读取 JSON 主体
-            std::string body(contentLength, '\0');
-            std::cin.read(&body[0], contentLength);
-            return body;
-        }
-    }
-    return "";
-}
-// 发送 LSP 格式消息到 stdout
-void sendLSPMessage(const std::string& jsonStr)
-{
-    std::cout << "Content-Length: " << jsonStr.size() << "\r\n\r\n" << jsonStr;
-    std::cout.flush();
-}
-
-e2_json handleInitialize(const e2_json& params)
-{
-    e2_json response = {{"capabilities",
-                         {
-                             {"definitionProvider",
-                              true},  // 声明支持跳转到定义
-                                      // 可以在此添加其他支持的能力，如
-                                      // textDocumentSync、hoverProvider 等
-                         }}};
-    return response;
-}
-
-void handleDidOpen(const e2_json& params)
-{
-    std::string uri = params["textDocument"]["uri"];
-    std::string text = params["textDocument"]["text"];
-    openDocuments[uri] = text;
-
-    std::cout << "uri:" << uri << "  text:" << text << std::endl;
-    // 此处可以触发初步的语法分析或诊断
-}
-
-e2_json handleDefinition(const e2_json& params)
-{
-    std::string uri = params["textDocument"]["uri"];
-    int line = params["position"]["line"];
-    int character = params["position"]["character"];
-    std::cout << "uri:" << uri << "  line:" << line << " char:" << character
-              << std::endl;
-
-    e2_json result = e2_json::array();  // 定义可能返回多个位置，以数组形式
-
-    // 极简示例：如果请求的是 main.cpp 中 loopPrint 的调用，则跳转到
-    // loopPrint.cpp
-    // if (uri.find("main.cpp") != std::string::npos && line == 2 &&
-    //     character == 2) {
-    //     json location = {{"uri",
-    //     "file:///path/to/your/project/loopPrint.cpp"},
-    //                      {"range",
-    //                       {{"start", {{"line", 2}, {"character", 5}}},
-    //                        {"end", {{"line", 2}, {"character", 14}}}}}};
-    //     result.push_back(location);
-    // }
-    return result;
-}
 
 /*
  * ===  FUNCTION  =============================
@@ -160,12 +82,24 @@ InitializeResult LifecycleMsg::Initialize()
     iresult.capabilities.textDocumentSync = TextDocumentSyncKind::Incremental;
     //    iresult.capabilities.textDocumentSync.openClose = false;
 
-    iresult.capabilities.completionProvider.triggerCharacters = {"."};
+    iresult.capabilities.completionProvider.triggerCharacters = {".", "[", "\"",
+                                                                 "'"};
+    for (char ch = 'A'; ch <= 'Z'; ch++) {
+        iresult.capabilities.completionProvider.triggerCharacters.push_back(
+            llog::format("%c", ch));
+    }
+    for (char ch = 'a'; ch <= 'z'; ch++) {
+        iresult.capabilities.completionProvider.triggerCharacters.push_back(
+            llog::format("%c", ch));
+    }
     iresult.capabilities.completionProvider.resolveProvider = true;
+
     iresult.capabilities.signatureHelpProvider.triggerCharacters = {"(", ",",
-                                                                    "="};
+                                                                    ")"};
     iresult.capabilities.semanticTokensProvider.legend.tokenTypes = {
         "namespace", "import", "func", "union"};
+    iresult.capabilities.codeActionProvider.CodeActionKind = {
+        "quickfix", "source.organizeImports"};
     return iresult;
 } /* -----  end of function LifecycleMsg::Initialize  ----- */
 
@@ -208,19 +142,19 @@ TextDocumentItem DocumentSync::DidOpen(RequestMessage request_msg)
  *
  * ============================================
  */
-std::string DocumentSync::DidChange(RequestMessage request_msg)
+bool DocumentSync::DidChange(RequestMessage request_msg,
+                             std::string& change_text)
 {
-    std::string change_text = "";
     std::size_t len = request_msg.params.count("contentChanges");
 
     if (len == 0) {
-        return change_text;
+        return false;
     }
     if (request_msg.params["contentChanges"][0].count("range")) {
         change_text = request_msg.params["contentChanges"][0]["text"];
     }
 
-    return change_text;
+    return true;
 } /* -----  end of function DocumentSync::DidChange  ----- */
 
 /*
@@ -249,64 +183,405 @@ void LanguageFeatures::inlineCompletion() {
  *
  * ============================================
  */
-CompletionList LanguageFeatures::Completion(std::string search_key,
-                                            Position pos)
+CompletionList LanguageFeatures::Completion(
+    const ContentChangesType& search_key, Position pos)
 {
+    int rc = 0;
     CompletionList clist;
-    std::vector<CompletionItem> items;
     EJson ejson;
-    llog::echo("search key:", search_key);
-    if (search_key.length() == 0) {
+#ifdef E2L_DEBUG
+    llog::echo("search key:", search_key.search_key);
+#endif
+
+    if (search_key.source.size() == 0) {
         return clist;
     }
 
     CompletionItem item;
-    LspLsif ll;
 
     std::vector<ElementInfo> ei_list;
+    // std::string key = search_key.search_key;
+    int ret = 0;
+    std::size_t import_post = 0;
+    if (search_key.source.substr(0, key_import.length()) == key_import) {
+        import_post = search_key.source.length();
+        if (search_key.search_key.find("<") == std::string::npos) {
+            rc = dbevent.search_import_path("", ei_list);
+        }
+        else {
+            rc = dbevent.search_import_path(search_key.search_key.substr(1),
+                                            ei_list);
+        }
+    }
+    else {
+        // key =
+        dbevent.search_key(search_key.search_key, ei_list);
+    }
 
-    std::string sql = llog::format(
-        "select e2lfile, value,code from e2lsp where value like \"%s%%\" ",
-        search_key.c_str());
+    if (ret == -1) {
+        llog::info("key is empty");
+        return clist;
+    }
+    std::string current_path = _current_uri.substr(file_path.length());
 
-    ll.query(sql, call_fun, &ei_list);
+    if (search_key.search_pos_start > pos.character) {
+        pos.character = search_key.search_pos_start;
+    }
+    else {
+        pos.character -= search_key.search_key.length();
+    }
+#ifdef E2L_DEBUG
 
-    llog::info(sql);
+    llog::echo("search len:", search_key.search_key.length(),
+               " line:", pos.line, " char:", pos.character,
+               " search post:", search_key.search_pos_start,
+               " search source:", search_key.source.length(),
+               " import  post:", import_post);
+#endif
+
     for (auto it : ei_list) {
+        //   自动提示中 列表显示的内容
         item.label = it.value;
-        item.sortText = it.value;
+        // 多个提示的时候用来排序的
+        item.sortText = it.value + "_" + it.insertText;
+
+        // 最终插入的内容,这个可能会更准确点 textEdit, 以后再优化吧
+        if (it.insertText.length() == 0) {
+            item.textEdit.newText = it.value;
+        }
+        else {
+            item.documentation =
+                "path:\n" + it.code_uri + "\ndoc:\n" + it.insertText;
+            item.textEdit.newText = it.insertText;
+        }
+
+        item.textEdit.range.start = pos;
+        // item.textEdit.range.end = pos;
 
         switch (it.ek) {
-            case e2::ElementKind::_ek_namespace:
-                item.kind = CompletionItemKind::Class;
-                break;
             case e2::ElementKind::_ek_fun:
-                item.kind = CompletionItemKind::Class;
+                item.kind = CompletionItemKind::Function;
+
                 break;
             case e2::ElementKind::_ek_var:
+
+                if (it.code_uri != current_path) {
+                    // llog::info(it.value, " uri:", it.code_uri,
+                    //            " current:", current_path);
+                    continue;
+                }
                 item.kind = CompletionItemKind::Variable;
                 break;
-            case e2::ElementKind::_ek_keyword:
-                item.kind = CompletionItemKind::Keyword;
+            case e2::ElementKind::_ek_ns_this_call:
+                item.kind = CompletionItemKind::Function;
+                if (it.from_ns.length() == 0) {
+                    item.textEdit.newText = "this::" + it.insertText;
+                }
+                break;
+            case e2::ElementKind::_ek_ns_fun:
+                item.kind = CompletionItemKind::Function;
+                if (it.from_ns.length() == 0) {
+                    item.textEdit.newText = "this::" + it.insertText;
+                }
+                else {
+                    item.textEdit.newText = it.from_ns + "<>::" + it.insertText;
+
+                    item.label = it.from_ns + "<>::" + it.value;
+                }
+                break;
+            case e2::ElementKind::_ek_ns_var:
+                item.kind = CompletionItemKind::Variable;
+                item.textEdit.newText = "this::" + it.value;
+
                 break;
 
+            case e2::ElementKind::_ek_namespace: {
+                item.kind = CompletionItemKind::Class;
+                std::vector<ElementInfo> ei_ns_func;
+                rc = dbevent.search_ns(it.value, ei_ns_func);
+                if (rc == 0) {
+                    ns_list(clist, ei_ns_func, pos, true);
+                    continue;
+                }
+            } break;
+            case e2::ElementKind::_ek_ns_call: {
+                item.kind = CompletionItemKind::Function;
+                if (it.from_ns.length() > 0) {
+                    item.label =
+                        it.from_ns + "<" + it.tag + ">::" + it.insertText;
+                    item.sortText += it.tag;
+
+                    item.textEdit.newText =
+                        it.from_ns + "<" + it.tag + ">::" + it.insertText;
+                }
+
+            } break;
+
+            case e2::ElementKind::_ek_keyword: {
+                item.kind = CompletionItemKind::snippet;
+
+                if (it.value == "this") {
+                    std::vector<ElementInfo> ei_ns_list;
+                    rc = dbevent.search_ns_field(pos.line, ei_ns_list);
+                    if (rc == 0) {
+                        ns_list(clist, ei_ns_list, pos, false);
+                        continue;
+                    }
+                }
+                else if (it.value == "import") {
+#ifdef E2L_DEBUG
+
+                    llog::echo(it.value, " search:", search_key.search_key);
+#endif
+                    std::vector<ElementInfo> ei_mod_list;
+                    rc = dbevent.search_import_path("", ei_mod_list);
+                    if (rc == 0) {
+                        mod_list(clist, ei_mod_list, pos);
+                        continue;
+                    }
+                }
+                else {
+                    // 多行的话，这个VIM 才不会出错
+                    item.insertText = it.insertText;
+                }
+            } break;
+            case e2::ElementKind::_ek_mode_path: {
+                item.kind = CompletionItemKind::Module;
+
+                std::string imp_path = it.code_uri;
+
+                item.label = item.sortText = imp_path;
+                item.textEdit.newText = "<" + imp_path + ">";
+
+                item.documentation = "path:\n" + it.code_uri + "\ndoc:\n" +
+                                     "import <" + imp_path + ">";
+                item.textEdit.range.start.character =
+                    import_post - search_key.search_key.length();
+
+                item.textEdit.range.start.line = pos.line;
+
+                item.textEdit.range.end.character =
+                    item.textEdit.range.start.character +
+                    item.textEdit.newText.length();
+
+                item.data = ejson.toDict("doc_uri",
+                                         file_path + it.code_dir + it.code_uri);
+            } break;
+            case e2::ElementKind::_ek_call:
+                item.kind = CompletionItemKind::Method;
+                break;
+            case e2::ElementKind::_ek_union: {
+                item.kind = CompletionItemKind::Enum;
+                std::vector<ElementInfo> ei_un_list;
+                rc = dbevent.search_union_fields(it.value, ei_un_list);
+                if (rc == 0) {
+                    union_list(clist, ei_un_list, pos, true);
+                    continue;
+                }
+            } break;
+            case e2::ElementKind::_ek_call_arg:
+                item.kind = CompletionItemKind::TypeParameter;
+                item.documentation =
+                    "path:\n" + it.code_uri + "\ndoc:\n" + it.from_ns;
+                break;
+            case e2::ElementKind::_ek_globle_un:
+                item.kind = CompletionItemKind::Enum;
+                item.label = it.from_ns + "." + it.value;
+                item.sortText = it.value;
+
+                item.textEdit.newText = it.from_ns + "." + it.value;
+
+                break;
             default:
+
+#ifdef E2L_DEBUG
+                llog::echo("default :", int(it.ek), " text:", it.insertText);
+#endif
                 item.kind = CompletionItemKind::Text;
                 break;
         }
 
-        item.insertText = it.insertText;
-        std::string uri = it.code_path;
-        item.data = ejson.toDict("doc_uri", uri);
+        if (it.ek != e2::ElementKind::_ek_mode_path) {
+            item.textEdit.range.end.character =
+                item.textEdit.range.start.character +
+                item.textEdit.newText.length();
+            item.documentation =
+                "path:\n" + it.code_uri + "\ndoc:\n" + item.textEdit.newText;
+        }
 
-        items.push_back(item);
+        item.textEdit.range.end.line = pos.line;
+
+        if (it.code_uri.length() == 0) {
+            item.data = ejson.toDict("doc_uri", _current_uri);
+        }
+        else {
+            item.data =
+                ejson.toDict("doc_uri", file_path + it.code_dir + it.code_uri);
+        }
+        clist.items.push_back(item);
     }
-
-    clist.items = items;
-
+    if (clist.items.size() == 0) {
+        llog::info("clist is empty");
+    }
     return clist;
 
 } /* -----  end of function LanguageFeatures::Completion  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LanguageFeatures::ns_list
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void LanguageFeatures::ns_list(CompletionList& clist,
+                               std::vector<ElementInfo>& ei_ns_list,
+                               Position pos, bool self_or_call)
+{
+    CompletionItem item_ns;
+    EJson ejson;
+
+    for (auto nit : ei_ns_list) {
+        switch (nit.ek) {
+            case e2::ElementKind::_ek_ns_fun:
+                item_ns.kind = CompletionItemKind::Function;
+
+                break;
+            case e2::ElementKind::_ek_ns_var:
+                item_ns.kind = CompletionItemKind::Variable;
+
+                break;
+            default:
+                break;
+        }
+        if (self_or_call) {
+            item_ns.label =
+                nit.from_ns + "<" + nit.tag + ">::" + nit.insertText;
+            item_ns.sortText = nit.tag;
+
+            item_ns.textEdit.newText =
+                nit.from_ns + "<" + nit.tag + ">::" + nit.insertText;
+        }
+        else {
+            item_ns.label = "this::" + nit.value;
+            item_ns.sortText = "this::" + nit.value;
+            if (nit.insertText.length() == 0) {
+                item_ns.textEdit.newText = "this::" + nit.value;
+            }
+            else {
+                item_ns.textEdit.newText = "this::" + nit.insertText;
+            }
+        }
+
+        item_ns.documentation =
+            "path:\n" + nit.code_uri + "\ndoc:\n" + item_ns.textEdit.newText;
+
+        item_ns.textEdit.range.start = pos;
+
+        item_ns.textEdit.range.end = pos;
+
+        item_ns.data =
+            ejson.toDict("doc_uri", file_path + nit.code_dir + nit.code_uri);
+
+        clist.items.push_back(item_ns);
+    }
+} /* -----  end of function LanguageFeatures::ns_list  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LanguageFeatures::union_list
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void LanguageFeatures::union_list(CompletionList& clist,
+                                  std::vector<ElementInfo>& ei_un_list,
+                                  Position pos, bool self_or_call)
+{
+    CompletionItem item_ns;
+    EJson ejson;
+
+    for (auto nit : ei_un_list) {
+        switch (nit.ek) {
+            case e2::ElementKind::_ek_union:
+                item_ns.kind = CompletionItemKind::Enum;
+                break;
+            case e2::ElementKind::_ek_globle_un:
+                item_ns.kind = CompletionItemKind::EnumMember;
+                break;
+            default:
+                break;
+        }
+        if (self_or_call) {
+            item_ns.label = nit.from_ns + "." + nit.value;
+            item_ns.sortText = nit.value;
+
+            item_ns.textEdit.newText = nit.from_ns + "." + nit.value;
+        }
+        else {
+            llog::info("value:", nit.value);
+        }
+        item_ns.documentation =
+            "path:\n" + nit.code_uri + "\ndoc:\n" + item_ns.textEdit.newText;
+        item_ns.textEdit.range.start = pos;
+
+        item_ns.textEdit.range.end = pos;
+
+        item_ns.data = ejson.toDict("doc_uri", file_path + nit.code_uri);
+
+        clist.items.push_back(item_ns);
+    }
+} /* -----  end of function LanguageFeatures::union_list  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LanguageFeatures::mod_list
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void LanguageFeatures::mod_list(CompletionList& clist,
+                                std::vector<ElementInfo>& ei_mod_list,
+                                Position pos)
+{
+    CompletionItem item;
+    EJson ejson;
+
+    for (auto nit : ei_mod_list) {
+        item.kind = CompletionItemKind::Module;
+
+        std::string imp_path = nit.code_uri;
+
+        item.label = item.sortText = imp_path;
+        item.textEdit.newText = "import <" + imp_path + ">";
+
+        item.documentation =
+            "path:\n" + nit.code_uri + "\ndoc:\n" + "import <" + imp_path + ">";
+        item.textEdit.range.start.character = 0;
+
+        item.textEdit.range.start.line = pos.line;
+
+        item.textEdit.range.end.character = item.textEdit.newText.length();
+        item.textEdit.range.end.line = pos.line;
+
+        item.data =
+            ejson.toDict("doc_uri", file_path + nit.code_dir + nit.code_uri);
+
+        clist.items.push_back(item);
+    }
+} /* -----  end of function LanguageFeatures::mod_list  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -330,8 +605,14 @@ PublishDiagnosticsParams LanguageFeatures::PublishDiagnostics(
         Diagnostic ds;
 
         ds.range.start.line = it.code_line;
+        if (ds.range.start.line > 0) {
+            ds.range.start.line -= 1;
+        }
         ds.range.start.character = it.begin_column;
         ds.range.end.line = it.code_line;
+        if (ds.range.end.line > 0) {
+            ds.range.end.line -= 1;
+        }
         ds.range.end.character = it.end_column;
 
         ds.severity = DiagnosticSeverity::Error;
@@ -360,7 +641,7 @@ DefinitionParams LanguageFeatures::Definition(RequestMessage request_msg)
 {
     DefinitionParams dp;
     dp.textDocument.uri = request_msg.params["textDocument"]["uri"];
-
+    // llog::echo(dp.textDocument.uri);
     if (request_msg.params.count("position")) {
         dp.position = request_msg.params["position"].get<Position>();
     }
@@ -432,7 +713,8 @@ int StdIOStream::write(const char* buffer, std::size_t size)
     if (len < size) {
         // #ifdef E2L_DEBUG
         //         std::string data =
-        //             llog::format("write error len:%ld size:%ld", len, size);
+        //             llog::format("write error len:%ld size:%ld", len,
+        //             size);
         //         CERR(data);
         // #endif
         return -1;
@@ -472,6 +754,33 @@ void StdIOStream::HeaderPart()
 /*
  * ===  FUNCTION  =============================
  *
+ *         Name:  LSPTransport::init_data
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+void LSPTransport::init_data()
+{
+    std::size_t cores = std::thread::hardware_concurrency();
+    _pool.run(cores > 0 ? cores : 2);
+
+    auto fun = [this](const std::string& value) {
+        this->ctx.project(value);
+    };  // -----  end lambda  -----
+
+    LspLsif ll;
+    ll.load_lib_json(fun);
+
+    ctx.all_scan(false);
+
+} /* -----  end of function LSPTransport::init_data  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
  *         Name:  LSPTransport::next
  *  ->  void *
  *  Parameters:
@@ -497,6 +806,7 @@ void LSPTransport::next()
     loop.add_read_fd(STDIN_FILENO, read_fun);
 
     loop.run();
+
 } /* -----  end of function LSPTransport::next  ----- */
 
 /*
@@ -514,16 +824,27 @@ bool LSPTransport::route(RequestMessage request_msg)
 {
     if (request_msg.id) {
         if (request_msg.method == "initialize") {
+#ifdef E2L_DEBUG
+            llog::info("initialize");
+#endif
             initialize_response(request_msg);
         }
         else if (request_msg.method == "initialized") {
-            //   CERR("inited");
+#ifdef E2L_DEBUG
+            llog::info("initialized");
+#endif
         }
         else if (request_msg.method == "textDocument/codeAction") {
-            // CERR("codeAction");
+#ifdef E2L_DEBUG
+            llog::info("codeAction");
+#endif
         }
         else if (request_msg.method == "textDocument/completion") {
-            if (_change_text.length() > 0) {
+            // 自动提示
+#ifdef E2L_DEBUG
+            llog::info("completion");
+#endif
+            if (_change_text.search_key.size() > 0) {
                 auto fun = [this](RequestMessage r) {
                     this->complete_response(r);
                 };  // -----  end lambda  -----
@@ -534,18 +855,24 @@ bool LSPTransport::route(RequestMessage request_msg)
         else if (request_msg.method == "textDocument/definition" ||
                  request_msg.method == "textDocument/typeDefinition" ||
                  request_msg.method == "textDocument/declaration") {
+            llog::info(request_msg.method);
+            // 跳转的
             auto fun = [this](RequestMessage r) {
-                LanguageFeatures lf;
+                std::string rootUri = r.params["textDocument"]["uri"];
+                LanguageFeatures lf(rootUri);
                 DefinitionParams dps = lf.Definition(r);
                 this->location(dps, r.id);
             };  // -----  end lambda  -----
 
             _pool.enqueue(fun, request_msg);
         }
+#ifdef E2L_DEBUG
         else {
+            llog::bug("else:" + request_msg.method);
             // CERR("id else:" + request_msg.method);
             //  return false;
         }
+#endif
     }
     else {
         DocumentSync ds;
@@ -553,6 +880,7 @@ bool LSPTransport::route(RequestMessage request_msg)
         // Notification
         if (request_msg.method == "textDocument/didOpen" ||
             request_msg.method == "textDocument/didSave") {
+            // 打开文件或保存
             auto dfun = [this, &ds](RequestMessage r) {
                 TextDocumentItem td;
                 td = ds.DidOpen(r);
@@ -564,17 +892,41 @@ bool LSPTransport::route(RequestMessage request_msg)
             _pool.enqueue(dfun, request_msg);
         }
         else if (request_msg.method == "textDocument/didChange") {
-            _change_text = ds.DidChange(request_msg);
-            _change_text = trim(_change_text);
-        }
+            std::string change_text = "";
+            bool is_change = ds.DidChange(request_msg, change_text);
+            if (is_change) {
+#ifdef E2L_DEBUG
 
+                llog::info("didchange:", change_text,
+                           " size:", change_text.length());
+#endif
+                if (change_text.length() < 2) {
+                    _change_text.clean();
+                }
+                else {
+                    int rnum = split(change_text, " ", _change_text);
+#ifdef E2L_DEBUG
+
+                    llog::info("didchange:", _change_text.source,
+                               " search:", _change_text.search_key,
+                               " pos start:", _change_text.search_pos_start);
+#endif
+                    if (rnum == 0) {
+                        _change_text.clean();
+                    }
+                }
+            }
+        }
+#ifdef E2L_DEBUG
         else {
+            llog::bug("else:" + request_msg.method);
+
             // CERR("else:" + request_msg.method);
             //  return false;
         }
+#endif
     }
 
-    // llog::info("next:", request_msg.method);
     return true;
 
 } /* -----  end of function LSPTransport::route  ----- */
@@ -715,23 +1067,39 @@ void LSPTransport::initialize_response(RequestMessage request_msg)
  */
 void LSPTransport::complete_response(RequestMessage request_msg)
 {
-    // std::string rootUri = request_msg.params["textDocument"]["uri"];
+    std::string rootUri = request_msg.params["textDocument"]["uri"];
     Position _complete_position;
-    _complete_position.character = request_msg.params["position"]["character"];
-    _complete_position.line = request_msg.params["position"]["line"];
+    if (request_msg.params.count("position") > 0) {
+        _complete_position.character =
+            request_msg.params["position"]["character"];
+        _complete_position.line = request_msg.params["position"]["line"];
+    }
+    else {
+        _complete_position.character = 0;
+        _complete_position.line = 0;
+    }
 
     e2_json response = {{"jsonrpc", "2.0"}, {"id", request_msg.id}};
 
-    LanguageFeatures lf;
+    LanguageFeatures lf(rootUri);
     CompletionList clist = lf.Completion(_change_text, _complete_position);
     response["result"] = clist;
+
+    for (auto& item : response["result"]["items"]) {
+        if (item.count("insertText") > 0) {
+            std::string name = item["insertText"].get<std::string>();
+            if (name.length() > 0) {
+                item.erase("textEdit");
+            }
+        }
+    }
 
     std::string json_dump = response.dump();
 
     std::string str_json =
         llog::format(response_fmt, json_dump.size(), json_dump.c_str());
 
-    _change_text = "";
+    // llog::echo(str_json);
 
     _stream.write(str_json.c_str(), str_json.size());
 
@@ -745,16 +1113,15 @@ void LSPTransport::complete_response(RequestMessage request_msg)
  *  Parameters:
  *  - size_t  arg
  *  Description:
- *
+ *  处理代码报错
  * ============================================
  */
 void LSPTransport::diagnostics(TextDocumentItem& tdi,
                                RequestMessage request_msg)
 {
-    e2::ParserCtx ctx;
-
     std::string uri = tdi.uri.substr(_file_p.length());
-    ctx.all_scan(false);
+    ctx.e2lsp();
+
     ctx.clear_loc();
 
     e2_json response = {{"jsonrpc", "2.0"}};
@@ -768,12 +1135,12 @@ void LSPTransport::diagnostics(TextDocumentItem& tdi,
     std::string import_str = "import";
     std::deque<LocationType> mods = ctx.imports();
     for (auto mod : mods) {
-        ret = ctx.findPath(mod.mod_name.c_str());
+        ret = ctx.ProjPath(mod.mod_name.c_str());
         if (ret < 0) {
             LocationType loc_mod;
             loc_mod.mod_name = mod.mod_name;
             loc_mod.code_line = mod.code_line;
-            loc_mod.code_path = mod.code_path;
+            loc_mod.code_uri = mod.code_uri;
             loc_mod.begin_line = loc_mod.end_line = mod.code_line - 1;
             loc_mod.begin_column = import_str.length();
             loc_mod.end_column = mod.mod_name.length() + import_str.length();
@@ -784,14 +1151,10 @@ void LSPTransport::diagnostics(TextDocumentItem& tdi,
     }
 
     ElementInfoType eit = ctx.element_data();
-    LspLsif ll;
+    _dbevent.save_element(eit);
 
-    for (auto value : eit) {
-        ll.clear(value.first);
-        ll.batchInsert(value.second);
-    }
-
-    LanguageFeatures lf;
+    std::string rootUri = request_msg.params["textDocument"]["uri"];
+    LanguageFeatures lf(rootUri);
     pdp = lf.PublishDiagnostics(tdi, d2dt);
 
     response["params"] = pdp;
@@ -819,19 +1182,64 @@ void LSPTransport::diagnostics(TextDocumentItem& tdi,
 std::string LSPTransport::trim(const std::string& str)
 {
     if (str.length() == 0) {
+#ifdef E2L_DEBUG
+        llog::echo("str empty");
+#endif
         return "";
     }
     size_t start = str.find_first_not_of(WHITESPACE);
-    if (start == std::string::npos) return "";  // 字符串仅由空白字符组成
+    if (start == std::string::npos) {
+#ifdef E2L_DEBUG
+        llog::echo("str empty find first");
+#endif
+        return "";
+    }  // 字符串仅由空白字符组成
 
     size_t end = str.find_last_not_of(WHITESPACE);
     std::string ret = str.substr(start, end - start + 1);
-    if (ret.find(" ") != std::string::npos) {
-        return "";
-    }
 
     return ret;
 } /* -----  end of function LSPTransport::trim  ----- */
+
+/*
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  LSPTransport::split
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:
+ *
+ * ============================================
+ */
+int LSPTransport::split(const std::string& str, const std::string& split_str,
+                        ContentChangesType& dest)
+{
+    int ret = 0;
+    std::string::size_type n;
+    std::string node = trim(str);
+    // std::string value = "";
+
+    dest.source = node;
+    dest.search_pos_start = 0;
+    do {
+        if (node.length() < 2) {
+            return ret;
+        }
+        n = node.find(split_str);
+
+        if (n != std::string::npos) {
+            node = node.substr(n);
+            dest.search_pos_start += n;
+        }
+        node = trim(node);
+        ret++;
+        dest.search_key = node;
+
+    } while (n != std::string::npos && node.length() > 0);
+
+    return ret;
+} /* -----  end of function LSPTransport::split  ----- */
 
 /*
  * ===  FUNCTION  =============================
@@ -846,58 +1254,34 @@ std::string LSPTransport::trim(const std::string& str)
  */
 void LSPTransport::location(DefinitionParams dp, int id)
 {
+    e2_json response = {{"jsonrpc", "2.0"}, {"id", id}};
+    std::vector<Location> loc_list;
     std::vector<ElementInfo> ei_list;
     std::string uri = dp.textDocument.uri.substr(_file_p.length());
     int character = dp.position.character;
+    // Line position in a document (zero-based).
     int line = dp.position.line + 1;
-    std::string sql = llog::format(
-        "SELECT value,begin_column,end_column,ek  from e2lsp WHERE e2lfile = "
-        "\"%s\" and code_line=%d and begin_column <= %d and end_column >= %d "
-        "and ek>3 LIMIT 1;",
-        uri.c_str(), line, character, character);
 
-    llog::info(sql);
-    LspLsif ll;
+    std::string value = "";
+    int ret = _dbevent.value(uri, line, character, value);
+    if (ret != -1 && value.length() > 0) {
+        ei_list.clear();
 
-    ll.query(sql, call_fun, &ei_list);
+        ret = _dbevent.postion(value, ei_list);
+        if (ret != -1) {
+            for (auto it : ei_list) {
+                Location loc;
+                loc.uri = _file_p + it.code_uri;
+                loc.range.start.character = it.begin_column;
+                loc.range.start.line = it.begin_line - 1;
 
-    if (ei_list.size() == 0) {
-        llog::echo("size == 0");
-        return;
+                loc.range.end.character = it.end_column;
+                loc.range.end.line = it.end_line - 1;
+                loc_list.push_back(loc);
+            }
+        }
     }
 
-    std::string value = ei_list.at(0).value;
-
-    sql = llog::format(
-        "SELECT e2lfile, value,begin_column,begin_line,end_column,end_line,ek  "
-        "from e2lsp WHERE "
-        "value = \"%s\"  and  ek> 0 and ek < %d ;",
-        value.c_str(), int(ElementKind::_ek_call));
-    llog::info(sql);
-
-    ei_list.clear();
-
-    ll.query(sql, call_fun, &ei_list);
-
-    if (ei_list.size() == 0) {
-        llog::echo("size == 0");
-
-        return;
-    }
-
-    std::vector<Location> loc_list;
-    for (auto it : ei_list) {
-        Location loc;
-        loc.uri = _file_p + it.code_path;
-        loc.range.start.character = it.begin_column;
-        loc.range.start.line = it.begin_line - 1;
-
-        loc.range.end.character = it.end_column;
-        loc.range.end.line = it.end_line - 1;
-        loc_list.push_back(loc);
-    }
-
-    e2_json response = {{"jsonrpc", "2.0"}, {"id", id}};
     response["result"] = loc_list;
 
     std::string json_dump = response.dump();
@@ -905,7 +1289,7 @@ void LSPTransport::location(DefinitionParams dp, int id)
     std::string str_json =
         llog::format(response_fmt, json_dump.size(), json_dump.c_str());
 
-    llog::echo(str_json);
+    //    llog::echo(str_json);
 
     _stream.write(str_json.c_str(), str_json.size());
 

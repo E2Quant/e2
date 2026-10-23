@@ -146,7 +146,7 @@ struct ServerCompletionItemOptions {
      *
      * @since 3.17.0
      */
-    bool labelDetailsSupport;
+    bool labelDetailsSupport = true;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(ServerCompletionItemOptions,
                                    labelDetailsSupport);
 
@@ -188,6 +188,7 @@ struct CompletionOptions {
      */
     bool resolveProvider = true;
 
+    bool workDoneProgress = true;
     /**
      * The server supports the following `CompletionItem` specific
      * capabilities.
@@ -196,8 +197,8 @@ struct CompletionOptions {
      */
     ServerCompletionItemOptions completionItem;
     NLOHMANN_DEFINE_TYPE_INTRUSIVE(CompletionOptions, triggerCharacters,
-                                   allCommitCharacters, resolveProvider,
-                                   completionItem);
+                                   resolveProvider, completionItem,
+                                   workDoneProgress);
 }; /* ----------  end of struct CompletionOptions  ---------- */
 
 typedef struct CompletionOptions CompletionOptions;
@@ -226,8 +227,7 @@ struct SignatureHelpOptions : public WorkDoneProgressOptions {
      * @since 3.15.0
      */
     std::vector<std::string> retriggerCharacters;
-    NLOHMANN_DEFINE_TYPE_INTRUSIVE(SignatureHelpOptions, triggerCharacters,
-                                   retriggerCharacters);
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(SignatureHelpOptions, triggerCharacters);
 }; /* ----------  end of struct SignatureHelpOptions  ---------- */
 
 struct CodeLensOptions : public WorkDoneProgressOptions {
@@ -352,6 +352,22 @@ struct WorkspaceOptions {
 
 typedef struct WorkspaceOptions WorkspaceOptions;
 
+struct CodeActionOptions {
+    /**
+     * The kind of the code action being documented.
+     *
+     * If the kind is generic, such as `CodeActionKind.Refactor`, the
+     * documentation will be shown whenever any refactorings are returned. If
+     * the kind is more specific, such as `CodeActionKind.RefactorExtract`, the
+     * documentation will only be shown when extract refactoring code actions
+     * are returned.
+     */
+    std::vector<std::string> CodeActionKind;
+    NLOHMANN_DEFINE_TYPE_INTRUSIVE(CodeActionOptions, CodeActionKind);
+}; /* ----------  end of struct CodeActionOptions  ---------- */
+
+typedef struct CodeActionOptions CodeActionOptions;
+
 struct ServerCapabilities {
     /**
      * The position encoding the server picked from the encodings offered
@@ -452,8 +468,8 @@ struct ServerCapabilities {
      * property `textDocument.codeAction.codeActionLiteralSupport`.
      *| CodeActionOptions
      */
-    bool codeActionProvider = true;
-
+    // bool codeActionProvider = true;
+    CodeActionOptions codeActionProvider;
     /**
      * The server provides code lens.
      */
@@ -528,7 +544,7 @@ struct ServerCapabilities {
      *| CallHierarchyOptions | CallHierarchyRegistrationOptions
      * @since 3.16.0
      */
-    bool callHierarchyProvider = false;
+    bool callHierarchyProvider = true;
 
     /**
      * The server provides semantic tokens support.

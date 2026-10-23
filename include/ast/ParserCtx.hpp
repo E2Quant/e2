@@ -46,7 +46,6 @@
 #include <libgen.h>
 
 #include <cstddef>
-#include <map>
 #include <string>
 #include <vector>
 
@@ -62,6 +61,14 @@ class location;
 
 namespace e2 {
 
+#define FILE_SIZE 2046
+
+#define RESETFILE()               \
+    ({                            \
+        do {                      \
+            _file_path[0] = '\0'; \
+        } while (0);              \
+    })
 /*
  * ================================
  *        Class:  ParserCtx
@@ -78,15 +85,14 @@ public:
     /* =============  MUTATORS      =================== */
 
     int toparse(const char* f);
-    void search_path(const char* f);
+    int ProjPath(const char* f);
+    const char* current_file();
+    void project(const std::string paths);
 
     Block* RootBlock();
     void RootBlock(Block* block);
-
-    const char* path();
-    const char* current_file();
-
-    int findPath(const char* f);
+    NodeType current_block_type() { return _cbt; };
+    void current_block_type(NodeType nt) { _cbt = nt; };
 
     void clear_loc() { _error_location.clear(); };
     void grammar_error(const yy::location&, std::size_t line, std::string msg);
@@ -94,8 +100,16 @@ public:
     void all_scan(bool b) { _all_scan = b; }
 
     void element_data(ElementInfo, std::size_t line, ElementKind);
+    void element_update(ElementInfo, std::size_t line, ElementKind);
     ElementInfoType element_data();
     std::deque<LocationType> imports();
+
+    void e2lsp()
+    {
+        _e2lsp = true;
+        reset();
+    }
+
     /* =============  OPERATORS     =================== */
 
 protected:
@@ -108,12 +122,16 @@ private:
     // Handling the scanner.
     void scan_begin();
     void scan_end();
+
+    void reset();
+
     int HasImport();
 
-    void rootPath(const char* f);
+    int LongPath(std::string&, bool complete);
+    int findPath(const char* f);
 
-    int defPath(const char* f);
-
+    int loopPath(const char* f, std::string&);
+    std::string root_dirname(const char* p);
     /* =============  DATA MEMBERS  =================== */
     void* lexer;
     yy::location* loc;
@@ -121,20 +139,26 @@ private:
 
     Block* _RootBlock{nullptr};
 
-    char* _dir = nullptr;
-    char* _file_path = nullptr;
+    NodeType _cbt = NodeType::_null;
+
+    // 一个路径的长度，应该够了
+    char _file_path[FILE_SIZE] = {0};
+    // toparse 的 file path
+    char* _root_filepath = NULL;
     FILE* _file = nullptr;
+
+    std::vector<std::string> _project_dir;
+    int _current_proj_idx = -1;
 
     bool _trace_scanning;
 
     std::string _imp_path = "main";
 
-    std::string _search_path = "";
-
     std::vector<LocationType> _error_location;
 
     bool _all_scan = true;
 
+    bool _e2lsp = false;
     //  e2l file path -> element_info list
     ElementInfoType _element_map;
 }; /* -----  end of class ParserCtx  ----- */

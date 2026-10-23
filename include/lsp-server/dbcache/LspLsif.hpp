@@ -47,7 +47,6 @@
 #include <sqlite3.h>
 
 #include <cstring>
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -59,44 +58,7 @@ namespace e2 {
 
 using call_back_query = int (*)(void*, int, char**, char**);
 
-inline auto call_fun = [](void* data, int argc, char** argv,
-                          char** colName) -> int {
-    auto* result = static_cast<std::vector<ElementInfo>*>(data);
-    ElementInfo _ei;
-    for (int i = 0; i < argc; i++) {
-        std::string col = std::string(colName[i]);
-        if (col == "e2lfile") {
-            _ei.code_path = (argv[i] ? std::string(argv[i]) : "");
-        }
-        if (col == "value") {
-            _ei.value = (argv[i] ? std::string(argv[i]) : "");
-        }
-        if (col == "begin_line") {
-            _ei.begin_line = (argv[i] ? atoi(argv[i]) : 0);
-        }
-        if (col == "begin_column") {
-            _ei.begin_column = (argv[i] ? atoi(argv[i]) : 0);
-        }
-        if (col == "end_line") {
-            _ei.end_line = (argv[i] ? atoi(argv[i]) : 0);
-        }
-        if (col == "end_column") {
-            _ei.end_column = (argv[i] ? atoi(argv[i]) : 0);
-        }
-        if (col == "code_line") {
-            _ei.code_line = (argv[i] ? atoi(argv[i]) : 0);
-        }
-        if (col == "ek") {
-            int ekd = (argv[i] ? atoi(argv[i]) : 0);
-            _ei.ek = (ElementKind)ekd;
-        }
-        if (col == "code") {
-            _ei.insertText = (argv[i] ? std::string(argv[i]) : "");
-        }
-    }
-    result->push_back(_ei);
-    return 0;
-};  // -----  end lambda  -----
+using JsonCallback = std::function<void(const std::string&)>;
 
 /*
  * ================================
@@ -113,17 +75,30 @@ public:
 
     /* =============  MUTATORS      =================== */
 
+    void load_lib_json(JsonCallback);
+
     bool open(const std::string& filename);
     bool clear(const std::string& e2l_file);
     bool execute(const std::string& sql);
     bool preparedInsert(ElementInfo);
+    bool update(ElementInfo);
+
     bool query(const std::string& sql, call_back_query, void*);
     bool queryWithPrepare(const std::string& sql);
     bool beginTransaction();
     bool commitTransaction();
     bool rollbackTransaction();
     bool batchInsert(const std::vector<ElementInfo>& records);
+    bool batchUpdate(const std::vector<ElementInfo>& records);
+
+    void system_keyword(const char*);
     void close();
+
+    // void import_dir(const std::string& code_dir)
+    // {
+    //     _code_dir = std::move(code_dir);
+    // }
+
     /* =============  OPERATORS     =================== */
 
 protected:
@@ -136,12 +111,17 @@ private:
     void init();
     void init_db();
 
-    void system_keyword();
+    void update();
+
+    void GlobalUnionToE2lsp();
+
     /* =============  DATA MEMBERS  =================== */
     sqlite3* _db_connect;
 
     const char* _lldir = ".e2lsp";
     std::string _dbfile = ".e2lsp/e2lsp.db";
+    const char* _lib_json_file = ".e2lsp/lib.json";
+    //  std::string _code_dir = "";
 }; /* -----  end of class LspLsif  ----- */
 
 }  // namespace e2

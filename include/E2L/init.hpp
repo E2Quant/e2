@@ -285,8 +285,21 @@ void SwapRate(e2::Int_e rate);
  *   TimeZone=GMT+0
  * ============================================
  */
-void gmtime(); /* -----  end of function gmtime  ----- */
+e2::Int_e gmtime(); /* -----  end of function gmtime  ----- */
 
+
+/* 
+ * ===  FUNCTION  =============================
+ *
+ *         Name:  EnableGmt
+ *  ->  void *
+ *  Parameters:
+ *  - size_t  arg
+ *  Description:  
+ *
+ * ============================================
+ */
+void EnableGmt (  );/* -----  end of function EnableGmt  ----- */
 /*
  * ===  FUNCTION  =============================
  *
